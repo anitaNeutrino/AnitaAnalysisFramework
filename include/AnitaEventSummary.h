@@ -15,11 +15,15 @@ class AnitaEventSummary
     class PointingHypothesis 
     {
       public: 
-        Double_t phi;  // peak phi
-        Double_t theta; // peak theta
+        Double_t phi;  // peak phi, degrees
+        Double_t theta; // peak theta, degrees
         Double_t value; // peak value
+        Double_t snr; // snr of peak
+        Double_t hwAngle; // angle with respect to triggering phi sector
+        Bool_t triggered; 
+        Bool_t masked; 
 
-        /* covariance matrix ?*/ 
+        /* covariance matrix?*/ 
     //    Double_t var_theta;  
     //    Double_t var_phi; 
     //    Double_t covar; 
@@ -31,7 +35,7 @@ class AnitaEventSummary
   {
     public: 
       Double_t snr; 
-      Double_t peakOfHilbert; 
+      Double_t peakHilbert; 
       Double_t peakVal; 
 
       ClassDef(WaveformInfo, 1); 
@@ -53,6 +57,7 @@ class AnitaEventSummary
         Int_t isSoftwareTrigger; 
         Int_t isPayloadBlast; 
         Int_t nadirFlag; 
+        Int_t strongCWFlag; 
 
         CalPulser pulser; 
         Bool_t isVarner; 

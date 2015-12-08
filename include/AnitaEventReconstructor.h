@@ -5,7 +5,6 @@ class FilteredAnitaEvent;
 class AnitaEventSummary; 
 class AnitaEventReconstructor 
 {
-  friend class FilteredAnitaEvent; 
   public:
    virtual void process(const FilteredAnitaEvent * ev, AnitaEventSummary * summary) const = 0; 
 }; 
