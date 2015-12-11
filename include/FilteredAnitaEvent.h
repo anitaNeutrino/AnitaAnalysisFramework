@@ -37,12 +37,13 @@ class FilterOperation
     // human readable description, should provide sufficient information to understand what was done 
     virtual const char * description () const  = 0; 
 
-    virtual void process(FilteredAnitaEvent * event, double * tree_vars = 0) const = 0; 
+    virtual void process(FilteredAnitaEvent * event) const = 0; 
 
 
-    /* If you ant to output stuff to trees, define the output here */ 
+    /* If you want to output stuff to trees, define the output here */ 
     virtual UInt_t nTreeVars() const  { return 0; } 
     virtual const char *  treeVarName(UInt_t i) const  { (void) i; return ""; } 
+    virtual void fillTreeVars(double * vars) { (void) vars; return; } 
 
 }; 
 
