@@ -10,6 +10,24 @@ class RawAnitaHeader;
 #include <vector>
 #include <list>
 
+class FilterStrategy; 
+class FilteredAnitaEvent 
+{
+  public: 
+   FilteredAnitaEvent(const UsefulAnitaEvent * event, const FilterStrategy * strategy, const Adu5Pat * pat, const RawAnitaHeader * header ); 
+   const TGraph * getFilteredGraph(UInt_t i); 
+   const UsefulAnitaEvent* getUsefulAnitaEvent() { return useful; } 
+   const Adu5Pat * getGPS() { return pat; } 
+   const RawAnitaHeader * getHeader() { return header; } 
+  private: 
+   std::vector<TGraph*> filteredGraphs; 
+   const UsefulAnitaEvent * useful; 
+   const FilterStrategy * strategy; 
+   const Adu5Pat * pat; 
+   const RawAnitaHeader * header; 
+};
+
+
 class FilterOperation
 {
   public: 
@@ -24,7 +42,7 @@ class FilterOperation
 
     /* If you ant to output stuff to trees, define the output here */ 
     virtual UInt_t nTreeVars() const  { return 0; } 
-    virtual const char *  treeVarName(UInt_t i) const  { (void i); return ""; } 
+    virtual const char *  treeVarName(UInt_t i) const  { (void) i; return ""; } 
 
 }; 
 
@@ -43,23 +61,6 @@ class FilterStrategy
    std::list<const FilterOperation*> operations;
 }; 
 
-
-class FilteredAnitaEvent 
-{
-  public: 
-
-   FilteredAnitaEvent(const UsefulAnitaEvent * event, const FilterStrategy * strategy, const Adu5Pat * pat, const RawAnitaHeader * header ); 
-   const TGraph * getFilteredGraph(UInt_t i); 
-   const UsefulAnitaEvent* getUsefulAnitaEvent() { return useful; } 
-   const Adu5Pat * getGPS() { return pat; } 
-   const RawAnitaHeader * getHeader() { returnheaderpat; } 
-  private: 
-   std::vector<TGraph*> filteredGraphs; 
-   const UsefulAnitaEvent * useful; 
-   const FilterStrategy * strategy; 
-   const Adu5Pat * pat; 
-   const RawAnitaHeader * header; 
-};
 
 
 #endif

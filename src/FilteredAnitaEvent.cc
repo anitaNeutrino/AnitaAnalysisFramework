@@ -1,4 +1,5 @@
 #include "FilteredAnitaEvent.h" 
+#include "UsefulAnitaEvent.h"
 #include "AnitaConventions.h" 
 #include "TGraph.h" 
 
@@ -14,10 +15,10 @@ FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, const Fi
 
 
   // Initialize the filtered graphs with the raw graphs from Raw Anita Event 
-  for (UIint i = 0; i < NUM_DIGITZED_CHANNELS; i++) 
+  for (unsigned i = 0; i < NUM_DIGITZED_CHANNELS; i++) 
   {
     // UsefulAnitaEvent is not (yet?) const correct 
-    filteredGraphs[i] = ((UsefulAnitaEvent*) useful)->getGraph(i); 
+    filteredGraphs[i] = ((UsefulAnitaEvent*) useful)->getGraph((int) i); 
   }
 
   // Loop through the operations and apply them sequentially 
@@ -25,6 +26,7 @@ FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, const Fi
   {
 
     (*it)->process(this); 
+
   }
 }
 
