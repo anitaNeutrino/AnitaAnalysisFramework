@@ -1,18 +1,16 @@
 #include "FilteredAnitaEvent.h" 
 #include "UsefulAnitaEvent.h"
 #include "AnitaConventions.h" 
-#include "TGraph.h" 
+#include "FilterStrategy.h"
 
 
-
-FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, const FilterStrategy * strategy, const Adu5Pat * pat, const RawAnitaHeader * header ) 
+FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterStrategy * strategy, const Adu5Pat * pat, const RawAnitaHeader * header ) 
   : filteredGraphs(NUM_DIGITZED_CHANNELS), 
     useful(event), 
     strategy(strategy), 
     pat(pat), 
     header(header) 
 {
-
 
   // Initialize the filtered graphs with the raw graphs from Raw Anita Event 
   for (unsigned i = 0; i < NUM_DIGITZED_CHANNELS; i++) 
@@ -21,13 +19,8 @@ FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, const Fi
     filteredGraphs[i] = ((UsefulAnitaEvent*) useful)->getGraph((int) i); 
   }
 
-  // Loop through the operations and apply them sequentially 
-  for (std::list<const FilterOperation *>::const_iterator it = strategy->operations.begin(); it != strategy->operations.end(); it++) 
-  {
-
-    (*it)->process(this); 
-
-  }
+  //tell the strategy to process this
+  strategy->process(this); 
 }
 
 

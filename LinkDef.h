@@ -10,9 +10,11 @@
 #pragma link C++ class AnitaEventSummary::WaveformInfo;
 #pragma link C++ class AnitaEventSummary::EventFlags;
 #pragma link C++ class FilteredAnitaEvent;
-#pragma link C++ class FilterOperation;
 #pragma link C++ class FilterStrategy;
 
+#pragma link C++ class FilterOperation;
+#pragma link C++ class UniformFilterOperation;
+#pragma link C++ class ConditionalFilterOperation;
 
 #endif
 

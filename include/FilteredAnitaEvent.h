@@ -7,15 +7,16 @@ class TGraph;
 class RawAnitaHeader; 
 
 #include "TObject.h" 
-#include <vector>
-#include <list>
-
 class FilterStrategy; 
+
 class FilteredAnitaEvent 
 {
+
+  friend class FilterOperation; 
+
   public: 
-   FilteredAnitaEvent(const UsefulAnitaEvent * event, const FilterStrategy * strategy, const Adu5Pat * pat, const RawAnitaHeader * header ); 
-   const TGraph * getFilteredGraph(UInt_t i); 
+   FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterStrategy * strategy, const Adu5Pat * pat, const RawAnitaHeader * header); 
+   const TGraph * getFilteredGraph(UInt_t i) const; 
    const UsefulAnitaEvent* getUsefulAnitaEvent() { return useful; } 
    const Adu5Pat * getGPS() { return pat; } 
    const RawAnitaHeader * getHeader() { return header; } 
@@ -25,42 +26,11 @@ class FilteredAnitaEvent
    const FilterStrategy * strategy; 
    const Adu5Pat * pat; 
    const RawAnitaHeader * header; 
+
+   ClassDef(FilteredAnitaEvent,1); 
 };
 
 
-class FilterOperation
-{
-  public: 
-    // short name for operation, will be used for output tree name, if there is one 
-    virtual const char * tag () const  = 0; 
-
-    // human readable description, should provide sufficient information to understand what was done 
-    virtual const char * description () const  = 0; 
-
-    virtual void process(FilteredAnitaEvent * event) const = 0; 
-
-
-    /* If you want to output stuff to trees, define the output here */ 
-    virtual UInt_t nTreeVars() const  { return 0; } 
-    virtual const char *  treeVarName(UInt_t i) const  { (void) i; return ""; } 
-    virtual void fillTreeVars(double * vars) { (void) vars; return; } 
-
-}; 
-
-
-
-class FilterStrategy
-{
-  friend class FilteredAnitaEvent; 
-
-  public: 
-    FilterStrategy() {; } 
-    virtual ~FilterStrategy() {; } 
-    void addOperation(const FilterOperation* f) { operations.push_back(f); }
-
-  private: 
-   std::list<const FilterOperation*> operations;
-}; 
 
 
 
