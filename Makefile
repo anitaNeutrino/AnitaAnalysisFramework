@@ -23,6 +23,7 @@ OBJS := $(addprefix $(BUILDDIR)/, FilteredAnitaEvent.o FilterOperation.o FilterS
 INCLUDES := $(addprefix $(INCLUDEDIR)/, $(shell ls $(INCLUDEDIR)))
 
 LIBNAME = $(LIBDIR)/libAnitaAnalysis.${DllSuf}
+LINKLIBNAME=AnitaAnalysis
 
 all: $(LIBNAME) $(BINARIES) 
 
@@ -55,7 +56,7 @@ $(BUILDDIR)/%.o: build/%.cc $(INCLUDES) Makefile | $(BUILDDIR)
 
 $(BINDIR)/%: %.cc $(INCLUDES) Makefile $(LIBNAME) | $(BINDIR)
 	@echo Compiling $<
-	@$(CXX)  -I./include -I./ $(CXXFLAGS) -o $@ $(LDFLAGS) -L./$(LIBDIR) -lRootRF  $< 
+	@$(CXX)  -I./include -I./ $(CXXFLAGS) -o $@ $(LDFLAGS) -L./$(LIBDIR) -lAnitaAnalysis  $< 
 
 $(BUILDDIR)/dict.cc: $(INCLUDES) LinkDef.h | $(BUILDDIR)
 	@echo Running rootcint
