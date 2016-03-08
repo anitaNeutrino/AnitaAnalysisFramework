@@ -10,7 +10,7 @@
 class AnitaEventSummary 
 {
   public: 
-    const UInt_t MaxPointingHypotheses = 5; 
+    static const UInt_t MaxPointingHypotheses = 5; 
 
     class PointingHypothesis 
     {
@@ -28,15 +28,18 @@ class AnitaEventSummary
     //    Double_t var_phi; 
     //    Double_t covar; 
 
+        virtual ~PointingHypothesis() {;}
       ClassDef(PointingHypothesis,1); 
     }; 
 
-   class WaveformInfo
+  class WaveformInfo
   {
     public: 
       Double_t snr; 
       Double_t peakHilbert; 
       Double_t peakVal; 
+      Double_t bandwidth; 
+      virtual ~WaveformInfo() {; } 
 
       ClassDef(WaveformInfo, 1); 
   }; 
@@ -48,8 +51,9 @@ class AnitaEventSummary
         {
           NONE, 
           WAIS, 
-          MCMURDO, 
-          TD 
+          LDB, 
+          SIPLE,
+          TD
         }; 
 
         Int_t isGood; 
@@ -62,6 +66,7 @@ class AnitaEventSummary
         CalPulser pulser; 
         Bool_t isVarner; 
         Bool_t isVarner2; 
+        virtual ~EventFlags() {;}
 
       ClassDef(EventFlags,1); 
     }; 
@@ -71,12 +76,16 @@ class AnitaEventSummary
     UInt_t eventNumber; 
 
     PointingHypothesis hypotheses[MaxPointingHypotheses]; 
+    UInt_t nantennas_in_coherent; 
     WaveformInfo coherent[MaxPointingHypotheses]; 
+    WaveformInfo deconvolved[MaxPointingHypotheses]; 
     WaveformInfo maxWaveform;  // do we want this for all ? 
 
     EventFlags flags; 
     Adu5Pat gps; 
     RawAnitaHeader header; 
+
+    virtual ~AnitaEventSummary() { ; } 
 
   private: 
 

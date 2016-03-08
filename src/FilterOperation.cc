@@ -4,30 +4,46 @@
 #include <string.h> 
 
 
+FilterOperation::~FilterOperation()
+{
+}
+
+ConditionalFilterOperation::~ConditionalFilterOperation()
+{
+ free (condition_tag); 
+ free (condition_desc); 
+}
+
+ConditionalFilterOperation::ConditionalFilterOperation(FilterOperation * operation, 
+                                                       bool (*condition)(FilteredAnitaEvent * ev, int trace), 
+                                                       const char * condition_tag_suffix, const char * condition_description_suffix) 
+                                                       : fn(condition), fo(operation)
+{
+  asprintf(&condition_tag, "%s_%s", fo->tag(), condition_tag_suffix); 
+  asprintf(&condition_desc, "%s (if %s) ", fo->description(), condition_description_suffix); 
+}
+
+
+
 size_t FilterOperation::nGraphs(FilteredAnitaEvent *ev) 
 { 
   return ev->filteredGraphs.size(); 
 }
 
-TGraph* FilterOperation::getGraph(FilteredAnitaEvent *ev, int i) 
+AnalysisWaveform* FilterOperation::getWf(FilteredAnitaEvent *ev, int i) 
 { 
   return ev->filteredGraphs[i]; 
 }
+
 
 
 void ConditionalFilterOperation::process(FilteredAnitaEvent * ev) 
 {
   for (size_t i = 0; i < nGraphs(ev); i++) 
   {
-    if (!fn(ev,(int)i)) continue; 
-    TGraph * g = getGraph(ev,i); 
-    TGraph * gnew = processIf(g); 
-    if (gnew) 
+    if (fn(ev,(int)i))
     {
-      g->Set(gnew->GetN()); 
-      memcpy(g->GetX(), gnew->GetX(), gnew->GetN() * sizeof(double)); 
-      memcpy(g->GetY(), gnew->GetY(), gnew->GetN() * sizeof(double)); 
-      delete gnew; 
+      fo->process(ev); 
     }
   }
 }
@@ -36,14 +52,6 @@ void UniformFilterOperation::process(FilteredAnitaEvent * ev)
 {
   for (size_t i = 0; i < nGraphs(ev); i++) 
   {
-    TGraph * g = getGraph(ev,i); 
-    TGraph * gnew = processOne(g); 
-    if (gnew) 
-    {
-      g->Set(gnew->GetN()); 
-      memcpy(g->GetX(), gnew->GetX(), gnew->GetN() * sizeof(double)); 
-      memcpy(g->GetY(), gnew->GetY(), gnew->GetN() * sizeof(double)); 
-      delete gnew; 
-    }
+    processOne(getWf(ev,i)); 
   }
 }

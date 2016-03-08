@@ -6,7 +6,7 @@ CXXFLAGS+= -g
 
 CXXFLAGS     += $(ROOTCFLAGS) $(SYSINCLUDES)
 LDFLAGS      += $(ROOTLDFLAGS) 
-LIBS          = $(ROOTLIBS) -g -Wl,-z,defs -lRootFftwWrapper -lAnitaEvent
+LIBS          = $(ROOTLIBS) -g -Wl,-z,defs -lMathMore -lRootFftwWrapper -lAnitaEvent
 GLIBS         = $(ROOTGLIBS) $(SYSLIBS)
 LIBDIR=lib
 BUILDDIR=build
@@ -16,7 +16,7 @@ BINDIR=bin
 .PHONY: clean install all
 
 
-OBJS := $(addprefix $(BUILDDIR)/, FilteredAnitaEvent.o FilterOperation.o FilterStrategy.o)
+OBJS := $(addprefix $(BUILDDIR)/, FilteredAnitaEvent.o FilterOperation.o FilterStrategy.o AnalysisWaveform.o dict.o)
 
 #BINARIES := $(addprefix $(BINDIR)/, binary);
 
@@ -51,7 +51,7 @@ $(BUILDDIR)/%.o: src/%.cc $(INCLUDES) Makefile | $(BUILDDIR) $(VECTORIZE)
 
 $(BUILDDIR)/%.o: build/%.cc $(INCLUDES) Makefile | $(BUILDDIR) 
 	@echo Compiling  $< 
-	@$(CXX)  -I../include $(CXXFLAGS) -o $@ -c $< 
+	$(CXX)  -I../include -I./ $(CXXFLAGS) -o $@ -c $< 
 
 
 $(BINDIR)/%: %.cc $(INCLUDES) Makefile $(LIBNAME) | $(BINDIR)

@@ -7,6 +7,7 @@ class AnitaEventReconstructor
 {
   public:
    virtual void process(const FilteredAnitaEvent * ev, AnitaEventSummary * summary) const = 0; 
+   virtual ~AnitaEventReconstructor() { ; }
 }; 
 
 #endif 
