@@ -4,8 +4,8 @@ include Makefile.config
 CXX=g++
 CXXFLAGS+= -g
 
-CXXFLAGS     += $(ROOTCFLAGS) $(SYSINCLUDES)
-LDFLAGS      += $(ROOTLDFLAGS) 
+CXXFLAGS     += $(ROOTCFLAGS) $(SYSINCLUDES) -I$(ANITA_UTIL_INSTALL_DIR)/include
+LDFLAGS      += $(ROOTLDFLAGS)  -L$(ANITA_UTIL_INSTALL_DIR)/lib
 LIBS          = $(ROOTLIBS) -g -Wl,-z,defs -lMathMore -lRootFftwWrapper -lAnitaEvent
 GLIBS         = $(ROOTGLIBS) $(SYSLIBS)
 LIBDIR=lib
@@ -60,7 +60,7 @@ $(BINDIR)/%: %.cc $(INCLUDES) Makefile $(LIBNAME) | $(BINDIR)
 
 $(BUILDDIR)/dict.cc: $(INCLUDES) LinkDef.h | $(BUILDDIR)
 	@echo Running rootcint
-	@rootcint  -f $@ -c -p $(INCLUDES) LinkDef.h
+	@rootcint  -f $@ -c -p -I$(ANITA_UTIL_INSTALL_DIR)/include $(INCLUDES) LinkDef.h
 
 install: 
 ifndef ANITA_UTIL_INSTALL_DIR 
