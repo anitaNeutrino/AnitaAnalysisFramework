@@ -22,15 +22,32 @@ OBJS := $(addprefix $(BUILDDIR)/, FilteredAnitaEvent.o FilterOperation.o FilterS
 # INCLUDES := $(addprefix $(INCLUDEDIR)/, $(shell ls includes/*.h ))
 INCLUDES := $(shell ls $(INCLUDEDIR)/*.h )
 
-LIBNAME = $(LIBDIR)/libAnitaAnalysis.${DllSuf}
-LINKLIBNAME=AnitaAnalysis
+ROOT_LIBRARY = $(LIBDIR)/libAnitaAnalysis.${DllSuf}
 
-all: $(LIBNAME) $(BINARIES) 
+all: $(ROOT_LIBRARY) $(BINARIES) 
 
-### probably need some magic for Mac OS X here? 
-$(LIBNAME): $(OBJS) | $(LIBDIR)
-	@echo Building shared library $@
-	@$(LD) $(SOFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(GLIBS) -shared -o $@
+## probably need some magic for Mac OS X here? Yes you do, and it is a truly mysterious dark art
+$(ROOT_LIBRARY) : $(OBJS) | $(LIBDIR) 
+	@echo "Linking $@ ..."
+ifeq ($(PLATFORM),macosx)
+# We need to make both the .dylib and the .so
+		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(LIBS) $(OutPutOpt) $@
+ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
+ifeq ($(MACOSX_MINOR),4)
+		ln -sf $@ $(subst .$(DllSuf),.so,$@)
+else
+		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $(LIBS) $^ \
+		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
+endif
+endif
+else
+#	$(LD) $(SOFLAGS) $(LDFLAGS) $(LIBS) $(OBJS) -o $@
+# $(LIBNAME): $(OBJS) | $(LIBDIR)
+# 	@echo Building shared library $@
+	$(LD) $(SOFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(GLIBS) -shared -o $@
+endif
+
+
 
 
 $(OBJS): | $(BUILDDIR)
@@ -44,7 +61,6 @@ $(BINDIR):
 $(LIBDIR): 
 	mkdir -p $(LIBDIR)
 
-
 $(BUILDDIR)/%.o: src/%.cc $(INCLUDES) Makefile | $(BUILDDIR) $(VECTORIZE)
 	@echo Compiling  $< 
 	$(LD)  -I./include $(CXXFLAGS) -o $@ -c $< 
@@ -54,7 +70,7 @@ $(BUILDDIR)/%.o: build/%.cc $(INCLUDES) Makefile | $(BUILDDIR)
 	$(LD)  -I../include -I./ $(CXXFLAGS) -o $@ -c $< 
 
 
-$(BINDIR)/%: %.cc $(INCLUDES) Makefile $(LIBNAME) | $(BINDIR)
+$(BINDIR)/%: %.cc $(INCLUDES) Makefile $(ROOT_LIBRARY) | $(BINDIR)
 	@echo Compiling $<
 	$(LD)  -I./include -I./ $(CXXFLAGS) -o $@ $(LDFLAGS) -L./$(LIBDIR) -lAnitaAnalysis  $< 
 
@@ -62,13 +78,13 @@ $(BUILDDIR)/dict.cc: $(INCLUDES) LinkDef.h | $(BUILDDIR)
 	@echo Running rootcint
 	rootcint  -f $@ -c -p -I$(ANITA_UTIL_INSTALL_DIR)/include $(INCLUDES) LinkDef.h
 
-install: 
+install: $(ROOT_LIBRARY)
 ifndef ANITA_UTIL_INSTALL_DIR 
 	$(error Please define ANITA_UTIL_INSTALL_DIR)
 endif 
 	install -d $(ANITA_UTIL_INSTALL_DIR)/lib 
 	install -d $(ANITA_UTIL_INSTALL_DIR)/include 
-	install -c -m 755 $(LIBNAME) $(ANITA_UTIL_INSTALL_DIR)/lib
+	install -c -m 755 $(ROOT_LIBRARY) $(ANITA_UTIL_INSTALL_DIR)/lib
 	install -c -m 644 $(INCLUDES) $(ANITA_UTIL_INSTALL_DIR)/include 
 
 clean: 
