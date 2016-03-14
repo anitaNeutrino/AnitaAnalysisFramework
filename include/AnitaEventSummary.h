@@ -10,7 +10,7 @@
 class AnitaEventSummary 
 {
   public: 
-    static const UInt_t MaxPointingHypotheses = 5; 
+    static const UInt_t MaxPointingHypotheses = 6; 
 
     class PointingHypothesis 
     {
@@ -85,11 +85,13 @@ class AnitaEventSummary
     Adu5Pat gps; 
     RawAnitaHeader header; 
 
-    virtual ~AnitaEventSummary() { ; } 
+  AnitaEventSummary(const RawAnitaHeader* header, const Adu5Pat* pat);
+  virtual ~AnitaEventSummary() { ; } 
 
+  
   private: 
 
-    ClassDef(AnitaEventSummary, 1); 
+    ClassDef(AnitaEventSummary, 2); 
 }; 
 
 

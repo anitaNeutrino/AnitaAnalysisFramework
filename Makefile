@@ -15,7 +15,7 @@ BINDIR=bin
 
 .PHONY: clean install all
 
-OBJS := $(addprefix $(BUILDDIR)/, FilteredAnitaEvent.o FilterOperation.o FilterStrategy.o AnalysisWaveform.o dict.o)
+OBJS := $(addprefix $(BUILDDIR)/, FilteredAnitaEvent.o FilterOperation.o FilterStrategy.o AnalysisWaveform.o AnitaEventSummary.o dict.o)
 
 #BINARIES := $(addprefix $(BINDIR)/, binary);
 
