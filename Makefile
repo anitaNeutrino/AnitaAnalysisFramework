@@ -13,9 +13,10 @@ BUILDDIR=build
 INCLUDEDIR=include
 BINDIR=bin
 
+
 .PHONY: clean install all
 
-OBJS := $(addprefix $(BUILDDIR)/, FilteredAnitaEvent.o FilterOperation.o FilterStrategy.o AnalysisWaveform.o AnitaEventSummary.o dict.o)
+OBJS := $(addprefix $(BUILDDIR)/, FilteredAnitaEvent.o FilterOperation.o FilterStrategy.o AnalysisWaveform.o AnitaEventSummary.o analysisDict.o)
 
 #BINARIES := $(addprefix $(BINDIR)/, binary);
 
@@ -74,7 +75,7 @@ $(BINDIR)/%: %.cc $(INCLUDES) Makefile $(ROOT_LIBRARY) | $(BINDIR)
 	@echo Compiling $<
 	$(LD)  -I./include -I./ $(CXXFLAGS) -o $@ $(LDFLAGS) -L./$(LIBDIR) -lAnitaAnalysis  $< 
 
-$(BUILDDIR)/dict.cc: $(INCLUDES) LinkDef.h | $(BUILDDIR)
+$(BUILDDIR)/analysisDict.cc: $(INCLUDES) LinkDef.h | $(BUILDDIR)
 	@echo Running rootcint
 	rootcint  -f $@ -c -p -I$(ANITA_UTIL_INSTALL_DIR)/include $(INCLUDES) LinkDef.h
 
@@ -86,7 +87,7 @@ endif
 	install -d $(ANITA_UTIL_INSTALL_DIR)/include 
 	install -c -m 755 $(ROOT_LIBRARY) $(ANITA_UTIL_INSTALL_DIR)/lib
 	install -c -m 644 $(INCLUDES) $(ANITA_UTIL_INSTALL_DIR)/include 
-
+	if [ -e $(BUILDDIR)/analysisDict_rdict.pcm ];  then install -c -m 755 $(BUILDDIR)/analysisDict_rdict.pcm $(ANITA_UTIL_INSTALL_DIR)/lib; fi; 
 clean: 
 	rm -rf build
 	rm -rf bin

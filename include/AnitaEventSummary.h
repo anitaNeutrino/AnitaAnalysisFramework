@@ -85,6 +85,7 @@ class AnitaEventSummary
     Adu5Pat gps; 
     RawAnitaHeader header; 
 
+  AnitaEventSummary();
   AnitaEventSummary(const RawAnitaHeader* header, const Adu5Pat* pat);
   virtual ~AnitaEventSummary() { ; } 
 
