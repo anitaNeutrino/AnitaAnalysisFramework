@@ -4,7 +4,7 @@
 #include "TObject.h" 
 #include "Adu5Pat.h" 
 #include "RawAnitaHeader.h" 
-
+#include <iostream>
 
 
 class AnitaEventSummary 
@@ -61,21 +61,24 @@ public:
 	TD
       }; 
 
-    Int_t isGood; 
-    Int_t isRF; 
-    Int_t isSoftwareTrigger; 
-    Int_t isPayloadBlast; 
+    Int_t isGood;
+    Int_t isRF;
+    Int_t isAdu5Trigger;
+    Int_t isG12Trigger;
+    Int_t isSoftwareTrigger;
+    Int_t isMinBiasTrigger;
+    Int_t isPayloadBlast;
     Int_t nadirFlag; 
     Int_t strongCWFlag;
     Int_t isHPolTrigger;
-    Int_t isVPolTrigger;
+    Int_t isVPolTrigger;    
 
     CalPulser pulser; 
     Bool_t isVarner; 
     Bool_t isVarner2; 
     virtual ~EventFlags() {;}
 
-    ClassDef(EventFlags,2); 
+    ClassDef(EventFlags,3); 
   }; 
 
 
@@ -94,14 +97,14 @@ public:
 
   AnitaEventSummary();
   AnitaEventSummary(const RawAnitaHeader* header);//, const Adu5Pat* pat);
-  void tagTriggerAsHPolOrVPol(const RawAnitaHeader* header);
+  void setTriggerInfomation(const RawAnitaHeader* header);
   void zeroInternals();
   virtual ~AnitaEventSummary() { ; } 
 
   
 private: 
 
-  ClassDef(AnitaEventSummary, 3); 
+  ClassDef(AnitaEventSummary, 4); 
 }; 
 
 
