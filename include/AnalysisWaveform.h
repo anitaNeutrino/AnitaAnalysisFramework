@@ -73,12 +73,13 @@ class AnalysisWaveform
     AnalysisWaveform(const AnalysisWaveform & other);  // copy constructor... more subtle than you might think! 
 
     /* Computes the (circular) correlation (in the frequency domain) of the two waveforms as a new waveform. Note that if you want to
-     * correlate two traces, they should be padded first. This does not pad them for you. It is also assumed the two are of the same length.
+     * correlate two traces, they should be padded first. This does not pad them for you, but will complain if they are not! It is also assumed the two are of the same length.
      *
      * There is no normalization done at all, the frequency values are simply multiplied appropriately
      *
      **/ 
     static AnalysisWaveform * correlation(const AnalysisWaveform * A, const AnalysisWaveform * B); 
+    bool checkIfPaddedInTime() const; 
 
     virtual ~AnalysisWaveform(); 
 
@@ -137,6 +138,7 @@ class AnalysisWaveform
     mutable int fft_len; 
     mutable FFTWComplex * fft; 
 
+    mutable bool just_padded; 
     InterpolationType interpolation_type; 
     InterpolationOptions interpolation_options; 
     mutable bool must_update_uneven; 

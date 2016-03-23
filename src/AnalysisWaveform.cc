@@ -13,6 +13,7 @@ AnalysisWaveform::AnalysisWaveform(int N, const double *x, const double * y, dou
   power_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true;
+  just_padded = false; 
 }
 
 AnalysisWaveform::AnalysisWaveform(int N, const double * y, double dt, double t0)
@@ -28,6 +29,7 @@ AnalysisWaveform::AnalysisWaveform(int N, const double * y, double dt, double t0
   power_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true;
+  just_padded = false; 
 }
 
 AnalysisWaveform::AnalysisWaveform(int N, const FFTWComplex * f, double df, double t0)
@@ -47,6 +49,7 @@ AnalysisWaveform::AnalysisWaveform(int N, const FFTWComplex * f, double df, doub
   power_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true; 
+  just_padded = false; 
 }
 
 
@@ -103,6 +106,7 @@ void AnalysisWaveform::updateEven(const TGraph * replace)
   memcpy(g_even.GetY(), replace->GetY(), replace->GetN() * sizeof(double)); 
   must_update_uneven = !uneven_equals_even; 
   must_update_freq = true; 
+  just_padded = false; 
 }
 
 
@@ -110,6 +114,7 @@ TGraph * AnalysisWaveform::updateEven()
 {
   must_update_uneven = !uneven_equals_even; 
   must_update_freq = true; 
+  just_padded = false; 
   return (TGraph *) even(); 
 }
 
@@ -119,6 +124,7 @@ TGraph * AnalysisWaveform::updateUneven()
 
   must_update_even = true; 
   must_update_freq = true; 
+  just_padded = false; 
   return (TGraph *) uneven(); 
 }
 
@@ -130,6 +136,7 @@ FFTWComplex * AnalysisWaveform::updateFreq()
   power_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true; 
+  just_padded = false; 
 
   return (FFTWComplex *) freq(); 
 }
@@ -145,6 +152,7 @@ void AnalysisWaveform::updateUneven(const TGraph * replace)
   memcpy(g_uneven.GetX(), replace->GetX(), replace->GetN() * sizeof(double)); 
   memcpy(g_uneven.GetY(), replace->GetY(), replace->GetN() * sizeof(double)); 
 
+  just_padded = false; 
   must_update_even = true; 
   must_update_freq = true; 
 }
@@ -274,6 +282,7 @@ void AnalysisWaveform::updateFreq(int new_N, const FFTWComplex * new_fft, double
   power_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true; 
+  just_padded = false; 
 }
 
 const TGraph * AnalysisWaveform::phase() const
@@ -366,6 +375,7 @@ AnalysisWaveform::AnalysisWaveform(const AnalysisWaveform & other)
   must_update_even = other.must_update_even; 
   must_update_freq = other.must_update_freq; 
   must_update_uneven = other.must_update_uneven; 
+  just_padded = other.just_padded; 
 
 
   //don't bother copying these, they can be regenerated if needed
@@ -413,8 +423,13 @@ AnalysisWaveform * AnalysisWaveform::correlation(const AnalysisWaveform *A, cons
     return 0; 
   }
 
-  // in principle, we could check if even is zeropadded to warn people but it's kinda expensive
 
+
+  if(!A->checkIfPaddedInTime() || !B->checkIfPaddedInTime())
+  {
+
+    fprintf(stderr,"warning: waveforms don't appear to be padded in time, will be computing circular correlation!\n"); 
+  }
 
   AnalysisWaveform * answer = new AnalysisWaveform(A->Neven(), A->freq(), 
                                                    A->deltaF(), A->even()->GetX()[0]); 
@@ -467,6 +482,7 @@ void AnalysisWaveform::padFreq(int npad)
   power_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true; 
+  just_padded = false; 
 }
 
 void AnalysisWaveform::padEven(int npad)
@@ -479,6 +495,21 @@ void AnalysisWaveform::padEven(int npad)
     g->GetX()[i] = g->GetX()[i-1] + dt; 
     g->GetY()[i] = 0; 
   }
+  just_padded = true; 
+}
+
+bool AnalysisWaveform::checkIfPaddedInTime() const 
+{
+  if (just_padded) return true; 
+
+  const TGraph *g = even(); 
+
+  for (int i = g->GetN()/2; i <g->GetN(); i++) 
+  {
+    if (g->GetX()[i] !=0) return false; 
+  }
+  just_padded = true; 
+  return true; 
 }
 
 void AnalysisWaveform::drawEven(const char * opt) const{ ((TGraph*)even())->Draw(opt); }

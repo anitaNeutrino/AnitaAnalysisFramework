@@ -4,6 +4,7 @@
 class FilteredAnitaEvent; 
 class AnalysisWaveform; 
 #include <cstddef>
+#include "AnitaConventions.h" 
 
 class FilterOperation
 {
@@ -26,37 +27,8 @@ class FilterOperation
 
   protected: 
     AnalysisWaveform * getWf(FilteredAnitaEvent *ev, int i); 
-    size_t nGraphs(FilteredAnitaEvent *ev); 
+    AnalysisWaveform * getWf(FilteredAnitaEvent *ev, int ant, AnitaPol::AnitaPol_t pol); 
 }; 
-
-
-
-/** A ConditionalFilterOperation only applies the passed FilterOperation 
- *  if the condition is true. The tag and description are combinations of the 
- *  passed operation and the condition tag and description provided. 
- */ 
-class ConditionalFilterOperation : public FilterOperation
-{
-
-  public: 
-    ConditionalFilterOperation(FilterOperation * operation, 
-                               bool (*condition)(FilteredAnitaEvent * ev, int trace), 
-                               const char * condition_tag, const char * condition_description) ; 
-    
-    
-
-    virtual const char * tag() const { return condition_tag; } 
-    virtual const char * description () const { return condition_desc; } 
-
-    virtual ~ConditionalFilterOperation(); 
-    virtual void process(FilteredAnitaEvent * event); 
-
-  protected:
-    bool (*fn)(FilteredAnitaEvent *, int);
-    char * condition_tag; 
-    char * condition_desc; 
-    FilterOperation * fo; 
-};
 
 
 /** For filter operations that do the same thing to each Graph */ 
@@ -70,6 +42,37 @@ class UniformFilterOperation : public FilterOperation
 
   protected: 
 }; 
+
+
+
+/** A ConditionalFilterOperation only applies the passed FilterOperation 
+ *  if the condition is true. The tag and description are combinations of the 
+ *  passed operation and the condition tag and description provided. 
+ */ 
+class ConditionalFilterOperation : public FilterOperation
+{
+
+  public: 
+    ConditionalFilterOperation(UniformFilterOperation * operation, 
+                               bool (*condition)(FilteredAnitaEvent * ev, int trace), 
+                               const char * condition_tag, const char * condition_description, bool own = false) ; 
+    
+    
+
+    virtual const char * tag() const { return condition_tag; } 
+    virtual const char * description () const { return condition_desc; } 
+
+    virtual ~ConditionalFilterOperation(); 
+    virtual void process(FilteredAnitaEvent * event); 
+
+  protected:
+    bool (*fn)(FilteredAnitaEvent *, int);
+    char * condition_tag; 
+    char * condition_desc; 
+    UniformFilterOperation * fo; 
+    bool own; 
+};
+
 
 
 
