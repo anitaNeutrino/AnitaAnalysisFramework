@@ -450,7 +450,7 @@ AnalysisWaveform * AnalysisWaveform::correlation(const AnalysisWaveform *A, cons
 void AnalysisWaveform::padFreq(int npad)
 {
   //new even size
-  int new_N = even()->GetN() * npad; 
+  int new_N = even()->GetN() * (1+npad); 
 
   //allocate new memory
   FFTWComplex * new_fft = new FFTWComplex[new_N/2+1]; 
@@ -489,13 +489,13 @@ void AnalysisWaveform::padEven(int npad)
 {
   TGraph * g = updateEven(); 
   int old_n = g->GetN(); 
-  g->Set(g->GetN() * npad); 
+  g->Set(g->GetN() *(1+npad)); 
   for (int i = old_n; i < g->GetN(); i++) 
   {
     g->GetX()[i] = g->GetX()[i-1] + dt; 
     g->GetY()[i] = 0; 
   }
-  just_padded = true; 
+  if (npad >= 1) just_padded = true; 
 }
 
 bool AnalysisWaveform::checkIfPaddedInTime() const 
