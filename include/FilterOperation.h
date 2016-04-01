@@ -54,7 +54,7 @@ class ConditionalFilterOperation : public FilterOperation
 
   public: 
     ConditionalFilterOperation(UniformFilterOperation * operation, 
-                               bool (*condition)(FilteredAnitaEvent * ev, int trace), 
+                               bool (*condition)(FilteredAnitaEvent * ev, int ant, AnitaPol::AnitaPol_t pol), 
                                const char * condition_tag, const char * condition_description, bool own = false) ; 
     
     
@@ -66,7 +66,7 @@ class ConditionalFilterOperation : public FilterOperation
     virtual void process(FilteredAnitaEvent * event); 
 
   protected:
-    bool (*fn)(FilteredAnitaEvent *, int);
+    bool (*fn)(FilteredAnitaEvent *, int, AnitaPol::AnitaPol_t);
     char * condition_tag; 
     char * condition_desc; 
     UniformFilterOperation * fo; 

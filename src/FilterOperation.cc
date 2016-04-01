@@ -16,7 +16,7 @@ ConditionalFilterOperation::~ConditionalFilterOperation()
 }
 
 ConditionalFilterOperation::ConditionalFilterOperation(UniformFilterOperation * operation, 
-                                                       bool (*condition)(FilteredAnitaEvent * ev, int trace), 
+                                                       bool (*condition)(FilteredAnitaEvent * ev, int ant, AnitaPol::AnitaPol_t), 
                                                        const char * condition_tag_suffix, const char * condition_description_suffix, bool should_own_operation) 
                                                        : fn(condition), fo(operation), own(should_own_operation)
 {
@@ -40,18 +40,21 @@ AnalysisWaveform* FilterOperation::getWf(FilteredAnitaEvent *ev, int ant, AnitaP
 
 void ConditionalFilterOperation::process(FilteredAnitaEvent * ev) 
 {
-  for (size_t i = 0; i <NUM_DIGITZED_CHANNELS; i++) 
+  for (int pol = AnitaPol::kHorizontal; pol <= AnitaPol::kVertical; pol++)
   {
-    if (fn(ev,(int)i))
+    for (int ant = 0; ant <NUM_SEAVEYS; ant++) 
     {
-      fo->processOne(getWf(ev,i)); 
+      if (fn(ev,ant, (AnitaPol::AnitaPol_t)pol))
+      {
+        fo->processOne(getWf(ev,ant, (AnitaPol::AnitaPol_t)pol)); 
+      }
     }
   }
 }
 
 void UniformFilterOperation::process(FilteredAnitaEvent * ev) 
 {
-  for (size_t i = 0; i < NUM_DIGITZED_CHANNELS; i++) 
+  for (size_t i = 0; i < NUM_SEAVEYS * 2; i++) 
   {
     processOne(getWf(ev,i)); 
   }
