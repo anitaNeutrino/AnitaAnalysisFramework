@@ -36,6 +36,25 @@ AnalysisWaveform::AnalysisWaveform(int N, const double * y, double dt, double t0
   just_padded = false; 
 }
 
+
+AnalysisWaveform::AnalysisWaveform(int N)
+  : g_even(N), dt(1), fft(0),  interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(true), must_update_even(false), uneven_equals_even(true) 
+{
+  
+  for (int i  = 0; i < N; i++) 
+  {
+    g_even.GetX()[i] = dt * i;  
+    g_even.GetY()[i] = 0; 
+  }
+  fft_len = N/2 +1; 
+  df = 1./(N * dt); 
+  power_dirty = true; 
+  power_db_dirty = true; 
+  phase_dirty = true;
+  just_padded = false; 
+
+}
+
 AnalysisWaveform::AnalysisWaveform(int N, const FFTWComplex * f, double df, double t0)
   :  g_even(N), df(df), interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(false), must_update_even(true), uneven_equals_even(true) 
 {
