@@ -32,11 +32,10 @@
  *  Those have two versions, one where you modify the return value and one where you replace the value. 
  *   
  *
- *  In order to make it seem magic, there is a lot of internal state that is complicated to reason about. Hopefully there are no bugs.. .
- *
- *   
+ *  In order to make it seem magic, there is a lot of internal state that is complicated to reason about. Hopefully there are no bugs...
  *
  * 
+ *   Cosmin Deaconu <cozzyd@kicp.uchicago.edu> 
  *
  */  
 class FFTWComplex; 
@@ -46,7 +45,12 @@ class FFTWComplex;
 class AnalysisWaveform 
 {
 
+
   public: 
+    /** Enable (or disable) a bunch of debugging crap  */
+    static void enableDebug(bool enable);  
+
+
     enum InterpolationType
     {
       AKIMA, 
@@ -66,19 +70,28 @@ class AnalysisWaveform
       double mu; 
     }; 
 
-    /** Constructors */ 
-    AnalysisWaveform(int Nt, const double * x, const double * y, double nominal_dt = 1./2.6, InterpolationType type = AKIMA, InterpolationOptions * opt  = 0);  // constructor from unevenly sampled waveform
-    AnalysisWaveform(int Nt, const double * y, double dt, double t0);  //constructor from evenly sampled waveform (in which case, even and uneven are initialized to the same) 
-    AnalysisWaveform(int Nt, const FFTWComplex * f, double df, double t0);  //constructor from frequency domain waveform (in which case, even and uneven are the initialized to the same) 
+    /* Constructors */ 
+
+    /** Constructor for unevenly sampled waveform */ 
+    AnalysisWaveform(int Nt, const double * x, const double * y, double nominal_dt = 1./2.6, InterpolationType type = AKIMA, InterpolationOptions * opt  = 0);
+    /** Constructor for evenly sampled waveform. Uneven waveform is set to even. */ 
+    AnalysisWaveform(int Nt, const double * y, double dt, double t0);  
+
+    /** Constructor from frequency domain (and uneven is set to be the same) */ 
+    AnalysisWaveform(int Nt, const FFTWComplex * f, double df, double t0);  
+    AnalysisWaveform(int Nt = 256); //empty, even constructor
+
     AnalysisWaveform(const AnalysisWaveform & other);  // copy constructor... more subtle than you might think! 
 
-    /* Computes the (circular) correlation (in the frequency domain) of the two waveforms as a new waveform. Note that if you want to
+    /** Computes the (circular) correlation (in the frequency domain) of the two waveforms as a new waveform. Note that if you want to
      * correlate two traces, they should be padded first. This does not pad them for you, but will complain if they are not! It is also assumed the two are of the same length.
      *
      * There is no normalization done at all, the frequency values are simply multiplied appropriately
      *
      **/ 
-    static AnalysisWaveform * correlation(const AnalysisWaveform * A, const AnalysisWaveform * B); 
+    static AnalysisWaveform * correlation(const AnalysisWaveform * A, const AnalysisWaveform * B, int npadfreq = 0, double scale =1 ); 
+
+    /** Checks if the even waveform is zeropadded (by comparing second half to zero) */ 
     bool checkIfPaddedInTime() const; 
 
     virtual ~AnalysisWaveform(); 
@@ -90,12 +103,13 @@ class AnalysisWaveform
     const TGraph * power() const; 
     const TGraph * powerdB() const; 
     const TGraph * phase() const; 
+
     int Nfreq() const { (void) freq(); return fft_len; } 
     int Neven() const { return even()->GetN(); } 
     int Nuneven() const { return uneven()->GetN(); } 
     double deltaT() const { return dt ; } 
     double deltaF() const { return df ; }
-
+    void forceEvenSize(int size); 
     // drawers since drawing is non-const (and we don't care about silly things like axes for constness)
     void drawEven(const char * opt = "") const; 
     void drawUneven(const char * opt = "") const; 
@@ -103,6 +117,7 @@ class AnalysisWaveform
     void drawPowerdB(const char * opt = "") const; 
     void drawPhase(const char * opt = "") const; 
 
+    double evalEven(double t) const; //TODO: add additional evaluation methods other than linear interpolation. indeed, would be best to eval multiple points at same time
 
     /*  Update frequency graph by modifying return value */ 
     FFTWComplex * updateFreq(); 

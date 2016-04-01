@@ -1,8 +1,12 @@
 #include "AnalysisWaveform.h" 
 #include "FFTtools.h" 
+#include "TAxis.h"
 #include "RFInterpolate.h" 
 #include <assert.h>
 
+static bool DEBUGON = false; 
+
+void AnalysisWaveform::enableDebug(bool debug) { DEBUGON = debug; } 
 
 
 AnalysisWaveform::AnalysisWaveform(int N, const double *x, const double * y, double nominal_dt, InterpolationType interp_type, InterpolationOptions *opt)
@@ -70,6 +74,8 @@ const TGraph * AnalysisWaveform::uneven() const
 const TGraph * AnalysisWaveform::even()  const
 {
 
+  if (DEBUGON) printf("Called even()!\n"); 
+  if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
   //kaboom 
   assert (!(must_update_even && must_update_freq &&  must_update_uneven)); 
 
@@ -88,6 +94,8 @@ const FFTWComplex * AnalysisWaveform::freq()  const
 {
 
 
+  if (DEBUGON) printf("Called freq()!\n"); 
+  if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
   if (must_update_freq) 
   {
     calculateFreqFromEven(); 
@@ -101,6 +109,10 @@ const FFTWComplex * AnalysisWaveform::freq()  const
 
 void AnalysisWaveform::updateEven(const TGraph * replace)
 {
+
+  if (DEBUGON) printf("Called updateEven(replace)!\n"); 
+  if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+
   g_even.Set(replace->GetN()); 
   memcpy(g_even.GetX(), replace->GetX(), replace->GetN() * sizeof(double)); 
   memcpy(g_even.GetY(), replace->GetY(), replace->GetN() * sizeof(double)); 
@@ -112,33 +124,42 @@ void AnalysisWaveform::updateEven(const TGraph * replace)
 
 TGraph * AnalysisWaveform::updateEven()
 {
+  if (DEBUGON) printf("Called updateEven()!\n"); 
+  if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+  TGraph * ev = (TGraph *) even(); 
   must_update_uneven = !uneven_equals_even; 
   must_update_freq = true; 
   just_padded = false; 
-  return (TGraph *) even(); 
+  return ev; 
 }
 
 TGraph * AnalysisWaveform::updateUneven()
 {
-  if (uneven_equals_even) return updateEven(); 
-
+  if (DEBUGON) printf("Called updateUneven()!\n"); 
+  if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+  TGraph * g = (TGraph*) uneven(); 
+  uneven_equals_even = false; 
   must_update_even = true; 
   must_update_freq = true; 
   just_padded = false; 
-  return (TGraph *) uneven(); 
+  return g; 
 }
 
 FFTWComplex * AnalysisWaveform::updateFreq() 
 {
-  must_update_even = true; 
-  must_update_uneven = !uneven_equals_even; 
+  if (DEBUGON) printf("Called updateFreq()!\n"); 
+  if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+  FFTWComplex * fr = (FFTWComplex*) freq();
 
   power_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true; 
   just_padded = false; 
 
-  return (FFTWComplex *) freq(); 
+  must_update_even = true; 
+  must_update_uneven = !uneven_equals_even; 
+
+  return fr; 
 }
 
 
@@ -146,12 +167,16 @@ FFTWComplex * AnalysisWaveform::updateFreq()
 
 void AnalysisWaveform::updateUneven(const TGraph * replace)
 {
-  if (uneven_equals_even) updateEven(replace); 
+
+  if (DEBUGON) printf("Called updateUneven(replace)!\n"); 
+  if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+
 
   g_uneven.Set(replace->GetN()); 
   memcpy(g_uneven.GetX(), replace->GetX(), replace->GetN() * sizeof(double)); 
   memcpy(g_uneven.GetY(), replace->GetY(), replace->GetN() * sizeof(double)); 
 
+  uneven_equals_even = false; 
   just_padded = false; 
   must_update_even = true; 
   must_update_freq = true; 
@@ -263,6 +288,10 @@ void AnalysisWaveform::calculateFreqFromEven() const
 
 void AnalysisWaveform::updateFreq(int new_N, const FFTWComplex * new_fft, double new_df )
 {
+
+  if (DEBUGON) printf("Called updateFreq(replace)!\n"); 
+  if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+
   if (new_N && new_N != g_even.GetN())
   {
     delete [] fft; 
@@ -357,6 +386,42 @@ AnalysisWaveform::~AnalysisWaveform()
 }
 
 
+void AnalysisWaveform::forceEvenSize(int size)
+{
+  int old_size = Neven(); 
+  TGraph * g = updateEven(); 
+  g->Set(size); 
+
+  if (size > old_size)
+  {
+    for (int i = old_size; i < size; i++)
+    {
+      g->GetX()[i] = g->GetX()[i-1] + dt; 
+    }
+  }
+
+}
+
+double AnalysisWaveform::evalEven(double t)  const
+{
+
+  const TGraph * g = even(); 
+  double t0 = g->GetX()[0]; 
+  
+  int bin_low = int ((t-t0)/dt); 
+
+  if (bin_low < 0) return 0; 
+  if (bin_low > g->GetN()) return 0; 
+  if (bin_low ==  g->GetN()) return g->GetY()[g->GetN()-1]; 
+
+  int bin_high = bin_low + 1; 
+  double frac = (t - (t0 + dt * bin_low)) / dt; 
+
+  double val_low = g->GetY()[bin_low]; 
+  double val_high = g->GetY()[bin_high]; 
+
+  return frac * val_high + (1-frac) * val_low; 
+}
 
 AnalysisWaveform::AnalysisWaveform(const AnalysisWaveform & other) 
 {
@@ -384,7 +449,8 @@ AnalysisWaveform::AnalysisWaveform(const AnalysisWaveform & other)
   phase_dirty = true; 
 
 
-  // we must copy g_uneven if it's not qual to even 
+
+  // we must copy g_uneven if it's not equal to even 
   if (!uneven_equals_even)
   {
     g_uneven = other.g_uneven; 
@@ -393,15 +459,16 @@ AnalysisWaveform::AnalysisWaveform(const AnalysisWaveform & other)
 
   if (!must_update_even)
   {
-    g_even = other.g_even; 
+    g_even = *other.even(); 
   }
   else // still need the size! 
   {
-    g_even.Set(other.g_even.GetN()); 
+    g_even.Set(other.Neven()); 
   }
 
   if (!must_update_freq)
   {
+    fft = new FFTWComplex[fft_len]; 
     memcpy(fft, other.fft, fft_len * sizeof(FFTWComplex)); 
   }
   else
@@ -409,17 +476,13 @@ AnalysisWaveform::AnalysisWaveform(const AnalysisWaveform & other)
     fft = 0; 
   }
 
-  
-
-
-
 }
 
-AnalysisWaveform * AnalysisWaveform::correlation(const AnalysisWaveform *A, const AnalysisWaveform *B) 
+AnalysisWaveform * AnalysisWaveform::correlation(const AnalysisWaveform *A, const AnalysisWaveform *B, int npad, double scale) 
 {
   if (A->Nfreq() != B->Nfreq()) 
   {
-    fprintf(stderr,"correlation does not handle the case where A and B are of different lengths!\n"); 
+    fprintf(stderr,"correlation does not handle the case where A and B are of different lengths (%d vs. %d)!\n", A->Nfreq(), B->Nfreq()); 
     return 0; 
   }
 
@@ -430,25 +493,51 @@ AnalysisWaveform * AnalysisWaveform::correlation(const AnalysisWaveform *A, cons
 
     fprintf(stderr,"warning: waveforms don't appear to be padded in time, will be computing circular correlation!\n"); 
   }
+  double offset = A->even()->GetX()[0] - B->even()->GetX()[0]; 
 
   AnalysisWaveform * answer = new AnalysisWaveform(A->Neven(), A->freq(), 
                                                    A->deltaF(), A->even()->GetX()[0]); 
 
+  int N = answer->even()->GetN(); 
   FFTWComplex * update = answer->updateFreq(); 
 
+  const FFTWComplex * Bfreq = B->freq(); 
+  
   for (int i = 0; i < B->Nfreq(); i++) 
   {
     FFTWComplex vA = update[i]; 
-    FFTWComplex vB = B->freq()[i]; 
-    update[i].re =  vA.re * vB.re + vA.im * vB.im ; 
-    update[i].im =  vA.im * vB.re - vA.re * vB.im; 
+    FFTWComplex vB = Bfreq[i]; 
+    update[i].re =  (vA.re * vB.re + vA.im * vB.im) / N / scale; 
+    update[i].im =  (vA.im * vB.re - vA.re * vB.im) / N / scale; 
   }
+
+
+  answer->padFreq(npad); 
+
+  N = answer->even()->GetN(); 
+  TGraph * g = new TGraph(N); 
+
+  double dt = answer->deltaT(); 
+  memcpy(g->GetY(), answer->even()->GetY() + N/2, N/2 * sizeof(double)); 
+  memcpy(g->GetY()+ N/2, answer->even()->GetY(), N/2 * sizeof(double)); 
+
+  for (int i = 0; i < N; i++) 
+  {
+    g->GetX()[i] =(i - N/2) * dt + offset; 
+  }
+
+
+
+
+  answer->updateEven(g); 
+
 
   return answer; 
 }
 
 void AnalysisWaveform::padFreq(int npad)
 {
+  if (npad < 1) return; 
   //new even size
   int new_N = even()->GetN() * (1+npad); 
 
@@ -459,8 +548,8 @@ void AnalysisWaveform::padFreq(int npad)
   memcpy(new_fft, freq(), Nfreq() * sizeof(FFTWComplex));
 
   //scale
-  FFTWComplex scale(npad,0); 
-  for (int i =0; i < Nfreq(); i++) { new_fft[i] *= scale; }
+  double scale = (1 + npad); 
+  for (int i =0; i < Nfreq(); i++) { new_fft[i].re *= scale;  new_fft[i].im *= scale; }
 
 
   // zero rest 
@@ -487,6 +576,7 @@ void AnalysisWaveform::padFreq(int npad)
 
 void AnalysisWaveform::padEven(int npad)
 {
+  if (npad < 1) return; 
   TGraph * g = updateEven(); 
   int old_n = g->GetN(); 
   g->Set(g->GetN() *(1+npad)); 
