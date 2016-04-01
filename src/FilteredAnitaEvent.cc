@@ -18,15 +18,20 @@ FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterSt
 {
 
   // Initialize the filtered graphs with the raw graphs from Raw Anita Event 
-  for (unsigned i = 0; i < NUM_DIGITZED_CHANNELS; i++) 
+  
+  int k = 0; 
+  for (int pol = AnitaPol::kHorizontal; pol <= AnitaPol::kVertical; pol++)
   {
-    filteredGraphs[i] = new AnalysisWaveform (useful->fNumPoints[i], useful->fTimes[i], useful->fVolts[i]); 
-    int surf,chan; 
-    AnitaGeomTool::Instance()->getSurfChanFromChanIndex(i, surf,chan); 
-    int ant; 
-    AnitaPol::AnitaPol_t pol;
-    AnitaGeomTool::Instance()->getAntPolFromSurfChan(surf,chan,ant,pol); 
-    filteredGraphsByAntPol[pol][ant] = filteredGraphs[i];  
+    for (unsigned ant = 0; ant < NUM_SEAVEYS; ant++) 
+    {
+      int i = AnitaGeomTool::Instance()->getChanIndexFromAntPol(ant, (AnitaPol::AnitaPol_t) pol); 
+      filteredGraphs[k] = new AnalysisWaveform (useful->fNumPoints[i], useful->fTimes[i], useful->fVolts[i]); 
+      rawGraphs[k] = new AnalysisWaveform (useful->fNumPoints[i], useful->fTimes[i], useful->fVolts[i]); 
+      filteredGraphs[k]->forceEvenSize(260); // do this for correlations 
+      filteredGraphsByAntPol[pol][ant] = filteredGraphs[k];  
+      rawGraphsByAntPol[pol][ant] = rawGraphs[k];  
+      k++; 
+    }
   }
 
   //tell the strategy to process this
@@ -37,9 +42,10 @@ FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterSt
 
 FilteredAnitaEvent::~FilteredAnitaEvent() 
 {
-  for (unsigned i = 0; i < NUM_DIGITZED_CHANNELS; i++ )
+  for (unsigned i = 0; i < 2 * NUM_SEAVEYS; i++ )
   {
     delete filteredGraphs[i]; 
+    delete rawGraphs[i]; 
   }
 }
 
