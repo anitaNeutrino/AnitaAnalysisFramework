@@ -301,6 +301,7 @@ void AnalysisWaveform::calculateFreqFromEven() const
 
   const TGraph * g = even();  // in case it must be converted from uneven
 
+  assert(g->GetN() > 0); 
   dt = g->GetX()[1] - g->GetX()[0]; 
   fft_len = g->GetN()/2+1;  
   df = 1./ (g->GetN() * dt); 
@@ -529,6 +530,9 @@ AnalysisWaveform::AnalysisWaveform(const AnalysisWaveform & other)
   power_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true; 
+  hilbert_dirty = true; 
+  hilbert_transform = 0; 
+
 
 
 
