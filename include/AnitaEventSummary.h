@@ -23,17 +23,16 @@ public:
     Bool_t triggered; 
     Bool_t masked; 
 
-    Double_t latitude;
-    Double_t longitude;
-    Double_t altitude;
+    Double_t latitude;// on continent, or -9999 if doesn't intersect
+    Double_t longitude;// on continent, or -9999 if doesn't intersect
+    Double_t altitude;// on continent, or -9999 if doesn't intersect
     
-    /* covariance matrix?*/ 
-    //    Double_t var_theta;  
-    //    Double_t var_phi; 
-    //    Double_t covar; 
+    Double_t var_theta;  
+    Double_t var_phi; 
+    Double_t covar; 
 
     virtual ~PointingHypothesis() {;}
-    ClassDef(PointingHypothesis,2); 
+    ClassDef(PointingHypothesis,3); 
   }; 
 
   class WaveformInfo
@@ -54,11 +53,11 @@ public:
   public: 
     enum CalPulser
       {
-	NONE, 
-	WAIS, 
-	LDB, 
-	SIPLE,
-	TD
+        NONE, 
+        WAIS, 
+        LDB, 
+        SIPLE,
+        TD
       }; 
 
     Int_t isGood;
@@ -85,15 +84,17 @@ public:
   Int_t run; 
   UInt_t eventNumber; 
   
+  Int_t nPeaks[AnitaPol::kNotAPol]; //Number of peaks actually found; this might be less than maxDirectionsPerPol 
   PointingHypothesis peak[AnitaPol::kNotAPol][maxDirectionsPerPol]; 
   WaveformInfo coherent[AnitaPol::kNotAPol][maxDirectionsPerPol];
   WaveformInfo deconvolved[AnitaPol::kNotAPol][maxDirectionsPerPol];
+
+
   // WaveformInfo maxWaveform;  // do we want this for all ? 
 
   EventFlags flags; 
   // Adu5Pat gps;
   // RawAnitaHeader header;
-
 
   AnitaEventSummary();
   AnitaEventSummary(const RawAnitaHeader* header);//, const Adu5Pat* pat);
@@ -104,7 +105,7 @@ public:
   
 private: 
 
-  ClassDef(AnitaEventSummary, 4); 
+  ClassDef(AnitaEventSummary, 5); 
 }; 
 
 

@@ -37,9 +37,11 @@ void AnitaEventSummary::zeroInternals(){
   eventNumber = 0;
 
   for(Int_t polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
+    nPeaks[polInd] = 0; 
     for(Int_t dir=0; dir < maxDirectionsPerPol; dir++){
       peak[polInd][dir].value = 0;
       peak[polInd][dir].theta = 0;
+      peak[polInd][dir].phi = 0;
       peak[polInd][dir].value = 0;
       peak[polInd][dir].snr = 0;
       peak[polInd][dir].hwAngle = 0;
