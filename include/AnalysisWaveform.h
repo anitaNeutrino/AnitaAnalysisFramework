@@ -79,7 +79,7 @@ class AnalysisWaveform
 
     /** Constructor from frequency domain (and uneven is set to be the same) */ 
     AnalysisWaveform(int Nt, const FFTWComplex * f, double df, double t0);  
-    AnalysisWaveform(int Nt = 256); //empty, even constructor
+    AnalysisWaveform(int Nt = 260, double dt=1, double t0=0); //empty, even constructor
 
     AnalysisWaveform(const AnalysisWaveform & other);  // copy constructor... more subtle than you might think! 
 
@@ -103,6 +103,8 @@ class AnalysisWaveform
     const TGraph * power() const; 
     const TGraph * powerdB() const; 
     const TGraph * phase() const; 
+    const TGraph * hilbertEnvelope() const; 
+    const AnalysisWaveform * hilbertTransform() const; 
 
     int Nfreq() const { (void) freq(); return fft_len; } 
     int Neven() const { return even()->GetN(); } 
@@ -112,12 +114,15 @@ class AnalysisWaveform
     void forceEvenSize(int size); 
     // drawers since drawing is non-const (and we don't care about silly things like axes for constness)
     void drawEven(const char * opt = "") const; 
+    void drawHilbertEnvelope(const char * opt = "") const; 
     void drawUneven(const char * opt = "") const; 
     void drawPower(const char * opt = "") const; 
     void drawPowerdB(const char * opt = "") const; 
     void drawPhase(const char * opt = "") const; 
 
     double evalEven(double t) const; //TODO: add additional evaluation methods other than linear interpolation. indeed, would be best to eval multiple points at same time
+
+
 
     /*  Update frequency graph by modifying return value */ 
     FFTWComplex * updateFreq(); 
@@ -144,6 +149,7 @@ class AnalysisWaveform
     void calculateUnevenFromEven() const;
 
     mutable TGraph g_uneven; 
+    mutable TGraph g_hilbert_envelope; 
     mutable TGraph g_even; 
     mutable TGraph g_power; 
     mutable TGraph g_power_db; 
@@ -163,6 +169,9 @@ class AnalysisWaveform
     mutable bool power_dirty; 
     mutable bool power_db_dirty; 
     mutable bool phase_dirty; 
+    mutable bool hilbert_envelope_dirty; 
+    mutable bool hilbert_dirty; 
+    mutable AnalysisWaveform * hilbert_transform;
 }; 
 
 

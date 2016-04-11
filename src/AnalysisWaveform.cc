@@ -9,67 +9,79 @@ static bool DEBUGON = false;
 void AnalysisWaveform::enableDebug(bool debug) { DEBUGON = debug; } 
 
 
+
+
+static void 
+__attribute__((__optimize__("fast-math","O3")))
+fillEven(int N, double * __restrict__ x, double dt, double t0)
+{
+  for (int i = 0; i < N; i++)
+  {
+    x[i] = i * dt + t0; 
+  }
+}
+
+
 AnalysisWaveform::AnalysisWaveform(int N, const double *x, const double * y, double nominal_dt, InterpolationType interp_type, InterpolationOptions *opt)
-  : g_uneven(N,x,y),  dt(nominal_dt), fft(0), interpolation_type(interp_type), must_update_uneven(false), must_update_freq(true), must_update_even(true), uneven_equals_even(false)  
+  : g_uneven(N,x,y),  dt(nominal_dt), fft(0), interpolation_type(interp_type), must_update_uneven(false), must_update_freq(true), must_update_even(true), uneven_equals_even(false), hilbert_transform(0)  
 {
 
   if (opt) interpolation_options = *opt; 
   power_dirty = true; 
+  hilbert_dirty = true; 
   power_db_dirty = true; 
+  hilbert_envelope_dirty = true; 
   phase_dirty = true;
   just_padded = false; 
 }
 
 AnalysisWaveform::AnalysisWaveform(int N, const double * y, double dt, double t0)
-  : g_even(N), dt(dt), fft(0),  interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(true), must_update_even(false), uneven_equals_even(true) 
+  : g_even(N), dt(dt), fft(0),  interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(true), must_update_even(false), uneven_equals_even(true), hilbert_transform(0) 
 {
-  for (int i  = 0; i < N; i++) 
-  {
-    g_even.GetX()[i] = t0  + dt * i;  
-    g_even.GetY()[i] = y[i]; 
-  }
+  fillEven(N,g_even.GetX(),dt,t0); 
+  memcpy(g_even.GetY(), y, sizeof(double) * N); 
   fft_len = N/2 +1; 
   df = 1./(N * dt); 
   power_dirty = true; 
+  hilbert_dirty = true; 
   power_db_dirty = true; 
+  hilbert_envelope_dirty = true; 
   phase_dirty = true;
   just_padded = false; 
 }
 
 
-AnalysisWaveform::AnalysisWaveform(int N)
-  : g_even(N), dt(1), fft(0),  interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(true), must_update_even(false), uneven_equals_even(true) 
+AnalysisWaveform::AnalysisWaveform(int N, double dt, double t0)
+  : g_even(N), dt(dt), fft(0),  interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(true), must_update_even(false), uneven_equals_even(true), hilbert_transform(0) 
 {
   
-  for (int i  = 0; i < N; i++) 
-  {
-    g_even.GetX()[i] = dt * i;  
-    g_even.GetY()[i] = 0; 
-  }
+  fillEven(N,g_even.GetX(),dt,t0); 
+  memset(g_even.GetY(),0, sizeof(double) * N); 
   fft_len = N/2 +1; 
   df = 1./(N * dt); 
   power_dirty = true; 
+  hilbert_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true;
+  hilbert_envelope_dirty = true; 
   just_padded = false; 
 
 }
 
 AnalysisWaveform::AnalysisWaveform(int N, const FFTWComplex * f, double df, double t0)
-  :  g_even(N), df(df), interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(false), must_update_even(true), uneven_equals_even(true) 
+  :  g_even(N), df(df), interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(false), must_update_even(true), uneven_equals_even(true), hilbert_transform(0) 
 {
   fft_len = N/2 +1; 
   fft = new FFTWComplex[fft_len]; 
   memcpy(fft, f, fft_len * sizeof(FFTWComplex)); 
   dt = 1./ (N*df); 
 
-  for (int i  = 0; i < N; i++) 
-  {
-    g_even.GetX()[i] = t0  + dt * i;  
-    g_even.GetY()[i] = 0; 
-  }
+  fillEven(N,g_even.GetX(),dt,t0); 
+  memset(g_even.GetY(),0, sizeof(double) * N); 
 
   power_dirty = true; 
+  hilbert_dirty = true; 
+  hilbert_envelope_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true; 
   just_padded = false; 
@@ -138,6 +150,7 @@ void AnalysisWaveform::updateEven(const TGraph * replace)
   must_update_uneven = !uneven_equals_even; 
   must_update_freq = true; 
   just_padded = false; 
+  hilbert_envelope_dirty = true; 
 }
 
 
@@ -149,6 +162,7 @@ TGraph * AnalysisWaveform::updateEven()
   must_update_uneven = !uneven_equals_even; 
   must_update_freq = true; 
   just_padded = false; 
+  hilbert_envelope_dirty = true; 
   return ev; 
 }
 
@@ -172,6 +186,7 @@ FFTWComplex * AnalysisWaveform::updateFreq()
 
   power_dirty = true; 
   power_db_dirty = true; 
+  hilbert_dirty = true;
   phase_dirty = true; 
   just_padded = false; 
 
@@ -259,6 +274,7 @@ void AnalysisWaveform::calculateEvenFromUneven()  const
                                                   interpolation_options.regularization_order); 
 
   }
+  hilbert_envelope_dirty = true; 
 
   must_update_even = false; 
 }
@@ -271,13 +287,11 @@ void AnalysisWaveform::calculateEvenFromFreq() const
   double t0 = g_even.GetX()[0]; 
   if (g_even.GetX()[1] - t0 != dt) 
   {
-    for (int i = 1; i < g_even.GetN(); i++) 
-    {
-      g_even.GetX()[i] = i * dt + t0; 
-    }
+    fillEven(g_even.GetN(), g_even.GetX(), dt,t0); 
   }
   
   delete [] y; 
+  hilbert_envelope_dirty = true; 
 
   must_update_even = false; 
 }
@@ -299,6 +313,7 @@ void AnalysisWaveform::calculateFreqFromEven() const
 
   must_update_freq = false; 
   power_dirty = true; 
+  hilbert_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true; 
 }
@@ -372,6 +387,53 @@ const TGraph * AnalysisWaveform::powerdB() const
 }
 
 
+const AnalysisWaveform * AnalysisWaveform::hilbertTransform() const 
+{
+
+  (void) freq(); 
+
+  if (hilbert_dirty)
+  {
+    if (hilbert_transform) delete hilbert_transform; 
+    hilbert_transform = new AnalysisWaveform(*this); 
+
+    FFTWComplex * hilbert = hilbert_transform->updateFreq(); 
+    for (int i = 0; i < fft_len; i++) 
+    {
+      double temp_im = hilbert[i].im; 
+      hilbert[i].im = hilbert[i].re; 
+      hilbert[i].re = - temp_im; 
+    }
+
+    hilbert_dirty = false; 
+  }
+
+
+  return hilbert_transform; 
+}
+
+const TGraph * AnalysisWaveform::hilbertEnvelope() const
+{
+  const TGraph * the_even = even(); 
+
+  if (hilbert_envelope_dirty)
+  {
+    g_hilbert_envelope = *the_even; 
+    const AnalysisWaveform * hilbert = hilbertTransform(); 
+
+    double * y = g_hilbert_envelope.GetY(); 
+    const double * H = hilbert->even()->GetY(); 
+    for (int i = 0; i < g_hilbert_envelope.GetN(); i++) 
+    {
+      y[i] = sqrt(y[i] * y[i] + H[i]*H[i]); 
+    }
+
+    hilbert_envelope_dirty = false; 
+
+  }
+
+  return &g_hilbert_envelope; 
+}
 
 const TGraph * AnalysisWaveform::power() const
 {
@@ -400,7 +462,8 @@ AnalysisWaveform::~AnalysisWaveform()
   if (fft) 
     delete [] fft; 
 
-
+  if (hilbert_transform) 
+    delete hilbert_transform; 
 
 }
 
@@ -593,6 +656,7 @@ void AnalysisWaveform::padFreq(int npad)
   just_padded = false; 
 }
 
+
 void AnalysisWaveform::padEven(int npad)
 {
   if (npad < 1) return; 
@@ -626,4 +690,5 @@ void AnalysisWaveform::drawUneven(const char * opt) const{ ((TGraph*)uneven())->
 void AnalysisWaveform::drawPower(const char * opt)const { ((TGraph*)power())->Draw(opt); }
 void AnalysisWaveform::drawPowerdB(const char * opt)const { ((TGraph*)powerdB())->Draw(opt); }
 void AnalysisWaveform::drawPhase(const char * opt) const{ ((TGraph*)phase())->Draw(opt); }
+void AnalysisWaveform::drawHilbertEnvelope(const char * opt) const{ ((TGraph*)hilbertEnvelope())->Draw(opt); }
 
