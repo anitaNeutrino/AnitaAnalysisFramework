@@ -28,6 +28,7 @@ FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterSt
       filteredGraphs[k] = new AnalysisWaveform (useful->fNumPoints[i], useful->fTimes[i], useful->fVolts[i]); 
       rawGraphs[k] = new AnalysisWaveform (useful->fNumPoints[i], useful->fTimes[i], useful->fVolts[i]); 
       filteredGraphs[k]->forceEvenSize(260); // do this for correlations 
+      rawGraphs[k]->forceEvenSize(260); // do this for correlations 
       filteredGraphsByAntPol[pol][ant] = filteredGraphs[k];  
       rawGraphsByAntPol[pol][ant] = rawGraphs[k];  
       k++; 

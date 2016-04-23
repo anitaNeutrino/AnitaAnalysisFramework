@@ -14,7 +14,7 @@
 
 
   TCanvas corig("corig","corig",800,800) ; 
-  corig.Divide(2,2); 
+  corig.Divide(2,3); 
   corig.cd(1); 
   g->Draw(); 
   corig.cd(2); 
@@ -23,6 +23,10 @@
   sig.drawEven(); 
   corig.cd(4); 
   sig.drawPower(); 
+  corig.cd(5); 
+  sig.drawPhase(); 
+  corig.cd(6); 
+  sig.drawHilbertEnvelope(); 
   
 
   TCanvas ccorr("ccorr","ccorr",800,800) ; 

@@ -27,12 +27,12 @@ public:
     Double_t longitude;// on continent, or -9999 if doesn't intersect
     Double_t altitude;// on continent, or -9999 if doesn't intersect
     
-    Double_t var_theta;  
-    Double_t var_phi; 
-    Double_t covar; 
+    Double_t sigma_theta;  
+    Double_t sigma_phi; 
+    Double_t rho; 
 
     virtual ~PointingHypothesis() {;}
-    ClassDef(PointingHypothesis,3); 
+    ClassDef(PointingHypothesis,4); 
   }; 
 
   class WaveformInfo

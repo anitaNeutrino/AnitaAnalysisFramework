@@ -42,6 +42,7 @@ void FilterStrategy::process(FilteredAnitaEvent * ev)
   int tree_index = 0; 
   for (size_t op = 0; op < operations.size(); op++) 
   {
+//    printf("DOING OPERATION %lu!!!!\n", op); 
     operations[op]->process(ev); 
 
     if (f && operations[op]->nOutputs() > 0)

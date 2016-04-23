@@ -23,7 +23,7 @@ fillEven(int N, double * __restrict__ x, double dt, double t0)
 
 
 AnalysisWaveform::AnalysisWaveform(int N, const double *x, const double * y, double nominal_dt, InterpolationType interp_type, InterpolationOptions *opt)
-  : g_uneven(N,x,y),  dt(nominal_dt), fft(0), interpolation_type(interp_type), must_update_uneven(false), must_update_freq(true), must_update_even(true), uneven_equals_even(false), hilbert_transform(0)  
+  : g_uneven(N,x,y),  dt(nominal_dt), fft(0), interpolation_type(interp_type), must_update_uneven(false), must_update_freq(true), must_update_even(true), uneven_equals_even(false), hilbert_transform(0)
 {
 
   if (opt) interpolation_options = *opt; 
@@ -36,7 +36,7 @@ AnalysisWaveform::AnalysisWaveform(int N, const double *x, const double * y, dou
 }
 
 AnalysisWaveform::AnalysisWaveform(int N, const double * y, double dt, double t0)
-  : g_even(N), dt(dt), fft(0),  interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(true), must_update_even(false), uneven_equals_even(true), hilbert_transform(0) 
+  : g_even(N), dt(dt), fft(0),  interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(true), must_update_even(false), uneven_equals_even(true), hilbert_transform(0)
 {
   fillEven(N,g_even.GetX(),dt,t0); 
   memcpy(g_even.GetY(), y, sizeof(double) * N); 
@@ -52,7 +52,7 @@ AnalysisWaveform::AnalysisWaveform(int N, const double * y, double dt, double t0
 
 
 AnalysisWaveform::AnalysisWaveform(int N, double dt, double t0)
-  : g_even(N), dt(dt), fft(0),  interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(true), must_update_even(false), uneven_equals_even(true), hilbert_transform(0) 
+  : g_even(N), dt(dt), fft(0),  interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(true), must_update_even(false), uneven_equals_even(true), hilbert_transform(0)
 {
   
   fillEven(N,g_even.GetX(),dt,t0); 
@@ -69,7 +69,7 @@ AnalysisWaveform::AnalysisWaveform(int N, double dt, double t0)
 }
 
 AnalysisWaveform::AnalysisWaveform(int N, const FFTWComplex * f, double df, double t0)
-  :  g_even(N), df(df), interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(false), must_update_even(true), uneven_equals_even(true), hilbert_transform(0) 
+  :  g_even(N), df(df), interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(false), must_update_even(true), uneven_equals_even(true), hilbert_transform(0)
 {
   fft_len = N/2 +1; 
   fft = new FFTWComplex[fft_len]; 
@@ -249,27 +249,31 @@ void AnalysisWaveform::calculateEvenFromUneven()  const
 
 
   const TGraph * g = uneven(); 
+  int npoints = (g->GetX()[g->GetN()-1] - g->GetX()[0]) / dt; 
+  g_even.Set(npoints); 
+  double t0 = g->GetX()[0]; 
+  for (int i = 0; i < g_even.GetN(); i++) 
+  {
+    double x = t0 + i * dt; 
+    g_even.GetX()[i] = x;   
 
+  }
+   
   if (interpolation_type == AKIMA) 
   {
     ROOT::Math::Interpolator irp(g->GetN(), ROOT::Math::Interpolation::kAKIMA); 
     irp.SetData(g->GetN(), g->GetX(), g->GetY()); 
      
-    int npoints = (g->GetX()[g->GetN()-1] - g->GetX()[0]) / dt; 
-    g_even.Set(npoints); 
 
-    double t0 = g->GetX()[0]; 
 
     for (int i = 0; i < g_even.GetN(); i++) 
     {
-      double x = t0 + i * dt; 
-      g_even.GetY()[i] = irp.Eval(x); 
-      g_even.GetX()[i] = x;   
+      g_even.GetY()[i] = irp.Eval(g_even.GetX()[i]); 
     }
   }
   else 
   {
-    FFTtools::getInterpolatedGraphSparseInvert(g, &g_uneven, interpolation_options.max_distance, 0, 0, 
+    FFTtools::getInterpolatedGraphSparseInvert(g, &g_even, interpolation_options.max_distance, 0, 0, 
                                                   interpolation_type == SPARSE_YEN ? 0 : interpolation_options.mu, 
                                                   interpolation_options.regularization_order); 
 
@@ -308,7 +312,9 @@ void AnalysisWaveform::calculateFreqFromEven() const
 
 
   if (fft) 
+  {
     delete [] fft; 
+  }
 
   fft = FFTtools::doFFT(g->GetN(), g->GetY()); 
 
@@ -334,6 +340,7 @@ void AnalysisWaveform::updateFreq(int new_N, const FFTWComplex * new_fft, double
     fft_len = new_N/2 + 1; 
     g_even.Set(new_N); 
   }
+
   memcpy(fft, new_fft, fft_len * sizeof(FFTWComplex)); 
   if (new_df)
   {
@@ -494,8 +501,8 @@ double AnalysisWaveform::evalEven(double t)  const
   int bin_low = int ((t-t0)/dt); 
 
   if (bin_low < 0) return 0; 
-  if (bin_low > g->GetN()) return 0; 
-  if (bin_low ==  g->GetN()) return g->GetY()[g->GetN()-1]; 
+  if (bin_low >= g->GetN()) return 0; 
+  if (bin_low ==  g->GetN()-1) return g->GetY()[g->GetN()-1]; 
 
   int bin_high = bin_low + 1; 
   double frac = (t - (t0 + dt * bin_low)) / dt; 
@@ -514,7 +521,6 @@ AnalysisWaveform::AnalysisWaveform(const AnalysisWaveform & other)
   
   dt = other.dt; 
   df = other.df; 
-  fft_len = other.fft_len; 
 
   interpolation_type = other.interpolation_type; 
   interpolation_options = other.interpolation_options; 
@@ -531,8 +537,8 @@ AnalysisWaveform::AnalysisWaveform(const AnalysisWaveform & other)
   power_db_dirty = true; 
   phase_dirty = true; 
   hilbert_dirty = true; 
+  hilbert_envelope_dirty = true; 
   hilbert_transform = 0; 
-
 
 
 
@@ -551,6 +557,8 @@ AnalysisWaveform::AnalysisWaveform(const AnalysisWaveform & other)
   {
     g_even.Set(other.Neven()); 
   }
+  
+  fft_len = g_even.GetN()/2+1;
 
   if (!must_update_freq)
   {
@@ -613,8 +621,6 @@ AnalysisWaveform * AnalysisWaveform::correlation(const AnalysisWaveform *A, cons
   }
 
 
-
-
   answer->updateEven(g); 
 
 
@@ -624,14 +630,21 @@ AnalysisWaveform * AnalysisWaveform::correlation(const AnalysisWaveform *A, cons
 void AnalysisWaveform::padFreq(int npad)
 {
   if (npad < 1) return; 
+
+
+
+
   //new even size
-  int new_N = even()->GetN() * (1+npad); 
+  int new_N = g_even.GetN() * (1+npad); 
 
   //allocate new memory
   FFTWComplex * new_fft = new FFTWComplex[new_N/2+1]; 
 
+  const FFTWComplex * old_freq = freq(); 
+  //printf("%d\n", fft_len); 
+
   //copy old
-  memcpy(new_fft, freq(), Nfreq() * sizeof(FFTWComplex));
+  memcpy(new_fft, old_freq, TMath::Min(new_N/2+1,fft_len) * sizeof(FFTWComplex));
 
   //scale
   double scale = (1 + npad); 
@@ -654,9 +667,12 @@ void AnalysisWaveform::padFreq(int npad)
   //others need to update now! 
   must_update_even = true; 
   must_update_uneven = !uneven_equals_even; 
+  must_update_freq = false; 
   power_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true; 
+  hilbert_dirty = true; 
+  hilbert_envelope_dirty = true; 
   just_padded = false; 
 }
 

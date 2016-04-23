@@ -26,7 +26,7 @@ class FilteredAnitaEvent
    const AnalysisWaveform * getFilteredGraph(UInt_t i) const { return filteredGraphs[i]; }
    const AnalysisWaveform * getFilteredGraph(UInt_t ant, AnitaPol::AnitaPol_t pol) const { return filteredGraphsByAntPol[pol][ant]; }
    const UsefulAnitaEvent* getUsefulAnitaEvent() const { return useful; } 
-   const Adu5Pat * getGPS() const { return pat; } 
+   const UsefulAdu5Pat * getGPS() const { return &pat; } 
    const RawAnitaHeader * getHeader() const { return header; } 
   private: 
    AnalysisWaveform *rawGraphs[NUM_SEAVEYS*2]; 
@@ -36,7 +36,7 @@ class FilteredAnitaEvent
 
    const UsefulAnitaEvent * useful; 
    const FilterStrategy * strategy; 
-   const Adu5Pat * pat; 
+   UsefulAdu5Pat pat; 
    const RawAnitaHeader * header; 
 
 };
