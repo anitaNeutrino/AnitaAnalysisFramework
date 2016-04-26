@@ -19,7 +19,7 @@ AnitaEventSummary::AnitaEventSummary(){
 /**
  * @brief Constructor
  *
- * Takes care of copying the header and GPS info into the event summary
+ * Takes care of copying the header info into the event summary
  */
 AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header){
 
@@ -29,6 +29,28 @@ AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header){
   eventNumber = header->eventNumber;
   run = header->run;
 }
+
+
+
+
+
+//---------------------------------------------------------------------------------------------------------
+/**
+ * @brief Constructor
+ *
+ * Takes care of copying the header and GPS info into the event summary
+ */
+AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header, Adu5Pat* pat){
+
+  zeroInternals();
+
+  setTriggerInfomation(header);
+  setSourceInformation(pat);
+  eventNumber = header->eventNumber;
+  run = header->run;
+}
+
+
 
 
 void AnitaEventSummary::zeroInternals(){
@@ -79,11 +101,13 @@ void AnitaEventSummary::zeroInternals(){
   flags.pulser = EventFlags::NONE; 
   flags.isVarner = 0; 
   flags.isVarner2 = 0; 
-   
+
+  sun.theta = -999;
+  sun.phi = -999;
+  sun.distance = -999;
 }
 
 
-// void AnitaEventSummary::tagTriggerAsHPolOrVPol(const RawAnitaHeader* header){
 void AnitaEventSummary::setTriggerInfomation(const RawAnitaHeader* header){  
 
   // setting to zero, for testing this function.
@@ -120,5 +144,16 @@ void AnitaEventSummary::setTriggerInfomation(const RawAnitaHeader* header){
   flags.isSoftwareTrigger = header->getTriggerBitSoftExt();
   flags.isMinBiasTrigger = flags.isAdu5Trigger || flags.isG12Trigger || header->getTriggerBitG12() || flags.isSoftwareTrigger;
 
+  
+}
+
+
+
+
+void AnitaEventSummary::setSourceInformation(Adu5Pat* pat){
+
+  UsefulAdu5Pat usefulPat(pat);
+
+  usefulPat.getSunPosition(sun.phi, sun.theta);
   
 }

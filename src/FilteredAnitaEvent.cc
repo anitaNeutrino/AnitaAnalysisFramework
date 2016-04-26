@@ -8,6 +8,16 @@
 
 //ClassImp(FilteredAnitaEvent); 
 
+FilteredAnitaEvent::FilteredAnitaEvent() 
+{
+  for (unsigned i = 0; i < 2 * NUM_SEAVEYS; i++ )
+    {
+    filteredGraphs[i] = NULL; 
+    rawGraphs[i] = NULL; 
+  }
+}
+
+
 
 FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterStrategy * strategy, const Adu5Pat * pat, const RawAnitaHeader * header ) 
   : useful(event), 

@@ -2,15 +2,16 @@
 #define _ANITA_EVENT_SUMMARY_H_
 
 #include "TObject.h" 
-#include "Adu5Pat.h" 
-#include "RawAnitaHeader.h" 
+#include "Adu5Pat.h"
+#include "UsefulAdu5Pat.h" 
+#include "RawAnitaHeader.h"
 #include <iostream>
 
 
 class AnitaEventSummary 
 {
 public: 
-  static const Int_t maxDirectionsPerPol = 3; 
+  static const Int_t maxDirectionsPerPol = 5; 
 
   class PointingHypothesis 
   {
@@ -20,8 +21,8 @@ public:
     Double_t value; // peak value
     Double_t snr; // snr of peak
     Double_t hwAngle; // angle with respect to triggering phi sector
-    Bool_t triggered; 
-    Bool_t masked; 
+    Bool_t triggered;
+    Bool_t masked;
 
     Double_t latitude;// on continent, or -9999 if doesn't intersect
     Double_t longitude;// on continent, or -9999 if doesn't intersect
@@ -38,11 +39,11 @@ public:
   class WaveformInfo
   {
   public: 
-    Double_t snr; 
-    Double_t peakHilbert; 
-    Double_t peakVal; 
+    Double_t snr;
+    Double_t peakHilbert;
+    Double_t peakVal;
     Double_t bandwidth;
-    Int_t numAntennasInCoherent;     
+    Int_t numAntennasInCoherent;
     virtual ~WaveformInfo() {; } 
 
     ClassDef(WaveformInfo, 1); 
@@ -67,22 +68,32 @@ public:
     Int_t isSoftwareTrigger;
     Int_t isMinBiasTrigger;
     Int_t isPayloadBlast;
-    Int_t nadirFlag; 
+    Int_t nadirFlag;
     Int_t strongCWFlag;
     Int_t isHPolTrigger;
-    Int_t isVPolTrigger;    
+    Int_t isVPolTrigger;
 
-    CalPulser pulser; 
-    Bool_t isVarner; 
-    Bool_t isVarner2; 
+    CalPulser pulser;
+    Bool_t isVarner;
+    Bool_t isVarner2;
     virtual ~EventFlags() {;}
 
     ClassDef(EventFlags,3); 
-  }; 
+  };
 
+  class SourceHypothesis
+  {
+  public:
+    Double_t theta;
+    Double_t phi;
+    Double_t distance;
+    
+    virtual ~SourceHypothesis(){;}
+    ClassDef(SourceHypothesis,1);
+  };
 
-  Int_t run; 
-  UInt_t eventNumber; 
+  Int_t run;
+  UInt_t eventNumber;
   
   Int_t nPeaks[AnitaPol::kNotAPol]; //Number of peaks actually found; this might be less than maxDirectionsPerPol 
   PointingHypothesis peak[AnitaPol::kNotAPol][maxDirectionsPerPol]; 
@@ -92,20 +103,23 @@ public:
 
   // WaveformInfo maxWaveform;  // do we want this for all ? 
 
-  EventFlags flags; 
-  // Adu5Pat gps;
+  EventFlags flags;
+  SourceHypothesis sun;
+  // Adu5Pat pat;
   // RawAnitaHeader header;
 
   AnitaEventSummary();
-  AnitaEventSummary(const RawAnitaHeader* header);//, const Adu5Pat* pat);
+  AnitaEventSummary(const RawAnitaHeader* header);
+  AnitaEventSummary(const RawAnitaHeader* header, Adu5Pat* pat);  
   void setTriggerInfomation(const RawAnitaHeader* header);
+  void setSourceInformation(Adu5Pat* pat);  
   void zeroInternals();
   virtual ~AnitaEventSummary() { ; } 
 
   
 private: 
 
-  ClassDef(AnitaEventSummary, 5); 
+  ClassDef(AnitaEventSummary, 7); 
 }; 
 
 

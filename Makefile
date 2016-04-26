@@ -6,7 +6,7 @@ CXXFLAGS+= -g
 CXXFLAGS     += $(ROOTCFLAGS) $(SYSINCLUDES) -I$(ANITA_UTIL_INSTALL_DIR)/include -march=native
 LDFLAGS      += $(ROOTLDFLAGS)  -L$(ANITA_UTIL_INSTALL_DIR)/lib -g 
 #LIBS          = $(ROOTLIBS) -g -Wl,-z,defs -lMathMore -lRootFftwWrapper -lAnitaEvent
-LIBS          = $(ROOTLIBS) -lMathMore -lRootFftwWrapper -lAnitaEvent -pthread
+LIBS          = $(ROOTLIBS) -g -lMathMore -lRootFftwWrapper -lAnitaEvent -lAnitaCorrelator -pthread
 GLIBS         = $(ROOTGLIBS) $(SYSLIBS)
 LIBDIR=lib
 BUILDDIR=build

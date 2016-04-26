@@ -2,9 +2,10 @@
 #define _FILTERED_ANITA_EVENT_H_
 #include "TObject.h" 
 #include "AnitaConventions.h" 
+#include "UsefulAdu5Pat.h"
 
 class UsefulAnitaEvent; 
-class Adu5Pat; 
+class Adu5Pat;
 class TGraph; 
 class RawAnitaHeader; 
 class AnalysisWaveform; 
@@ -17,7 +18,7 @@ class FilteredAnitaEvent
 
   friend class FilterOperation; 
 
-  public: 
+  public:
    FilteredAnitaEvent(); 
    FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterStrategy * strategy, const Adu5Pat * pat, const RawAnitaHeader * header); 
    virtual ~FilteredAnitaEvent(); 
@@ -29,10 +30,10 @@ class FilteredAnitaEvent
    const UsefulAdu5Pat * getGPS() const { return &pat; } 
    const RawAnitaHeader * getHeader() const { return header; } 
   private: 
-   AnalysisWaveform *rawGraphs[NUM_SEAVEYS*2]; 
-   AnalysisWaveform *rawGraphsByAntPol[2][NUM_SEAVEYS]; 
-   AnalysisWaveform *filteredGraphs[NUM_SEAVEYS*2]; 
-   AnalysisWaveform *filteredGraphsByAntPol[2][NUM_SEAVEYS]; 
+   AnalysisWaveform *rawGraphs[NUM_SEAVEYS*AnitaPol::kNotAPol]; 
+   AnalysisWaveform *rawGraphsByAntPol[AnitaPol::kNotAPol][NUM_SEAVEYS]; 
+   AnalysisWaveform *filteredGraphs[NUM_SEAVEYS*AnitaPol::kNotAPol]; 
+   AnalysisWaveform *filteredGraphsByAntPol[AnitaPol::kNotAPol][NUM_SEAVEYS]; 
 
    const UsefulAnitaEvent * useful; 
    const FilterStrategy * strategy; 
