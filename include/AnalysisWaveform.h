@@ -47,8 +47,11 @@ class AnalysisWaveform
 
 
   public: 
-    /** Enable (or disable) a bunch of debugging crap  */
+
+#ifdef ANITA_ANALYSIS_DEBUG
+    /** Enable (or disable) a bunch of debugging crap. Only possible with ANITA_ANALYSIS_DEBUG defined to avoid slow branches */
     static void enableDebug(bool enable);  
+#endif
 
 
     enum InterpolationType
@@ -148,20 +151,23 @@ class AnalysisWaveform
     void calculateFreqFromEven() const;  
     void calculateUnevenFromEven() const;
 
+    /** Storage vars */ 
     mutable TGraph g_uneven; 
     mutable TGraph g_hilbert_envelope; 
     mutable TGraph g_even; 
     mutable TGraph g_power; 
-    mutable TGraph g_power_db; 
-    mutable TGraph g_phase; 
-    mutable double dt; 
+    mutable TGraph g_power_db;
+    mutable TGraph g_phase;  
+    mutable double dt;  
     mutable double df; 
     mutable int fft_len; 
     mutable FFTWComplex * fft; 
 
-    mutable bool just_padded; 
     InterpolationType interpolation_type; 
     InterpolationOptions interpolation_options; 
+
+    /* State vars */ 
+    mutable bool just_padded;  
     mutable bool must_update_uneven; 
     mutable bool must_update_freq; 
     mutable bool must_update_even; 
@@ -172,6 +178,7 @@ class AnalysisWaveform
     mutable bool hilbert_envelope_dirty; 
     mutable bool hilbert_dirty; 
     mutable AnalysisWaveform * hilbert_transform;
+    mutable int force_even_size; 
 }; 
 
 

@@ -2,6 +2,7 @@
 #include "TFile.h"
 #include "FilterStrategy.h" 
 #include "FilterOperation.h" 
+#include "FilteredAnitaEvent.h" 
 
 
 FilterStrategy::FilterStrategy(TFile * outfile) 
@@ -32,19 +33,27 @@ void FilterStrategy::done()
   {
      delete trees[i]; 
   }
-
-
 }
 
 void FilterStrategy::process(FilteredAnitaEvent * ev) 
 {
   started = true; 
   int tree_index = 0; 
+
+
   for (size_t op = 0; op < operations.size(); op++) 
   {
-//    printf("DOING OPERATION %lu!!!!\n", op); 
+    //Do the thing! 
     operations[op]->process(ev); 
 
+
+    // save the stage if are asked to  it's not the last... the last is saved anyway
+    if (ev->keep_all_stages && op < operations.size() - 1)
+    {
+      ev->saveStage(operations.size()-1); 
+    }
+
+    // fill the output trees 
     if (f && operations[op]->nOutputs() > 0)
     {
       f->cd(); 

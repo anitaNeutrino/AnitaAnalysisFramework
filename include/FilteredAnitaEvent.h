@@ -2,7 +2,7 @@
 #define _FILTERED_ANITA_EVENT_H_
 #include "TObject.h" 
 #include "AnitaConventions.h" 
-#include "UsefulAdu5Pat.h"
+#include "UsefulAdu5Pat.h" 
 
 class UsefulAnitaEvent; 
 class Adu5Pat;
@@ -17,28 +17,40 @@ class FilteredAnitaEvent
 {
 
   friend class FilterOperation; 
+  friend class FilterStrategy; 
 
   public:
    FilteredAnitaEvent(); 
-   FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterStrategy * strategy, const Adu5Pat * pat, const RawAnitaHeader * header); 
+   FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterStrategy * strategy, const Adu5Pat * pat, const RawAnitaHeader * header, bool keep_all_stages = false); 
    virtual ~FilteredAnitaEvent(); 
    const AnalysisWaveform * getRawGraph(UInt_t i) const { return rawGraphs[i]; }
    const AnalysisWaveform * getRawGraph(UInt_t ant, AnitaPol::AnitaPol_t pol) const { return rawGraphsByAntPol[pol][ant]; }
    const AnalysisWaveform * getFilteredGraph(UInt_t i) const { return filteredGraphs[i]; }
    const AnalysisWaveform * getFilteredGraph(UInt_t ant, AnitaPol::AnitaPol_t pol) const { return filteredGraphsByAntPol[pol][ant]; }
+
+
+   const AnalysisWaveform * getFilteredGraphAtStage(UInt_t ant, AnitaPol::AnitaPol_t pol, UInt_t stage) const; 
+
    const UsefulAnitaEvent* getUsefulAnitaEvent() const { return useful; } 
    const UsefulAdu5Pat * getGPS() const { return &pat; } 
    const RawAnitaHeader * getHeader() const { return header; } 
   private: 
+
    AnalysisWaveform *rawGraphs[NUM_SEAVEYS*AnitaPol::kNotAPol]; 
    AnalysisWaveform *rawGraphsByAntPol[AnitaPol::kNotAPol][NUM_SEAVEYS]; 
    AnalysisWaveform *filteredGraphs[NUM_SEAVEYS*AnitaPol::kNotAPol]; 
    AnalysisWaveform *filteredGraphsByAntPol[AnitaPol::kNotAPol][NUM_SEAVEYS]; 
 
+
    const UsefulAnitaEvent * useful; 
    const FilterStrategy * strategy; 
    UsefulAdu5Pat pat; 
    const RawAnitaHeader * header; 
+
+
+   bool keep_all_stages; 
+   std::vector<AnalysisWaveform *> all_stages[AnitaPol::kNotAPol][NUM_SEAVEYS] ;
+   void saveStage(int nreserve); 
 
 };
 

@@ -4,10 +4,35 @@
 #include "RFInterpolate.h" 
 #include <assert.h>
 
+
+
+/* Branch prediction help macros. Not sure if these work with clang */ 
+#define likely(x)       __builtin_expect((!!x),1)
+#define unlikely(x)     __builtin_expect((!!x),0)
+
+
+#ifdef ANITA_ANALYSIS_DEBUG
 static bool DEBUGON = false; 
-
 void AnalysisWaveform::enableDebug(bool debug) { DEBUGON = debug; } 
+#endif 
 
+
+
+
+static void setNewSize(TGraph * g, int size )
+{
+  int old_size = g->GetN(); 
+  g->Set(size); 
+  double dt = g->GetX()[1] - g->GetX()[0]; 
+  if (size > old_size)
+  {
+    for (int i = old_size; i < size; i++)
+    {
+      g->GetX()[i] = g->GetX()[i-1] + dt; 
+    }
+  }
+
+}
 
 
 
@@ -23,7 +48,7 @@ fillEven(int N, double * __restrict__ x, double dt, double t0)
 
 
 AnalysisWaveform::AnalysisWaveform(int N, const double *x, const double * y, double nominal_dt, InterpolationType interp_type, InterpolationOptions *opt)
-  : g_uneven(N,x,y),  dt(nominal_dt), fft(0), interpolation_type(interp_type), must_update_uneven(false), must_update_freq(true), must_update_even(true), uneven_equals_even(false), hilbert_transform(0)
+  : g_uneven(N,x,y),  dt(nominal_dt), fft(0), interpolation_type(interp_type), must_update_uneven(false), must_update_freq(true), must_update_even(true), uneven_equals_even(false), hilbert_transform(0), force_even_size(0)
 {
 
   if (opt) interpolation_options = *opt; 
@@ -36,7 +61,7 @@ AnalysisWaveform::AnalysisWaveform(int N, const double *x, const double * y, dou
 }
 
 AnalysisWaveform::AnalysisWaveform(int N, const double * y, double dt, double t0)
-  : g_even(N), dt(dt), fft(0),  interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(true), must_update_even(false), uneven_equals_even(true), hilbert_transform(0)
+  : g_even(N), dt(dt), fft(0),  interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(true), must_update_even(false), uneven_equals_even(true), hilbert_transform(0), force_even_size(0)
 {
   fillEven(N,g_even.GetX(),dt,t0); 
   memcpy(g_even.GetY(), y, sizeof(double) * N); 
@@ -52,7 +77,7 @@ AnalysisWaveform::AnalysisWaveform(int N, const double * y, double dt, double t0
 
 
 AnalysisWaveform::AnalysisWaveform(int N, double dt, double t0)
-  : g_even(N), dt(dt), fft(0),  interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(true), must_update_even(false), uneven_equals_even(true), hilbert_transform(0)
+  : g_even(N), dt(dt), fft(0),  interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(true), must_update_even(false), uneven_equals_even(true), hilbert_transform(0), force_even_size(0)
 {
   
   fillEven(N,g_even.GetX(),dt,t0); 
@@ -69,7 +94,7 @@ AnalysisWaveform::AnalysisWaveform(int N, double dt, double t0)
 }
 
 AnalysisWaveform::AnalysisWaveform(int N, const FFTWComplex * f, double df, double t0)
-  :  g_even(N), df(df), interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(false), must_update_even(true), uneven_equals_even(true), hilbert_transform(0)
+  :  g_even(N), df(df), interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(false), must_update_even(true), uneven_equals_even(true), hilbert_transform(0), force_even_size(0)
 {
   fft_len = N/2 +1; 
   fft = new FFTWComplex[fft_len]; 
@@ -105,19 +130,22 @@ const TGraph * AnalysisWaveform::uneven() const
 const TGraph * AnalysisWaveform::even()  const
 {
 
+#ifdef ANITA_ANALYSIS_DEBUG
   if (DEBUGON) printf("Called even()!\n"); 
   if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
   //kaboom 
   assert (!(must_update_even && must_update_freq &&  must_update_uneven)); 
+#endif
 
-  if (must_update_even && must_update_freq) 
+  if ((must_update_even && must_update_freq)) 
   {
     calculateEvenFromUneven(); 
   }
-  else if (must_update_even && must_update_even)
+  else if ((must_update_even))
   {
     calculateEvenFromFreq(); 
   }
+
   return &g_even; 
 }
 
@@ -125,8 +153,11 @@ const FFTWComplex * AnalysisWaveform::freq()  const
 {
 
 
+#ifdef ANITA_ANALYSIS_DEBUG
   if (DEBUGON) printf("Called freq()!\n"); 
   if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+#endif
+
   if (must_update_freq) 
   {
     calculateFreqFromEven(); 
@@ -141,8 +172,10 @@ const FFTWComplex * AnalysisWaveform::freq()  const
 void AnalysisWaveform::updateEven(const TGraph * replace)
 {
 
+#ifdef ANITA_ANALYSIS_DEBUG
   if (DEBUGON) printf("Called updateEven(replace)!\n"); 
   if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+#endif
 
   g_even.Set(replace->GetN()); 
   memcpy(g_even.GetX(), replace->GetX(), replace->GetN() * sizeof(double)); 
@@ -156,8 +189,12 @@ void AnalysisWaveform::updateEven(const TGraph * replace)
 
 TGraph * AnalysisWaveform::updateEven()
 {
+
+#ifdef ANITA_ANALYSIS_DEBUG
   if (DEBUGON) printf("Called updateEven()!\n"); 
   if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+#endif 
+
   TGraph * ev = (TGraph *) even(); 
   must_update_uneven = !uneven_equals_even; 
   must_update_freq = true; 
@@ -168,8 +205,10 @@ TGraph * AnalysisWaveform::updateEven()
 
 TGraph * AnalysisWaveform::updateUneven()
 {
+#ifdef ANITA_ANALYSIS_DEBUG
   if (DEBUGON) printf("Called updateUneven()!\n"); 
   if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+#endif
   TGraph * g = (TGraph*) uneven(); 
   uneven_equals_even = false; 
   must_update_even = true; 
@@ -180,8 +219,10 @@ TGraph * AnalysisWaveform::updateUneven()
 
 FFTWComplex * AnalysisWaveform::updateFreq() 
 {
+#ifdef ANITA_ANALYSIS_DEBUG
   if (DEBUGON) printf("Called updateFreq()!\n"); 
   if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+#endif
   FFTWComplex * fr = (FFTWComplex*) freq();
 
   power_dirty = true; 
@@ -202,8 +243,10 @@ FFTWComplex * AnalysisWaveform::updateFreq()
 void AnalysisWaveform::updateUneven(const TGraph * replace)
 {
 
+#ifdef ANITA_ANALYSIS_DEBUG
   if (DEBUGON) printf("Called updateUneven(replace)!\n"); 
   if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+#endif
 
 
   g_uneven.Set(replace->GetN()); 
@@ -250,7 +293,8 @@ void AnalysisWaveform::calculateEvenFromUneven()  const
 
   const TGraph * g = uneven(); 
   int npoints = (g->GetX()[g->GetN()-1] - g->GetX()[0]) / dt; 
-  g_even.Set(npoints); 
+  g_even.Set(force_even_size ? force_even_size : npoints); 
+  force_even_size = 0; 
   double t0 = g->GetX()[0]; 
   for (int i = 0; i < g_even.GetN(); i++) 
   {
@@ -268,7 +312,20 @@ void AnalysisWaveform::calculateEvenFromUneven()  const
 
     for (int i = 0; i < g_even.GetN(); i++) 
     {
-      g_even.GetY()[i] = irp.Eval(g_even.GetX()[i]); 
+      if (g_even.GetX()[i] > g->GetX()[g->GetN()-1])
+      {
+        memset(g_even.GetY()+i, 0, (g_even.GetN() - i )*sizeof(double)); 
+        break ; 
+   
+//        g_even.GetY()[i] = 0; 
+      }
+
+      else
+      {
+        g_even.GetY()[i] = irp.Eval(g_even.GetX()[i]); 
+      }
+
+//      printf("%d %f\n", i, g_even.GetY()[i]); 
     }
   }
   else 
@@ -289,6 +346,12 @@ void AnalysisWaveform::calculateEvenFromFreq() const
 
   memcpy(g_even.GetY(), y, g_even.GetN() * sizeof(double)); 
   double t0 = g_even.GetX()[0]; 
+
+  if (force_even_size) 
+  {
+    setNewSize(&g_even, force_even_size); 
+    force_even_size = 0; 
+  }
   if (g_even.GetX()[1] - t0 != dt) 
   {
     fillEven(g_even.GetN(), g_even.GetX(), dt,t0); 
@@ -330,8 +393,10 @@ void AnalysisWaveform::calculateFreqFromEven() const
 void AnalysisWaveform::updateFreq(int new_N, const FFTWComplex * new_fft, double new_df )
 {
 
+#ifdef ANITA_ANALYSIS_DEBUG
   if (DEBUGON) printf("Called updateFreq(replace)!\n"); 
   if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+#endif
 
   if (new_N && new_N != g_even.GetN())
   {
@@ -388,6 +453,8 @@ const TGraph * AnalysisWaveform::powerdB() const
         g_power_db.SetPoint(i, the_power->GetX()[i], 10 * TMath::Log10(the_power->GetY()[i])); 
     }
 
+    g_power_db.GetXaxis()->SetTitle("Frequency"); 
+    g_power_db.GetYaxis()->SetTitle("Power (dBm)"); 
     power_db_dirty = false;
   }
 
@@ -453,10 +520,10 @@ const TGraph * AnalysisWaveform::power() const
     for (int i = 0; i < fft_len; i++) 
     {
       if (i == 0 || i == fft_len -1)
-        g_power.SetPoint(i, i * df, the_fft[i].getAbsSq()/fft_len); 
+        g_power.SetPoint(i, i * df, the_fft[i].getAbsSq()/fft_len/50/1000); 
 
       else
-        g_power.SetPoint(i, i * df, the_fft[i].getAbsSq()*2/fft_len); 
+        g_power.SetPoint(i, i * df, the_fft[i].getAbsSq()*2/fft_len/50/1000); 
     }
 
     power_dirty = false;
@@ -475,20 +542,14 @@ AnalysisWaveform::~AnalysisWaveform()
 
 }
 
-
 void AnalysisWaveform::forceEvenSize(int size)
 {
-  int old_size = Neven(); 
-  TGraph * g = updateEven(); 
-  g->Set(size); 
-
-  if (size > old_size)
+  if (must_update_even)  //defer 
   {
-    for (int i = old_size; i < size; i++)
-    {
-      g->GetX()[i] = g->GetX()[i-1] + dt; 
-    }
+    force_even_size = size; 
+    return; 
   }
+  setNewSize(&g_even, size); 
 
 }
 
@@ -496,24 +557,29 @@ double AnalysisWaveform::evalEven(double t)  const
 {
 
   const TGraph * g = even(); 
-  double t0 = g->GetX()[0]; 
-  
-  int bin_low = int ((t-t0)/dt); 
 
-  if (bin_low < 0) return 0; 
-  if (bin_low >= g->GetN()) return 0; 
-  if (bin_low ==  g->GetN()-1) return g->GetY()[g->GetN()-1]; 
+  double t0 = g->GetX()[0]; 
+  double xval = (t-t0) / dt; 
+
+  int bin_low = int (xval); 
+
+  if ((bin_low < 0)) return 0; 
+  if ((bin_low >= g->GetN())) return 0; 
+  if ((bin_low ==  g->GetN()-1)) return g->GetY()[g->GetN()-1]; 
 
   int bin_high = bin_low + 1; 
-  double frac = (t - (t0 + dt * bin_low)) / dt; 
-
   double val_low = g->GetY()[bin_low]; 
   double val_high = g->GetY()[bin_high]; 
 
-  return frac * val_high + (1-frac) * val_low; 
+  double frac = xval - bin_low; 
+
+  return val_low + frac*(val_high-val_low); 
 }
 
 AnalysisWaveform::AnalysisWaveform(const AnalysisWaveform & other) 
+  :
+  g_uneven(other.uneven_equals_even ? 0 : other.g_uneven.GetN()), 
+  g_even(other.Neven()) 
 {
   
 
@@ -530,6 +596,8 @@ AnalysisWaveform::AnalysisWaveform(const AnalysisWaveform & other)
   must_update_freq = other.must_update_freq; 
   must_update_uneven = other.must_update_uneven; 
   just_padded = other.just_padded; 
+  force_even_size = other.force_even_size; 
+//  printf("%d\n", force_even_size); 
 
 
   //don't bother copying these, they can be regenerated if needed
@@ -542,20 +610,22 @@ AnalysisWaveform::AnalysisWaveform(const AnalysisWaveform & other)
 
 
 
-  // we must copy g_uneven if it's not equal to even 
+  // we must copy x from g_uneven if it's not equal to even 
   if (!uneven_equals_even)
   {
-    g_uneven = other.g_uneven; 
+    memcpy(g_uneven.GetX(), other.g_uneven.GetX(), g_uneven.GetN() * sizeof(double)); 
+
+    if (!must_update_uneven)
+    {
+      memcpy(g_uneven.GetY(), other.g_uneven.GetY(), g_uneven.GetN() * sizeof(double)); 
+    }
   }
  
 
   if (!must_update_even)
   {
-    g_even = *other.even(); 
-  }
-  else // still need the size! 
-  {
-    g_even.Set(other.Neven()); 
+    memcpy(g_even.GetY(), other.g_even.GetY(), g_even.GetN() * sizeof(double)); 
+    memcpy(g_even.GetX(), other.g_even.GetX(), g_even.GetN() * sizeof(double)); 
   }
   
   fft_len = g_even.GetN()/2+1;
@@ -609,19 +679,19 @@ AnalysisWaveform * AnalysisWaveform::correlation(const AnalysisWaveform *A, cons
   answer->padFreq(npad); 
 
   N = answer->even()->GetN(); 
-  TGraph * g = new TGraph(N); 
+  TGraph g(N); 
 
   double dt = answer->deltaT(); 
-  memcpy(g->GetY(), answer->even()->GetY() + N/2, N/2 * sizeof(double)); 
-  memcpy(g->GetY()+ N/2, answer->even()->GetY(), N/2 * sizeof(double)); 
+  memcpy(g.GetY(), answer->even()->GetY() + N/2, N/2 * sizeof(double)); 
+  memcpy(g.GetY()+ N/2, answer->even()->GetY(), N/2 * sizeof(double)); 
 
   for (int i = 0; i < N; i++) 
   {
-    g->GetX()[i] =(i - N/2) * dt + offset; 
+    g.GetX()[i] =(i - N/2) * dt + offset; 
   }
 
 
-  answer->updateEven(g); 
+  answer->updateEven(&g); 
 
 
   return answer; 

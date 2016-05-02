@@ -1,6 +1,13 @@
 #ifndef _FILTER_STRATEGY_H
 #define _FILTER_STRATEGY_H
 
+
+/** 
+ * A filter strategy defines the sets of filters that are used. 
+ *
+ */
+
+
 class TFile; 
 class TTree; 
 class FilterOperation; 
@@ -20,6 +27,8 @@ class FilterStrategy
     virtual ~FilterStrategy() {done(); } 
     void addOperation(FilterOperation* f); 
     void process(FilteredAnitaEvent * event); 
+    const FilterOperation * getOperation(size_t i) const { return operations[i]; } 
+    size_t nOperations() const { return operations.size(); } 
     void done(); 
 
   private: 
