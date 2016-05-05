@@ -6,6 +6,12 @@ class AnalysisWaveform;
 #include <cstddef>
 #include "AnitaConventions.h" 
 
+/** A FilteredOperation does things to the waveforms inside a FilteredAnitaEvent 
+ *
+ *  See anitaGround/cozzyd/UCorrelator for some example implementing filters. 
+ *
+ **/ 
+
 class FilterOperation
 {
   public: 
@@ -19,28 +25,41 @@ class FilterOperation
     virtual void process(FilteredAnitaEvent * event)= 0; 
 
 
-    /* If you want to output stuff to trees, define the output here */ 
+    // If you want to output stuff to trees, define the output here 
+    
+    /** The number of output variables (doubles) defined by this operatoin */
     virtual unsigned nOutputs() const  { return 0; } 
+
+    /** The name of the ith output variable */ 
     virtual const char *  outputName(unsigned i) const  { (void) i; return ""; } 
+
+    /** Fills an array of doubls with the output ariables */ 
     virtual void fillOutputs(double * vars) const{ (void) vars; return; } 
+
+    /** Destructor */ 
     virtual ~FilterOperation(); 
 
   protected: 
+    /** Accessor for waveform */ 
     AnalysisWaveform * getWf(FilteredAnitaEvent *ev, int i); 
+
+    /** Accessor for waveform */ 
     AnalysisWaveform * getWf(FilteredAnitaEvent *ev, int ant, AnitaPol::AnitaPol_t pol); 
 }; 
 
 
-/** For filter operations that do the same thing to each Graph */ 
+/** For filter operations that do the same thing to each waveform */ 
 class UniformFilterOperation : public FilterOperation
 {
 
   public: 
+    /** Processes an event, calling processOne on each waveform */ 
     virtual void process(FilteredAnitaEvent * event) ; 
     virtual ~UniformFilterOperation() {; } 
+
+    /** You only need to implement this method */ 
     virtual void processOne(AnalysisWaveform * g) = 0; 
 
-  protected: 
 }; 
 
 
@@ -53,6 +72,9 @@ class ConditionalFilterOperation : public FilterOperation
 {
 
   public: 
+    /** Convert a UniformFilterOperation to a conditional operation. The UniformFilterOperation will only be applied
+     * to the event if the passed condition function returns true */ 
+
     ConditionalFilterOperation(UniformFilterOperation * operation, 
                                bool (*condition)(FilteredAnitaEvent * ev, int ant, AnitaPol::AnitaPol_t pol), 
                                const char * condition_tag, const char * condition_description, bool own = false) ; 

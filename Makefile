@@ -3,7 +3,7 @@ include Makefile.config
 
 CXXFLAGS+= -g
 
-CXXFLAGS     += $(ROOTCFLAGS) $(SYSINCLUDES) -I$(ANITA_UTIL_INSTALL_DIR)/include -march=native
+CXXFLAGS     += $(ROOTCFLAGS) $(SYSINCLUDES) -I$(ANITA_UTIL_INSTALL_DIR)/include 
 LDFLAGS      += $(ROOTLDFLAGS)  -L$(ANITA_UTIL_INSTALL_DIR)/lib -g 
 #LIBS          = $(ROOTLIBS) -g -Wl,-z,defs -lMathMore -lRootFftwWrapper -lAnitaEvent
 LIBS          = $(ROOTLIBS) -lMathMore -lRootFftwWrapper -lAnitaEvent -lAnitaCorrelator -pthread
@@ -14,7 +14,7 @@ INCLUDEDIR=include
 BINDIR=bin
 
 
-.PHONY: clean install all
+.PHONY: clean install all doc 
 
 OBJS := $(addprefix $(BUILDDIR)/, FilteredAnitaEvent.o FilterOperation.o FilterStrategy.o AnalysisWaveform.o AnitaEventSummary.o analysisDict.o)
 
@@ -88,6 +88,18 @@ endif
 	install -c -m 755 $(ROOT_LIBRARY) $(ANITA_UTIL_INSTALL_DIR)/lib
 	install -c -m 644 $(INCLUDES) $(ANITA_UTIL_INSTALL_DIR)/include 
 	if [ -e $(BUILDDIR)/analysisDict_rdict.pcm ];  then install -c -m 755 $(BUILDDIR)/analysisDict_rdict.pcm $(ANITA_UTIL_INSTALL_DIR)/lib; fi; 
+
+
+doc:  $(INCLUDES) 
+	doxygen doc/Doxyfile 
+
+
+
+doc/%.pdf: doc/%.tex
+	pdflatex -aux_directory=doc -output-directory=doc $< 
+	pdflatex -aux_directory=doc -output-directory=doc $< 
+
+
 clean: 
 	rm -rf build
 	rm -rf bin

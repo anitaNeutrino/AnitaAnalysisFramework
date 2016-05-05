@@ -1,0 +1,100 @@
+/** 
+
+\mainpage  AnitaAnalysis Framework
+
+
+
+\section intro Introduction
+
+
+One thing that came out of the December 2015 ANITA analysis workshop at UChicago was a
+desire for some tools to facilitate interchange between different analyses. This framework attempts to solve some of the problems. 
+
+
+Right now it consists of three main parts: 
+  - a standardized filtering framework   
+  - a common output format
+  - a utility class for efficiently working with waveforms 
+
+\section install Installation and Configuration
+
+AnitaAnalysis depends on ROOT, libRootFftwWrapper, eventReaderRoot, and
+eventCorrelator. It is assumed that those are compiled and availabile in
+ANITA_UTIL_INSTALL_DIR or elsewhere within the paths searched for by your compiler. 
+
+
+Some options meant to be set by end users are available within Makefile.cfg
+
+In particular, one may:
+
+ - override the compiler (perhaps for testing to see how clang and g++ might disagree) 
+ - enable OpenMP support. OpenMP is a #pragma-based multithreading system, which the filter framework can use. This is useful in the case where one has more cores than ANITA runs. 
+
+
+\section filter Filter Framework 
+
+The filter framework is intended to provide a common, yet flexible, way of filtering ANITA waveforms. The basic building blocks are
+ 
+
+ \subsection filteredevent FilteredAnitaEvent
+
+  A FilteredAnitaEvent stores the waveforms as well as everything necessary (we hope) to make decisions about what to do with it. It holds both the raw waveforms as well as the final filtered one. It can also be instructed to hold intermediate steps, if that is desired. 
+  
+ 
+ \subsection filteroperation FilterOperation
+
+ A FilterOperation is a transformation on the waveforms in a
+ FilteredAnitaEvent. It may do the same thing to each waveform (in which case
+ you can use UniformFilterOperation), only do things conditionally (in which
+ case you can use ConditionalFilterOperation) or do whatever you want (in which
+ case you have to do a bit more work). It has access to everything the FilteredAnitaEvent knows. 
+ 
+ Each FilterOperation has a tag and description, which are supposed to be meaningful. 
+
+ Additionally, each FilterOperation may define output quantities (necessarily doubles)  which may be saved to an output tree. 
+ This could be useful for diagnostics and eventually cuts. 
+
+ \subsection filterstrategy FilterStrategy
+
+ A FilterStrategy is a series of FilterOperations, and handles the creation of output trees. 
+
+ \subsection filterusage Usage 
+
+ The intended mode of usage is to that some FilterOperations are implemented,
+ then added to a strategy. For each event to be processed, a FilteredAnitaEvent
+ is created from the raw data and the strategy. 
+
+
+\verbatim
+   TFile out("out.root","RECREATE"); ; 
+   FilterStrategy strategy(&out); 
+
+   MyAwesomeFilterOperation filter1(foo,bar,42); 
+   MyEvenMoreAwesomeFilterOperation filter2(foo,bar,42); 
+   strategy.addOperation(&filter1); 
+   strategy.addOperation(&filter2); 
+
+   FilteredAnitaEvent event(usefulAnitaEvent, &strategy,adu5pat, rawAnitaHeader); 
+
+\endverbatim
+
+\section output Output Format 
+
+The framework defines AnitaEventSummary, which is intended as a common output
+format for different analyses. It is meant to contain all the information
+necessary to make cuts and then run through a clustering algorithm. 
+
+\section wf AnalysisWaveform 
+
+An AnalysisWaveform is what is actually stored within a FilteredAnitaEvent. It
+is a multi-representation view of a waveform, where coupled versions of the
+unevenly-sampled waveform, the evenly-sampled waveform and the Fourier
+Transform of the waveform are kept and calculated on the fly when necessary. By
+abstracting away the multiple representations, it is possible to elide
+unnecessary transforms in some cases. For example, multiple filters operating
+in the Fourier domain can avoid transforming the waveform and back and forth if
+they are applied one after another. 
+
+
+
+*/

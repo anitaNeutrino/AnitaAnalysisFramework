@@ -5,6 +5,9 @@
 #include <assert.h>
 
 
+AnalysisWaveform::InterpolationType AnalysisWaveform::defaultInterpolationType = AnalysisWaveform::AKIMA; 
+AnalysisWaveform::InterpolationOptions AnalysisWaveform::defaultInterpolationOptions; 
+
 
 /* Branch prediction help macros. Not sure if these work with clang */ 
 #define likely(x)       __builtin_expect((!!x),1)

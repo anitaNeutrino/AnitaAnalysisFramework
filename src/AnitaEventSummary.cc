@@ -2,6 +2,7 @@
 
 ClassImp(AnitaEventSummary)
 
+const double C_IN_M_NS = 0.299792; 
 
 //---------------------------------------------------------------------------------------------------------
 /**
@@ -40,7 +41,7 @@ AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header){
  *
  * Takes care of copying the header and GPS info into the event summary
  */
-AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header, Adu5Pat* pat){
+AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header, UsefulAdu5Pat* pat){
 
   zeroInternals();
 
@@ -150,10 +151,17 @@ void AnitaEventSummary::setTriggerInfomation(const RawAnitaHeader* header){
 
 
 
-void AnitaEventSummary::setSourceInformation(Adu5Pat* pat){
+void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat){
 
-  UsefulAdu5Pat usefulPat(pat);
 
-  usefulPat.getSunPosition(sun.phi, sun.theta);
+  pat->getSunPosition(sun.phi, sun.theta);
+  sun.distance = -999;  // I guess in theory we could compute this! 
+
+  pat->getThetaAndPhiWaveWaisDivide(wais.theta, wais.phi);
+  wais.distance = pat->getWaisDivideTriggerTimeNs() / C_IN_M_NS; 
+
+  pat->getThetaAndPhiWaveLDB(ldb.theta, ldb.phi);
+  ldb.distance = pat->getLDBTriggerTimeNs() / C_IN_M_NS; 
+
   
 }

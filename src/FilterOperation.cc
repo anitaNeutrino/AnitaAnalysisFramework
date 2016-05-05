@@ -42,6 +42,10 @@ void ConditionalFilterOperation::process(FilteredAnitaEvent * ev)
 {
   for (int pol = AnitaPol::kHorizontal; pol <= AnitaPol::kVertical; pol++)
   {
+
+#ifdef USE_OMP
+#pragma omp parallel for
+#endif
     for (int ant = 0; ant <NUM_SEAVEYS; ant++) 
     {
       if (fn(ev,ant, (AnitaPol::AnitaPol_t)pol))
@@ -54,6 +58,9 @@ void ConditionalFilterOperation::process(FilteredAnitaEvent * ev)
 
 void UniformFilterOperation::process(FilteredAnitaEvent * ev) 
 {
+#ifdef USE_OMP
+#pragma omp parallel for
+#endif
   for (size_t i = 0; i < NUM_SEAVEYS * 2; i++) 
   {
     processOne(getWf(ev,i)); 
