@@ -158,10 +158,14 @@ void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat){
   sun.distance = -999;  // I guess in theory we could compute this! 
 
   pat->getThetaAndPhiWaveWaisDivide(wais.theta, wais.phi);
+  wais.theta *= 180/ TMath::Pi(); 
+  wais.phi *= 180/ TMath::Pi(); 
   wais.distance = pat->getWaisDivideTriggerTimeNs() / C_IN_M_NS; 
 
   pat->getThetaAndPhiWaveLDB(ldb.theta, ldb.phi);
   ldb.distance = pat->getLDBTriggerTimeNs() / C_IN_M_NS; 
+  ldb.theta *= 180/ TMath::Pi(); 
+  ldb.phi *= 180/ TMath::Pi(); 
 
   
 }
