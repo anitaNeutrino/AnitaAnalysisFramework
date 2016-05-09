@@ -92,12 +92,8 @@ endif
 
 doc:  $(INCLUDES) 
 	doxygen doc/Doxyfile 
+	make -C doc/latex
 
-
-
-doc/%.pdf: doc/%.tex
-	pdflatex -aux_directory=doc -output-directory=doc $< 
-	pdflatex -aux_directory=doc -output-directory=doc $< 
 
 
 clean: 
