@@ -4,7 +4,7 @@
   gSystem->Load("libRootFftwWrapper.so"); 
   gSystem->Load("lib/libAnitaAnalysis.so"); 
 
-  FFTtools::ThermalNoise noise(1000, 0.1, 0.8, 10,2); 
+  FFTtools::ThermalNoise noise(5000, 0.2/1.3, 1.2/1.3, 10,2); 
   noise.setExtraNoise(0.5); 
 
   TGraph * g = noise.makeGaussianDtWf(256,1./2.6,0.1); 
@@ -12,6 +12,9 @@
   AnalysisWaveform sig(g->GetN(), g->GetX(), g->GetY(), 1./2.6); 
 
 
+  AnalysisWaveform::PowerCalculationOptions opt; 
+  opt.method = AnalysisWaveform::PowerCalculationOptions::WELCH; 
+  opt.window_size=128; 
 
   TCanvas corig("corig","corig",800,800) ; 
   corig.Divide(2,3); 
@@ -22,7 +25,8 @@
   corig.cd(3); 
   sig.drawEven(); 
   corig.cd(4); 
-  sig.drawPower(); 
+  sig.setPowerCalculationOptions(opt);
+  sig.drawPowerdB(); 
   corig.cd(5); 
   sig.drawPhase(); 
   corig.cd(6); 
@@ -49,7 +53,7 @@
   AnalysisWaveform sig2(g2->GetN(), g2->GetX(), g2->GetY(), 1./2.6); 
   AnalysisWaveform sig3(g3->GetN(), g3->GetX(), g3->GetY(), 1./2.6); 
 
-  sig3.updateEven()->Set(sig2.even()->GetN()); 
+  sig3.forceEvenSize(sig2.even()->GetN()); 
 
   ccorr.Divide(2,2); 
   TGraph * fftcorr = FFTtools::getCorrelationGraph((TGraph*) sig2.even(), (TGraph*)sig3.even()); 
@@ -63,17 +67,13 @@
 
   AnalysisWaveform * corr = AnalysisWaveform::correlation(&sig2,&sig3,0,1); 
   ccorr.cd(3); 
-  corr.drawEven(); 
+  corr->drawEven(); 
 
-  AnalysisWaveform * corr2 = AnalysisWaveform::correlation(&sig2,&sig3,1,1); 
   ccorr.cd(4); 
   //AnalysisWaveform *copy = new AnalysisWaveform(*corr2); 
 
   fftcorr.Draw(); 
 
-  TStopwatch sw; 
-  corr = AnalysisWaveform::correlation(&sig2,&sig3,0,1); 
-  sw.Print("u"); 
 
   TCanvas cfreq("cfreq"); 
 

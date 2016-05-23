@@ -2,7 +2,8 @@
 #define ANALYSIS_WAVEFORM_HH
 
 class FFTWComplex; 
-#include "TGraph.h" 
+#include "TGraphAligned.h" 
+#include "FFTWindow.h" 
 
 /** 
  * \brief
@@ -77,6 +78,26 @@ class AnalysisWaveform
       double mu; 
     }; 
 
+
+    /** default power calculation options, may be changed by user */ 
+    class PowerCalculationOptions
+    {
+      public: 
+      PowerCalculationOptions() 
+        : method(FFT), window_size(64)  { type = &FFTtools::GAUSSIAN_WINDOW; } 
+
+      enum method
+      {
+        FFT, 
+        BARTLETT,
+        WELCH
+      } method;  
+
+
+      int window_size; 
+      const FFTtools::FFTWindowType *type; 
+    }; 
+
     /** Default interpolation options, may be changed by user */ 
     static InterpolationOptions defaultInterpolationOptions; 
 
@@ -121,25 +142,25 @@ class AnalysisWaveform
     /* Constant accessors. If you coerce the compiler into allowing modification, coupled waveforms won't be updated */ 
 
     /** Constant accessor for uneven waveform. Dont' coerce into non-const unless you know what you're doing */ 
-    const TGraph * uneven() const ;
+    const TGraphAligned * uneven() const ;
 
     /** Constant accessor for even waveform. Dont' coerce into non-const unless you know what you're doing */ 
-    const TGraph * even()  const; 
+    const TGraphAligned * even()  const; 
 
     /** Constant accessor for frequency domain waveform. Dont' coerce into non-const unless you know what you're doing */ 
     const FFTWComplex * freq() const; 
 
     /** Get the power */ 
-    const TGraph * power() const; 
+    const TGraphAligned * power() const; 
 
     /** Get the power in dB*/ 
-    const TGraph * powerdB() const; 
+    const TGraphAligned * powerdB() const; 
 
     /** Get the phase */ 
-    const TGraph * phase() const; 
+    const TGraphAligned * phase() const; 
 
     /** Get the hilbert envelope */ 
-    const TGraph * hilbertEnvelope() const; 
+    const TGraphAligned * hilbertEnvelope() const; 
 
     /** Get the Hilbert Transform */ 
     const AnalysisWaveform * hilbertTransform() const; 
@@ -186,6 +207,8 @@ class AnalysisWaveform
     /**Evaluate the even waveform at a point. Right now just does linear interpolation */ 
     double evalEven(double t) const; //TODO: add additional evaluation methods other than linear interpolation. indeed, would be best to eval multiple points at same time
 
+    /** Evaluate the even waveform at the specified points. Right now just does linear interpolation */ 
+    void evalEven(int N, const double * __restrict t , double * __restrict v) const; 
 
 
     /**  Update frequency graph by modifying return value */ 
@@ -194,13 +217,13 @@ class AnalysisWaveform
     void updateFreq(int new_N, const FFTWComplex * new_freq, double new_df = 0) ;
 
     /** Update the even graph by modifying return value */ 
-    TGraph * updateEven(); 
+    TGraphAligned * updateEven(); 
 
     /** Update the even graph by replacing with argument*/
     void updateEven(const TGraph * replace_even); 
 
     /** Update the uneven graph by modifying return value */ 
-    TGraph * updateUneven(); 
+    TGraphAligned * updateUneven(); 
 
     /** Update the uneven graph by replacing with argument*/
     void updateUneven(const TGraph * replace_uneven); 
@@ -212,6 +235,9 @@ class AnalysisWaveform
     /** pad the frequency (equivalent to upsampling the even values) */
     void padFreq(int factor); 
 
+    /** Change the options for calculating the power. This obviously will invalidate power() and powerdB() */
+    void setPowerCalculationOptions(PowerCalculationOptions & opt); 
+
 
 
   private: 
@@ -221,12 +247,12 @@ class AnalysisWaveform
     void calculateUnevenFromEven() const;
 
     /* Storage vars */ 
-    mutable TGraph g_uneven; 
-    mutable TGraph g_hilbert_envelope; 
-    mutable TGraph g_even; 
-    mutable TGraph g_power; 
-    mutable TGraph g_power_db;
-    mutable TGraph g_phase;  
+    mutable TGraphAligned g_uneven; 
+    mutable TGraphAligned g_hilbert_envelope; 
+    mutable TGraphAligned g_even; 
+    mutable TGraphAligned g_power; 
+    mutable TGraphAligned g_power_db;
+    mutable TGraphAligned g_phase;  
     mutable double dt;  
     mutable double df; 
     mutable int fft_len; 
@@ -234,6 +260,7 @@ class AnalysisWaveform
 
     InterpolationType interpolation_type; 
     InterpolationOptions interpolation_options; 
+    PowerCalculationOptions power_options; 
 
     /* State vars */ 
     mutable bool just_padded;  

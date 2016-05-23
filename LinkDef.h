@@ -13,6 +13,8 @@
 #pragma link C++ class FilteredAnitaEvent+;
 #pragma link C++ class FilterStrategy+;
 #pragma link C++ class AnalysisWaveform+;
+#pragma link C++ class AnalysisWaveform::PowerCalculationOptions;
+#pragma link C++ class TGraphAligned+;
 
 #pragma link C++ class FilterOperation+;
 #pragma link C++ class UniformFilterOperation+;

@@ -26,8 +26,6 @@ public:
     Double_t value; /// peak value
     Double_t snr; /// snr of peak
     Double_t hwAngle; /// angle with respect to triggering phi sector
-    Bool_t triggered; /// was this in a triggered phi sector? 
-    Bool_t masked; /// was this in a masked phi sector? 
 
     Double_t latitude;/// on continent, or -9999 if doesn't intersect
     Double_t longitude;/// on continent, or -9999 if doesn't intersect
@@ -37,22 +35,29 @@ public:
     Double_t sigma_phi;  /// error on phi
     Double_t rho;  ///correlation coefficient between theta and phi
 
+    Bool_t triggered; /// was this in a triggered phi sector? 
+    Bool_t masked; /// was this in a masked phi sector? 
+
     virtual ~PointingHypothesis() {;}
-    ClassDef(PointingHypothesis,4); 
+    ClassDef(PointingHypothesis,5); 
   }; 
 
   /** Stores information about a waveform (coherent or deconvolve) */ 
   class WaveformInfo
   {
+
   public: 
     Double_t snr; ///Signal to Noise of waveform 
     Double_t peakHilbert; /// peak of hilbert envelope
     Double_t peakVal;  /// peak value
+    Double_t xPolPeakVal;  // Peak of xpol trace
+    Double_t xPolPeakHilbert;  // Peak of xpol hilbert Envelope
+    Double_t I,Q,U,V;  // Stokes Parameters
     Double_t bandwidth;  /// bandwidth of power spectrum 
     Int_t numAntennasInCoherent; // number of antennas used to make this 
     virtual ~WaveformInfo() {; } 
 
-    ClassDef(WaveformInfo, 1); 
+    ClassDef(WaveformInfo, 2); 
   }; 
 
 
@@ -139,7 +144,7 @@ public:
   
   private: 
 
-    ClassDef(AnitaEventSummary, 8); 
+    ClassDef(AnitaEventSummary, 9); 
 }; 
 
 

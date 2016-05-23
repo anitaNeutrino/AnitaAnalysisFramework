@@ -12,11 +12,12 @@ LIBDIR=lib
 BUILDDIR=build
 INCLUDEDIR=include
 BINDIR=bin
+VECTORDIR=vectorclass
 
 
 .PHONY: clean install all doc 
 
-OBJS := $(addprefix $(BUILDDIR)/, FilteredAnitaEvent.o FilterOperation.o FilterStrategy.o AnalysisWaveform.o AnitaEventSummary.o analysisDict.o)
+OBJS := $(addprefix $(BUILDDIR)/, FilteredAnitaEvent.o FilterOperation.o FilterStrategy.o AnalysisWaveform.o AnitaEventSummary.o TGraphAligned.o analysisDict.o)
 
 #BINARIES := $(addprefix $(BINDIR)/, binary);
 
@@ -93,6 +94,13 @@ endif
 doc:  $(INCLUDES) 
 	doxygen doc/Doxyfile 
 	make -C doc/latex
+
+#### Download and unzip Agner Fog's VCL vectorization class  
+$(VECTORDIR): 
+	mkdir -p $(VECTORDIR) 
+	curl http://www.agner.org/optimize/vectorclass.zip > $(VECTORDIR)/vectorclass.zip 
+	unzip $(VECTORDIR)/vectorclass.zip -d $(VECTORDIR) 
+	unzip $(VECTORDIR)/special.zip -d $(VECTORDIR) 
 
 
 

@@ -61,30 +61,11 @@ void AnitaEventSummary::zeroInternals(){
 
   for(Int_t polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
     nPeaks[polInd] = 0; 
-    for(Int_t dir=0; dir < maxDirectionsPerPol; dir++){
-      peak[polInd][dir].value = 0;
-      peak[polInd][dir].theta = 0;
-      peak[polInd][dir].phi = 0;
-      peak[polInd][dir].value = 0;
-      peak[polInd][dir].snr = 0;
-      peak[polInd][dir].hwAngle = 0;
-      peak[polInd][dir].triggered = 0;
-      peak[polInd][dir].masked = 0;
-      peak[polInd][dir].latitude = 0;
-      peak[polInd][dir].longitude = 0;
-      peak[polInd][dir].altitude = 0;
-
-      coherent[polInd][dir].snr = 0; 
-      coherent[polInd][dir].peakHilbert = 0; 
-      coherent[polInd][dir].peakVal = 0; 
-      coherent[polInd][dir].bandwidth = 0;
-      coherent[polInd][dir].numAntennasInCoherent = 0;
-      
-      deconvolved[polInd][dir].snr = 0; 
-      deconvolved[polInd][dir].peakHilbert = 0; 
-      deconvolved[polInd][dir].peakVal = 0; 
-      deconvolved[polInd][dir].bandwidth = 0;
-      deconvolved[polInd][dir].numAntennasInCoherent = 0;      
+    for(Int_t dir=0; dir < maxDirectionsPerPol; dir++)
+    {
+      memset(&peak[polInd][dir],0,sizeof(PointingHypothesis)); 
+      memset(&coherent[polInd][dir],0,sizeof(WaveformInfo)); 
+      memset(&deconvolved[polInd][dir],0,sizeof(WaveformInfo)); 
     }
   }
 

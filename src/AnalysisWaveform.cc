@@ -2,8 +2,20 @@
 #include "FFTtools.h" 
 #include "TAxis.h"
 #include "RFInterpolate.h" 
+#include <malloc.h>
 #include <assert.h>
 
+
+#define ALIGNMENT 32 
+
+#ifdef ENABLE_VECTORIZE
+#include "vectorclass.h" 
+#define VEC_T double
+#define VEC_N 4
+#define VEC Vec4d 
+#define IVEC Vec4i 
+static VEC INDEX(0,1,2,3); 
+#endif
 
 AnalysisWaveform::InterpolationType AnalysisWaveform::defaultInterpolationType = AnalysisWaveform::AKIMA; 
 AnalysisWaveform::InterpolationOptions AnalysisWaveform::defaultInterpolationOptions; 
@@ -22,30 +34,47 @@ void AnalysisWaveform::enableDebug(bool debug) { DEBUGON = debug; }
 
 
 
-static void setNewSize(TGraph * g, int size )
+static void fillEven(int N, double * x, double dt, double t0)
+{
+#ifdef ENABLE_VECTORIZE
+
+  int leftover = N % VEC_N; 
+  int nit = N / VEC_N + (leftover ? 1 : 0); 
+  VEC vt0(t0); 
+  VEC vdt(dt); 
+
+  for (int i = 0; i < nit; i++)
+  {
+    VEC index(i * VEC_N); 
+    index += INDEX; 
+    VEC vx = mul_add(index,vdt,vt0); 
+
+    if (i == nit-1 && leftover > 0) 
+    {
+      vx.store_partial(leftover, &x[i*VEC_N]); 
+    }
+    else
+    {
+      vx.store(&x[i * VEC_N]); 
+    }
+  }
+#else
+  for (int i = 0; i < N; i++)
+  {
+    x[i] = i * dt + t0; 
+  }
+#endif
+}
+
+
+static void setNewSize(TGraphAligned * g, int size )
 {
   int old_size = g->GetN(); 
   g->Set(size); 
   double dt = g->GetX()[1] - g->GetX()[0]; 
   if (size > old_size)
   {
-    for (int i = old_size; i < size; i++)
-    {
-      g->GetX()[i] = g->GetX()[i-1] + dt; 
-    }
-  }
-
-}
-
-
-
-static void 
-__attribute__((__optimize__("fast-math","O3")))
-fillEven(int N, double * __restrict__ x, double dt, double t0)
-{
-  for (int i = 0; i < N; i++)
-  {
-    x[i] = i * dt + t0; 
+    fillEven(size-old_size, g->GetX() + old_size, dt, g->GetX()[old_size-1]); 
   }
 }
 
@@ -100,7 +129,7 @@ AnalysisWaveform::AnalysisWaveform(int N, const FFTWComplex * f, double df, doub
   :  g_even(N), df(df), interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(false), must_update_even(true), uneven_equals_even(true), hilbert_transform(0), force_even_size(0)
 {
   fft_len = N/2 +1; 
-  fft = new FFTWComplex[fft_len]; 
+  fft = (FFTWComplex*) memalign(ALIGNMENT, fft_len * sizeof(FFTWComplex)); 
   memcpy(fft, f, fft_len * sizeof(FFTWComplex)); 
   dt = 1./ (N*df); 
 
@@ -117,7 +146,7 @@ AnalysisWaveform::AnalysisWaveform(int N, const FFTWComplex * f, double df, doub
 
 
 
-const TGraph * AnalysisWaveform::uneven() const
+const TGraphAligned * AnalysisWaveform::uneven() const
 {
 
   if (uneven_equals_even) return even(); 
@@ -130,7 +159,7 @@ const TGraph * AnalysisWaveform::uneven() const
   return &g_uneven; 
 }
 
-const TGraph * AnalysisWaveform::even()  const
+const TGraphAligned * AnalysisWaveform::even()  const
 {
 
 #ifdef ANITA_ANALYSIS_DEBUG
@@ -190,7 +219,7 @@ void AnalysisWaveform::updateEven(const TGraph * replace)
 }
 
 
-TGraph * AnalysisWaveform::updateEven()
+TGraphAligned * AnalysisWaveform::updateEven()
 {
 
 #ifdef ANITA_ANALYSIS_DEBUG
@@ -198,7 +227,7 @@ TGraph * AnalysisWaveform::updateEven()
   if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
 #endif 
 
-  TGraph * ev = (TGraph *) even(); 
+  TGraphAligned * ev = (TGraphAligned *) even(); 
   must_update_uneven = !uneven_equals_even; 
   must_update_freq = true; 
   just_padded = false; 
@@ -206,13 +235,13 @@ TGraph * AnalysisWaveform::updateEven()
   return ev; 
 }
 
-TGraph * AnalysisWaveform::updateUneven()
+TGraphAligned * AnalysisWaveform::updateUneven()
 {
 #ifdef ANITA_ANALYSIS_DEBUG
   if (DEBUGON) printf("Called updateUneven()!\n"); 
   if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
 #endif
-  TGraph * g = (TGraph*) uneven(); 
+  TGraphAligned * g = (TGraphAligned*) uneven(); 
   uneven_equals_even = false; 
   must_update_even = true; 
   must_update_freq = true; 
@@ -264,7 +293,7 @@ void AnalysisWaveform::updateUneven(const TGraph * replace)
 
 void AnalysisWaveform::calculateUnevenFromEven() const
 {
-  const TGraph * g = even(); 
+  const TGraphAligned * g = even(); 
 
   if (interpolation_type == AKIMA) 
   {
@@ -294,7 +323,7 @@ void AnalysisWaveform::calculateEvenFromUneven()  const
 {
 
 
-  const TGraph * g = uneven(); 
+  const TGraphAligned * g = uneven(); 
   int npoints = (g->GetX()[g->GetN()-1] - g->GetX()[0]) / dt; 
   g_even.Set(force_even_size ? force_even_size : npoints); 
   force_even_size = 0; 
@@ -345,9 +374,8 @@ void AnalysisWaveform::calculateEvenFromUneven()  const
 
 void AnalysisWaveform::calculateEvenFromFreq() const
 {
-  double *y =  FFTtools::doInvFFT(g_even.GetN(), fft); 
+  FFTtools::doInvFFTNoClobber(g_even.GetN(), fft, g_even.GetY()); 
 
-  memcpy(g_even.GetY(), y, g_even.GetN() * sizeof(double)); 
   double t0 = g_even.GetX()[0]; 
 
   if (force_even_size) 
@@ -360,7 +388,6 @@ void AnalysisWaveform::calculateEvenFromFreq() const
     fillEven(g_even.GetN(), g_even.GetX(), dt,t0); 
   }
   
-  delete [] y; 
   hilbert_envelope_dirty = true; 
 
   must_update_even = false; 
@@ -369,7 +396,7 @@ void AnalysisWaveform::calculateEvenFromFreq() const
 void AnalysisWaveform::calculateFreqFromEven() const
 {
 
-  const TGraph * g = even();  // in case it must be converted from uneven
+  const TGraphAligned * g = even();  // in case it must be converted from uneven
 
   assert(g->GetN() > 0); 
   dt = g->GetX()[1] - g->GetX()[0]; 
@@ -379,10 +406,11 @@ void AnalysisWaveform::calculateFreqFromEven() const
 
   if (fft) 
   {
-    delete [] fft; 
+    free(fft); 
   }
+  fft = (FFTWComplex*) memalign(ALIGNMENT, sizeof(FFTWComplex) *(fft_len)); 
 
-  fft = FFTtools::doFFT(g->GetN(), g->GetY()); 
+  FFTtools::doFFT(g->GetN(), g->GetY(),fft); 
 
   must_update_freq = false; 
   power_dirty = true; 
@@ -403,8 +431,8 @@ void AnalysisWaveform::updateFreq(int new_N, const FFTWComplex * new_fft, double
 
   if (new_N && new_N != g_even.GetN())
   {
-    delete [] fft; 
-    fft = new FFTWComplex[new_N/2+1]; 
+    free(fft); 
+    fft = (FFTWComplex*) memalign(ALIGNMENT, sizeof(FFTWComplex) *(new_N/2+1)); 
     fft_len = new_N/2 + 1; 
     g_even.Set(new_N); 
   }
@@ -424,7 +452,7 @@ void AnalysisWaveform::updateFreq(int new_N, const FFTWComplex * new_fft, double
   just_padded = false; 
 }
 
-const TGraph * AnalysisWaveform::phase() const
+const TGraphAligned * AnalysisWaveform::phase() const
 {
   const FFTWComplex * the_fft = freq(); //will update if necessary
   if (phase_dirty)
@@ -434,7 +462,6 @@ const TGraph * AnalysisWaveform::phase() const
     for (int i = 0; i < fft_len; i++) 
     {
         g_phase.SetPoint(i, i * df, the_fft[i].getPhase()); 
-
     }
 
     phase_dirty = false;
@@ -444,14 +471,14 @@ const TGraph * AnalysisWaveform::phase() const
 }
 
 
-const TGraph * AnalysisWaveform::powerdB() const
+const TGraphAligned * AnalysisWaveform::powerdB() const
 {
-  const TGraph * the_power = power(); //will update if necessary
+  const TGraphAligned * the_power = power(); //will update if necessary
   if (power_db_dirty)
   {
 
-    g_power_db.Set(fft_len); 
-    for (int i = 0; i < fft_len; i++) 
+    g_power_db.Set(g_power.GetN()); 
+    for (int i = 0; i < g_power.GetN(); i++) 
     {
         g_power_db.SetPoint(i, the_power->GetX()[i], 10 * TMath::Log10(the_power->GetY()[i])); 
     }
@@ -490,9 +517,9 @@ const AnalysisWaveform * AnalysisWaveform::hilbertTransform() const
   return hilbert_transform; 
 }
 
-const TGraph * AnalysisWaveform::hilbertEnvelope() const
+const TGraphAligned * AnalysisWaveform::hilbertEnvelope() const
 {
-  const TGraph * the_even = even(); 
+  const TGraphAligned * the_even = even(); 
 
   if (hilbert_envelope_dirty)
   {
@@ -513,20 +540,40 @@ const TGraph * AnalysisWaveform::hilbertEnvelope() const
   return &g_hilbert_envelope; 
 }
 
-const TGraph * AnalysisWaveform::power() const
+const TGraphAligned * AnalysisWaveform::power() const
 {
-  const FFTWComplex * the_fft = freq(); //will update if necessary
+
   if (power_dirty)
   {
 
-    g_power.Set(fft_len); 
-    for (int i = 0; i < fft_len; i++) 
+    if (power_options.method == PowerCalculationOptions::FFT) 
     {
-      if (i == 0 || i == fft_len -1)
-        g_power.SetPoint(i, i * df, the_fft[i].getAbsSq()/fft_len/50/1000); 
+      const FFTWComplex * the_fft = freq(); //will update if necessary
+      g_power.Set(fft_len); 
+      for (int i = 0; i < fft_len; i++) 
+      {
+        if (i == 0 || i == fft_len -1)
+        {
+          g_power.SetPoint(i, i * df, the_fft[i].getAbsSq()/fft_len/50/1000); 
+        }
+        else
+        {
+          g_power.SetPoint(i, i * df, the_fft[i].getAbsSq()*2/fft_len/50/1000); 
+        }
+      }
+    }
+    else 
+    {
+      const TGraphAligned * g = even(); 
 
-      else
-        g_power.SetPoint(i, i * df, the_fft[i].getAbsSq()*2/fft_len/50/1000); 
+      if (power_options.method == PowerCalculationOptions::BARTLETT)
+      {
+        FFTtools::welchPeriodogram(g, power_options.window_size, 0, &FFTtools::RECTANGULAR_WINDOW, true,&g_power); 
+      }
+      else 
+      {
+        FFTtools::welchPeriodogram(g, power_options.window_size, 0.5, power_options.type,true,&g_power); 
+      }
     }
 
     power_dirty = false;
@@ -538,7 +585,7 @@ const TGraph * AnalysisWaveform::power() const
 AnalysisWaveform::~AnalysisWaveform() 
 {
   if (fft) 
-    delete [] fft; 
+    free(fft); 
 
   if (hilbert_transform) 
     delete hilbert_transform; 
@@ -556,10 +603,100 @@ void AnalysisWaveform::forceEvenSize(int size)
 
 }
 
+void AnalysisWaveform::evalEven(int N, const double * __restrict t, double * __restrict v)  const
+{
+  const TGraphAligned * g = even(); 
+  int Ng = g->GetN(); 
+  if (Ng < 1) return; 
+  const double *y = g->GetY(); 
+  __builtin_prefetch(y); 
+  __builtin_prefetch(v,1); 
+
+  double t0 = g->GetX()[0]; 
+
+#ifndef ENABLE_VECTORIZE
+  for (int i = 0; i < N; i++) 
+  {
+    double xval = (t[i]-t0) / dt; 
+    int bin_low = int(xval); 
+
+    int branchless_too_low = bin_low < 0; 
+    int branchless_too_high = bin_low >= Ng; 
+    int branchless_on_edge = bin_low == Ng-1; 
+
+    int bin_high = bin_low+1; 
+    bin_low *= (1-branchless_too_high) * (1-branchless_too_low);
+    bin_high *= (1-branchless_too_high) * (1-branchless_too_low) * (1-branchless_on_edge);
+    double val_low = y[bin_low]; 
+    double val_high = y[bin_high]; 
+    double frac = xval - bin_low; 
+    double val = val_low + frac * (val_high - val_low); 
+
+    v[i] = val * (1-branchless_too_low) * (1-branchless_too_high) * (1-branchless_on_edge) + branchless_on_edge * y[Ng-1]; 
+  }
+#else
+
+  int leftover = N % VEC_N; 
+  int nit = N / VEC_N + (leftover ? 1 : 0);  
+
+  VEC v_t; 
+  VEC v_t0(t0); 
+  VEC inv_dt(1./dt); 
+  for (int i = 0; i < nit; i++)
+  {
+    v_t.load(t + i * VEC_N); 
+    VEC xval = (v_t - v_t0) * inv_dt; 
+    VEC truncated_xval = truncate(xval); 
+    IVEC bin_low = truncate_to_int(truncated_xval); 
+
+    IVEC branchless_too_low = bin_low < 0; 
+    IVEC branchless_too_high = bin_low >= Ng; 
+    IVEC branchless_on_edge = bin_low== Ng-1; 
+
+    int scalar_out_of_bounds =  int(i == nit-1 && leftover > 0); 
+    IVEC out_of_bounds  = scalar_out_of_bounds; 
+    IVEC bin_high = bin_low+1; 
+
+    IVEC too_low_or_too_high = (1-branchless_too_low) * (1-branchless_too_high) * out_of_bounds ; 
+    IVEC kill_it = too_low_or_too_high *  ( 1- branchless_on_edge);  
+
+    bin_low  *= too_low_or_too_high; 
+    bin_high *= kill_it; 
+
+    int indices_low[VEC_N]; 
+    int indices_high[VEC_N]; 
+    bin_low.store(indices_low); 
+    bin_high.store(indices_high); 
+
+    VEC val_low; 
+    VEC val_high; 
+    for (int j = 0; j < VEC_N; j++)
+    {
+      val_low.insert(j,y[indices_low[j]]); 
+      val_high.insert(j,y[indices_high[j]]); 
+    }
+
+    VEC frac = xval - truncated_xval; 
+    VEC val = val_low + frac * (val_high - val_low); 
+    
+    if (scalar_out_of_bounds)
+    {
+      val.store_partial(leftover, v + i * VEC_N); 
+    }
+    else
+    {
+      val.store(v + i * VEC_N); 
+    }
+  }
+
+#endif
+
+}
+
 double AnalysisWaveform::evalEven(double t)  const
 {
 
-  const TGraph * g = even(); 
+  const TGraphAligned * g = even(); 
 
   double t0 = g->GetX()[0]; 
   double xval = (t-t0) / dt; 
@@ -635,7 +772,7 @@ AnalysisWaveform::AnalysisWaveform(const AnalysisWaveform & other)
 
   if (!must_update_freq)
   {
-    fft = new FFTWComplex[fft_len]; 
+    fft = (FFTWComplex*) memalign(ALIGNMENT, sizeof(FFTWComplex)*fft_len);  
     memcpy(fft, other.fft, fft_len * sizeof(FFTWComplex)); 
   }
   else
@@ -669,20 +806,21 @@ AnalysisWaveform * AnalysisWaveform::correlation(const AnalysisWaveform *A, cons
   FFTWComplex * update = answer->updateFreq(); 
 
   const FFTWComplex * Bfreq = B->freq(); 
+  double inv = 1./(N*scale); 
   
   for (int i = 0; i < B->Nfreq(); i++) 
   {
     FFTWComplex vA = update[i]; 
     FFTWComplex vB = Bfreq[i]; 
-    update[i].re =  (vA.re * vB.re + vA.im * vB.im) / N / scale; 
-    update[i].im =  (vA.im * vB.re - vA.re * vB.im) / N / scale; 
+    update[i].re =  (vA.re * vB.re + vA.im * vB.im) *inv;
+    update[i].im =  (vA.im * vB.re - vA.re * vB.im) *inv; 
+//    printf("%f %f\n", update[i].re, update[i].im); 
   }
-
 
   answer->padFreq(npad); 
 
   N = answer->even()->GetN(); 
-  TGraph g(N); 
+  TGraphAligned g(N); 
 
   double dt = answer->deltaT(); 
   memcpy(g.GetY(), answer->even()->GetY() + N/2, N/2 * sizeof(double)); 
@@ -706,12 +844,11 @@ void AnalysisWaveform::padFreq(int npad)
 
 
 
-
   //new even size
   int new_N = g_even.GetN() * (1+npad); 
 
   //allocate new memory
-  FFTWComplex * new_fft = new FFTWComplex[new_N/2+1]; 
+  FFTWComplex * new_fft = (FFTWComplex*) memalign(ALIGNMENT, sizeof(FFTWComplex) * (new_N/2+1)); 
 
   const FFTWComplex * old_freq = freq(); 
   //printf("%d\n", fft_len); 
@@ -734,7 +871,7 @@ void AnalysisWaveform::padFreq(int npad)
 
 
   //swap in new fft
-  delete [] fft; 
+  free(fft); 
   fft = new_fft; 
 
   //others need to update now! 
@@ -750,10 +887,17 @@ void AnalysisWaveform::padFreq(int npad)
 }
 
 
+void AnalysisWaveform::setPowerCalculationOptions(PowerCalculationOptions & opt) 
+{
+  power_options = opt; 
+  power_dirty = true; 
+  power_db_dirty = true; 
+}
+
 void AnalysisWaveform::padEven(int npad)
 {
   if (npad < 1) return; 
-  TGraph * g = updateEven(); 
+  TGraphAligned * g = updateEven(); 
   int old_n = g->GetN(); 
   g->Set(g->GetN() *(1+npad)); 
   for (int i = old_n; i < g->GetN(); i++) 
@@ -768,7 +912,7 @@ bool AnalysisWaveform::checkIfPaddedInTime() const
 {
   if (just_padded) return true; 
 
-  const TGraph *g = even(); 
+  const TGraphAligned *g = even(); 
 
   for (int i = g->GetN()/2; i <g->GetN(); i++) 
   {
@@ -778,10 +922,10 @@ bool AnalysisWaveform::checkIfPaddedInTime() const
   return true; 
 }
 
-void AnalysisWaveform::drawEven(const char * opt) const{ ((TGraph*)even())->Draw(opt); }
-void AnalysisWaveform::drawUneven(const char * opt) const{ ((TGraph*)uneven())->Draw(opt); }
-void AnalysisWaveform::drawPower(const char * opt)const { ((TGraph*)power())->Draw(opt); }
-void AnalysisWaveform::drawPowerdB(const char * opt)const { ((TGraph*)powerdB())->Draw(opt); }
-void AnalysisWaveform::drawPhase(const char * opt) const{ ((TGraph*)phase())->Draw(opt); }
-void AnalysisWaveform::drawHilbertEnvelope(const char * opt) const{ ((TGraph*)hilbertEnvelope())->Draw(opt); }
+void AnalysisWaveform::drawEven(const char * opt) const{ ((TGraphAligned*)even())->Draw(opt); }
+void AnalysisWaveform::drawUneven(const char * opt) const{ ((TGraphAligned*)uneven())->Draw(opt); }
+void AnalysisWaveform::drawPower(const char * opt)const { ((TGraphAligned*)power())->Draw(opt); }
+void AnalysisWaveform::drawPowerdB(const char * opt)const { ((TGraphAligned*)powerdB())->Draw(opt); }
+void AnalysisWaveform::drawPhase(const char * opt) const{ ((TGraphAligned*)phase())->Draw(opt); }
+void AnalysisWaveform::drawHilbertEnvelope(const char * opt) const{ ((TGraphAligned*)hilbertEnvelope())->Draw(opt); }
 
