@@ -7,10 +7,7 @@
 
 FilterStrategy::FilterStrategy(TFile * outfile) 
 {
-  if (outfile) 
-  {
-    f =  outfile; 
-  }
+  f = outfile; 
   started = false; 
 }
 
