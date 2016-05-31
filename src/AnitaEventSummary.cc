@@ -1,6 +1,10 @@
 #include "AnitaEventSummary.h"
 
-ClassImp(AnitaEventSummary)
+//are these even necessary anymore? Who knows! 
+//ClassImp(AnitaEventSummary)
+//ClassImp(AnitaEventSummary::PointingHypothesis)
+//ClassImp(AnitaEventSummary::SourceHypothesis)
+  
 
 const double C_IN_M_NS = 0.299792; 
 
@@ -128,8 +132,6 @@ void AnitaEventSummary::setTriggerInfomation(const RawAnitaHeader* header){
 
   
 }
-
-
 
 
 void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat){

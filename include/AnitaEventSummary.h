@@ -21,6 +21,7 @@ public:
   class PointingHypothesis 
   {
   public: 
+    PointingHypothesis() { ; }
     Double_t phi;  /// peak phi, degrees
     Double_t theta; /// peak theta, degrees
     Double_t value; /// peak value
@@ -38,8 +39,7 @@ public:
     Bool_t triggered; /// was this in a triggered phi sector? 
     Bool_t masked; /// was this in a masked phi sector? 
 
-    virtual ~PointingHypothesis() {;}
-    ClassDef(PointingHypothesis,5); 
+    ClassDefNV(PointingHypothesis,5); 
   }; 
 
   /** Stores information about a waveform (coherent or deconvolve) */ 
@@ -47,6 +47,7 @@ public:
   {
 
   public: 
+    WaveformInfo() {; } 
     Double_t snr; ///Signal to Noise of waveform 
     Double_t peakHilbert; /// peak of hilbert envelope
     Double_t peakVal;  /// peak value
@@ -55,9 +56,8 @@ public:
     Double_t I,Q,U,V;  // Stokes Parameters
     Double_t bandwidth;  /// bandwidth of power spectrum 
     Int_t numAntennasInCoherent; // number of antennas used to make this 
-    virtual ~WaveformInfo() {; } 
 
-    ClassDef(WaveformInfo, 2); 
+    ClassDefNV(WaveformInfo, 2); 
   }; 
 
 
@@ -65,6 +65,7 @@ public:
   class EventFlags
   {
   public: 
+    EventFlags() {; }
     /** Is this event from a cal pulser? */ 
     enum CalPulser 
       {
@@ -90,22 +91,21 @@ public:
     CalPulser pulser;
     Bool_t isVarner;
     Bool_t isVarner2;
-    virtual ~EventFlags() {;}
 
-    ClassDef(EventFlags,3); 
+    ClassDefNV(EventFlags,3); 
   };
 
   /** A Source Hypothesis tells us about different potential sources of signals (e.g. calibration pulser) */ 
   class SourceHypothesis
   {
     public:
+      SourceHypothesis() { ; }
       Double_t theta;
       Double_t phi;
       Double_t distance;
       
-      virtual ~SourceHypothesis(){;}
 
-      ClassDef(SourceHypothesis,1);
+      ClassDefNV(SourceHypothesis,1);
   };
 
  
@@ -139,12 +139,11 @@ public:
   void setTriggerInfomation(const RawAnitaHeader* header);
   void setSourceInformation(UsefulAdu5Pat* pat);  
   void zeroInternals();
-  virtual ~AnitaEventSummary() { ; } 
 
   
   private: 
 
-    ClassDef(AnitaEventSummary, 9); 
+    ClassDefNV(AnitaEventSummary, 9); 
 }; 
 
 
