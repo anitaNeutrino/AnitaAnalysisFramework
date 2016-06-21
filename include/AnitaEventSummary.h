@@ -35,11 +35,15 @@ public:
     Double_t sigma_theta;  ///error on theta
     Double_t sigma_phi;  /// error on phi
     Double_t rho;  ///correlation coefficient between theta and phi
+    Double_t chisq; /// chisq/ndof of peak finding process, if available (otherwise zero)
+
+
+    Double_t theta_adjustment_needed; /// If an event barely missed the ground, it is useful to see the coordinates at which it would hit if theta adjustment by a small amount. This is the calculated small amount that leads to it hitting the ground. 
 
     Bool_t triggered; /// was this in a triggered phi sector? 
     Bool_t masked; /// was this in a masked phi sector? 
 
-    ClassDefNV(PointingHypothesis,5); 
+    ClassDefNV(PointingHypothesis,8); 
   }; 
 
   /** Stores information about a waveform (coherent or deconvolve) */ 
