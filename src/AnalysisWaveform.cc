@@ -477,12 +477,8 @@ const TGraphAligned * AnalysisWaveform::powerdB() const
   if (power_db_dirty)
   {
 
-    g_power_db.Set(g_power.GetN()); 
-    for (int i = 0; i < g_power.GetN(); i++) 
-    {
-        g_power_db.SetPoint(i, the_power->GetX()[i], 10 * TMath::Log10(the_power->GetY()[i])); 
-    }
-
+    g_power_db = *the_power;
+    g_power_db.dBize(); 
     g_power_db.GetXaxis()->SetTitle("Frequency"); 
     g_power_db.GetYaxis()->SetTitle("Power (dBm)"); 
     power_db_dirty = false;
@@ -808,6 +804,7 @@ AnalysisWaveform * AnalysisWaveform::correlation(const AnalysisWaveform *A, cons
   const FFTWComplex * Bfreq = B->freq(); 
   double inv = 1./(N*scale); 
   
+  //TODO this can be vectorized 
   for (int i = 0; i < B->Nfreq(); i++) 
   {
     FFTWComplex vA = update[i]; 

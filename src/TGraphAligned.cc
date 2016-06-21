@@ -1,6 +1,7 @@
 #include "TGraphAligned.h" 
 
 #include <stdlib.h>
+#include "TMath.h"
 #include <malloc.h>
 #include "TH1.h"
 #include "TList.h"
@@ -196,3 +197,28 @@ Double_t** TGraphAligned::AllocateAlignedArrays(Int_t Narrays, Int_t arraySize)
   fMaxSize = arraySize;
   return newarrays;
 }
+
+
+void TGraphAligned::undBize() 
+{
+  int n = GetN(); 
+
+  for (int i = 0; i < n; i++)
+  {
+    fY[i] = TMath::Power(10,fY[i]/10); 
+  }
+}
+
+
+void TGraphAligned::dBize(double mindB) 
+{
+  int n = GetN(); 
+
+  for (int i = 0; i < n; i++)
+  {
+    fY[i] = TMath::Max(mindB, 10 * TMath::Log10(fY[i])); 
+  }
+
+
+}
+

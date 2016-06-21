@@ -37,6 +37,9 @@ class TGraphAligned : public TGraph {
      *  I think this should fire also for TGraphAligned, but not sure */ 
     TGraphAligned(const TGraph  &); 
 
+    void dBize(double mindB=-100); 
+    void undBize(); 
+
     aligned_double_v GetX() const { return fX; } 
     aligned_double_v GetY() const { return fY; } 
 
