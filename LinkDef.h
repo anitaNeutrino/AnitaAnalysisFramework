@@ -16,9 +16,13 @@
 #pragma link C++ class AnalysisWaveform::PowerCalculationOptions;
 #pragma link C++ class TGraphAligned+;
 
+
 #pragma link C++ class FilterOperation+;
 #pragma link C++ class UniformFilterOperation+;
 #pragma link C++ class ConditionalFilterOperation+;
 
+#pragma link C++ class SimplePassBandFilter+;
+#pragma link C++ class SimpleNotchFilter+;
+#pragma link C++ class ALFAFilter+;
 #endif
 
