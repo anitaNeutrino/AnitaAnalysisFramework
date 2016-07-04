@@ -71,6 +71,7 @@ class ALFAFilter : public FilterOperation
     }
 
     const char * tag() const { return "ALFAFilter"; } 
+    const char * description() const { return descStr.Data(); } 
   private:
     SimplePassBandFilter pb; 
     TString descStr;
