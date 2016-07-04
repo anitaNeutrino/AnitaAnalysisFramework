@@ -17,7 +17,7 @@ VECTORDIR=vectorclass
 
 .PHONY: clean install all doc 
 
-OBJS := $(addprefix $(BUILDDIR)/, FilteredAnitaEvent.o FilterOperation.o FilterStrategy.o AnalysisWaveform.o AnitaEventSummary.o TGraphAligned.o analysisDict.o)
+OBJS := $(addprefix $(BUILDDIR)/, FilteredAnitaEvent.o FilterOperation.o FilterStrategy.o AnalysisWaveform.o AnitaEventSummary.o TGraphAligned.o BasicFilters.o analysisDict.o)
 
 #BINARIES := $(addprefix $(BINDIR)/, binary);
 
