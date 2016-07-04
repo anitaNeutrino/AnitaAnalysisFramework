@@ -444,7 +444,7 @@ void AnalysisWaveform::updateFreq(int new_N, const FFTWComplex * new_fft, double
   }
   dt = 1./ (g_even.GetN() * df); 
 
-  must_update_freq = false
+  must_update_freq = false; 
   must_update_even = true; 
   must_update_uneven = !uneven_equals_even; 
   power_dirty = true; 
