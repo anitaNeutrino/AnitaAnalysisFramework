@@ -166,7 +166,7 @@ class AnalysisWaveform
     const AnalysisWaveform * hilbertTransform() const; 
 
     /** Return the length of the frequency domain complex waveform */ 
-    int Nfreq() const { (void) freq(); return fft_len; } 
+    int Nfreq() const;
 
     /** Return the number of samples in the even waveform */ 
     int Neven() const { return even()->GetN(); } 

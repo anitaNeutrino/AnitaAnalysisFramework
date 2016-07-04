@@ -444,6 +444,7 @@ void AnalysisWaveform::updateFreq(int new_N, const FFTWComplex * new_fft, double
   }
   dt = 1./ (g_even.GetN() * df); 
 
+  must_update_freq = false
   must_update_even = true; 
   must_update_uneven = !uneven_equals_even; 
   power_dirty = true; 
@@ -842,6 +843,7 @@ void AnalysisWaveform::padFreq(int npad)
 
 
   //new even size
+  if (g_even.GetN() ==0) (void) even();  //may need to calculate even if it never has been
   int new_N = g_even.GetN() * (1+npad); 
 
   //allocate new memory
@@ -913,7 +915,7 @@ bool AnalysisWaveform::checkIfPaddedInTime() const
 
   for (int i = g->GetN()/2; i <g->GetN(); i++) 
   {
-    if (g->GetX()[i] !=0) return false; 
+    if (g->GetY()[i] !=0) return false; 
   }
   just_padded = true; 
   return true; 
@@ -925,4 +927,11 @@ void AnalysisWaveform::drawPower(const char * opt)const { ((TGraphAligned*)power
 void AnalysisWaveform::drawPowerdB(const char * opt)const { ((TGraphAligned*)powerdB())->Draw(opt); }
 void AnalysisWaveform::drawPhase(const char * opt) const{ ((TGraphAligned*)phase())->Draw(opt); }
 void AnalysisWaveform::drawHilbertEnvelope(const char * opt) const{ ((TGraphAligned*)hilbertEnvelope())->Draw(opt); }
+
+
+int AnalysisWaveform::Nfreq() const
+{
+  (void) freq(); 
+  return fft_len;  
+}
 
