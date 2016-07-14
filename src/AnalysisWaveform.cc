@@ -2,7 +2,11 @@
 #include "FFTtools.h" 
 #include "TAxis.h"
 #include "RFInterpolate.h" 
+#ifdef __APPLE__
+#include <stdlib.h>
+#else
 #include <malloc.h>
+#endif
 #include <assert.h>
 
 
@@ -129,7 +133,11 @@ AnalysisWaveform::AnalysisWaveform(int N, const FFTWComplex * f, double df, doub
   :  g_even(N), df(df), interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(false), must_update_even(true), uneven_equals_even(true), hilbert_transform(0), force_even_size(0)
 {
   fft_len = N/2 +1; 
-  fft = (FFTWComplex*) memalign(ALIGNMENT, fft_len * sizeof(FFTWComplex)); 
+#ifdef __APPLE__
+  fft = (FFTWComplex*) malloc(fft_len * sizeof(FFTWComplex));
+#else
+  fft = (FFTWComplex*) memalign(ALIGNMENT, fft_len * sizeof(FFTWComplex));
+#endif
   memcpy(fft, f, fft_len * sizeof(FFTWComplex)); 
   dt = 1./ (N*df); 
 
@@ -408,7 +416,11 @@ void AnalysisWaveform::calculateFreqFromEven() const
   {
     free(fft); 
   }
-  fft = (FFTWComplex*) memalign(ALIGNMENT, sizeof(FFTWComplex) *(fft_len)); 
+#ifdef __APPLE__
+  fft = (FFTWComplex*) malloc(sizeof(FFTWComplex) *(fft_len));
+#else
+  fft = (FFTWComplex*) memalign(ALIGNMENT, sizeof(FFTWComplex) *(fft_len));
+#endif
 
   FFTtools::doFFT(g->GetN(), g->GetY(),fft); 
 
@@ -432,7 +444,11 @@ void AnalysisWaveform::updateFreq(int new_N, const FFTWComplex * new_fft, double
   if (new_N && new_N != g_even.GetN())
   {
     free(fft); 
-    fft = (FFTWComplex*) memalign(ALIGNMENT, sizeof(FFTWComplex) *(new_N/2+1)); 
+#ifdef __APPLE__
+    fft = (FFTWComplex*) malloc(sizeof(FFTWComplex) *(new_N/2+1));
+  #else
+    fft = (FFTWComplex*) memalign(ALIGNMENT, sizeof(FFTWComplex) *(new_N/2+1));
+#endif
     fft_len = new_N/2 + 1; 
     g_even.Set(new_N); 
   }
@@ -769,7 +785,11 @@ AnalysisWaveform::AnalysisWaveform(const AnalysisWaveform & other)
 
   if (!must_update_freq)
   {
-    fft = (FFTWComplex*) memalign(ALIGNMENT, sizeof(FFTWComplex)*fft_len);  
+#ifdef __APPLE__
+    fft = (FFTWComplex*) malloc(sizeof(FFTWComplex)*fft_len);
+  #else
+    fft = (FFTWComplex*) memalign(ALIGNMENT, sizeof(FFTWComplex)*fft_len);
+#endif
     memcpy(fft, other.fft, fft_len * sizeof(FFTWComplex)); 
   }
   else
@@ -847,7 +867,11 @@ void AnalysisWaveform::padFreq(int npad)
   int new_N = g_even.GetN() * (1+npad); 
 
   //allocate new memory
-  FFTWComplex * new_fft = (FFTWComplex*) memalign(ALIGNMENT, sizeof(FFTWComplex) * (new_N/2+1)); 
+#ifdef __APPLE__
+  FFTWComplex * new_fft = (FFTWComplex*) malloc(sizeof(FFTWComplex) * (new_N/2+1));
+#else
+  FFTWComplex * new_fft = (FFTWComplex*) memalign(ALIGNMENT, sizeof(FFTWComplex) * (new_N/2+1));
+#endif
 
   const FFTWComplex * old_freq = freq(); 
   //printf("%d\n", fft_len); 

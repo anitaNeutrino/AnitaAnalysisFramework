@@ -2,7 +2,12 @@
 
 #include <stdlib.h>
 #include "TMath.h"
+#ifdef __APPLE__
+#include <stdlib.h>
+int err = 0; // error checking for posix_memalign
+#else
 #include <malloc.h>
+#endif
 #include "TH1.h"
 #include "TList.h"
 
@@ -70,8 +75,19 @@ TGraphAligned& TGraphAligned::operator=(const TGraphAligned &gr)
          fX = fY = 0;
          return *this;
       } else {
-        fX = (Double_t*) memalign(ALIGNMENT, fNpoints * sizeof(Double_t)); 
-        fY = (Double_t*) memalign(ALIGNMENT, fNpoints * sizeof(Double_t)); 
+#ifdef __APPLE__
+	err = posix_memalign((void**) fX, ALIGNMENT, fNpoints * sizeof(Double_t));
+	if(err != 0){
+	  fX = NULL;
+	}
+	err = posix_memalign((void**) fY, ALIGNMENT, fNpoints * sizeof(Double_t));
+	if(err != 0){
+	  fX = NULL;
+	}	
+#else
+        fX = (Double_t*) memalign(ALIGNMENT, fNpoints * sizeof(Double_t));
+        fY = (Double_t*) memalign(ALIGNMENT, fNpoints * sizeof(Double_t)); 		
+#endif
       }
 
       Int_t n = gr.GetN() * sizeof(Double_t);
@@ -116,8 +132,19 @@ Bool_t TGraphAligned::CtorAllocate()
   else 
   {
         fMaxSize   = fNpoints;
-        fX = (Double_t*) memalign(ALIGNMENT, fNpoints * sizeof(Double_t)); 
-        fY = (Double_t*) memalign(ALIGNMENT, fNpoints * sizeof(Double_t)); 
+#ifdef __APPLE__
+	err = posix_memalign((void**) fX, ALIGNMENT, fNpoints * sizeof(Double_t));
+	if(err != 0){
+	  fX = NULL;
+	}
+	err = posix_memalign((void**) fY, ALIGNMENT, fNpoints * sizeof(Double_t));
+	if(err != 0){
+	  fY = NULL;
+	}
+#else
+        fX = (Double_t*) memalign(ALIGNMENT, fNpoints * sizeof(Double_t));
+        fY = (Double_t*) memalign(ALIGNMENT, fNpoints * sizeof(Double_t)); 		
+#endif
   }
   return kTRUE;
 }
@@ -157,15 +184,31 @@ TGraphAligned::TGraphAligned(const TGraph &gr)
   // remake the pointers. If anybody can think of a better way to do this... let me know
    if (fMaxSize)
    {
-      Double_t * new_fX = (Double_t*) memalign(ALIGNMENT, fMaxSize * sizeof(Double_t)); 
-      memcpy(new_fX, fX, gr.GetN() * sizeof(Double_t));
-      delete [] fX; 
-      fX = new_fX; 
 
-      Double_t * new_fY = (Double_t*) memalign(ALIGNMENT, fMaxSize * sizeof(Double_t)); 
-      memcpy(new_fY, fY, gr.GetN() * sizeof(Double_t));
-      delete [] fY; 
-      fY = new_fY; 
+#ifdef __APPLE__
+     Double_t * new_fX = NULL;
+     err = posix_memalign((void**) new_fX, ALIGNMENT, fMaxSize * sizeof(Double_t));
+     if(err != 0){
+       new_fX = NULL;
+     }
+     Double_t * new_fY = NULL;
+     err = posix_memalign((void**) new_fY, ALIGNMENT, fMaxSize * sizeof(Double_t));
+     if(err != 0){
+       new_fY = NULL;
+     }
+#else
+     Double_t * new_fX = (Double_t*) memalign(ALIGNMENT, fMaxSize * sizeof(Double_t));      
+     Double_t * new_fY = (Double_t*) memalign(ALIGNMENT, fMaxSize * sizeof(Double_t));      
+#endif
+     
+     memcpy(new_fX, fX, gr.GetN() * sizeof(Double_t));
+     delete [] fX; 
+     fX = new_fX; 
+
+
+     memcpy(new_fY, fY, gr.GetN() * sizeof(Double_t));
+     delete [] fY; 
+     fY = new_fY; 
    }
 }
 
@@ -189,8 +232,15 @@ Double_t** TGraphAligned::AllocateAlignedArrays(Int_t Narrays, Int_t arraySize)
   else
   {
     for (Int_t i = 0; i < Narrays; ++i)
-    {
-       newarrays[i] = (Double_t*) memalign(ALIGNMENT, arraySize * sizeof(Double_t)); 
+      {
+#ifdef __APPLE__
+	err = posix_memalign((void**) newarrays[i], ALIGNMENT, arraySize * sizeof(Double_t));
+	if(err != 0){
+	  newarrays[i] = NULL;
+	}
+#else
+	newarrays[i] = (Double_t*) memalign(ALIGNMENT, arraySize * sizeof(Double_t));        
+#endif
     }
   }
 
