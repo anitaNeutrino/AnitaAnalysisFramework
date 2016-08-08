@@ -69,9 +69,9 @@ set(DICTNAME G__${libname})
 
 ROOT_GENERATE_DICTIONARY(${DICTNAME} ${HEADER_FILES} LINKDEF LinkDef.h)
 
-#---Create a shared library with geneated dictionary
+#---Create a shared library with generated dictionary
 add_library(${libname} SHARED ${SOURCE_FILES} ${DICTNAME}.cxx)
-target_link_libraries(${libname} ${ZLIB_LIBRARIES} RootFftwWrapper ${ROOT_LIBRARIES} ${FFTW_LIBRARIES})
+target_link_libraries(${libname} ${ZLIB_LIBRARIES} RootFftwWrapper AnitaEvent AnitaCorrelator ${ROOT_LIBRARIES} ${FFTW_LIBRARIES})
 
 if( ${ROOT_VERSION} VERSION_GREATER "5.99.99")
     add_custom_target(${DICTNAME}.pcm DEPENDS ${DICTNAME})
