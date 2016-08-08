@@ -1,110 +1,49 @@
-include Makefile.arch
-include Makefile.config
-
-CXXFLAGS+= -g
-
-CXXFLAGS     += $(ROOTCFLAGS) $(SYSINCLUDES) -I$(ANITA_UTIL_INSTALL_DIR)/include 
-LDFLAGS      += $(ROOTLDFLAGS)  -L$(ANITA_UTIL_INSTALL_DIR)/lib -g 
-#LIBS          = $(ROOTLIBS) -g -Wl,-z,defs -lMathMore -lRootFftwWrapper -lAnitaEvent
-LIBS          = $(ROOTLIBS) -lMathMore -lRootFftwWrapper -lAnitaEvent -lAnitaCorrelator -pthread
-GLIBS         = $(ROOTGLIBS) $(SYSLIBS)
-LIBDIR=lib
-BUILDDIR=build
-INCLUDEDIR=include
-BINDIR=bin
-VECTORDIR=vectorclass
+### Makefile that delegates building either to cmake or legacy Makefile 
+### Cmake is default, if you don't want to use CMake, you can do make legacy   
+### ( or move this file and rename Makefile.legacy to Makefile,
+###  or modify the all/clean/install targets below  ) 
+###
 
 
-.PHONY: clean install all doc 
+.PHONY: all configure clean cleaner install legacy legacy-clean legacy-install cmake-build cmake-clean cmake-install
 
-OBJS := $(addprefix $(BUILDDIR)/, FilteredAnitaEvent.o FilterOperation.o FilterStrategy.o AnalysisWaveform.o AnitaEventSummary.o TGraphAligned.o BasicFilters.o analysisDict.o)
-
-#BINARIES := $(addprefix $(BINDIR)/, binary);
-
-# INCLUDES := $(addprefix $(INCLUDEDIR)/, $(shell ls includes/*.h ))
-INCLUDES := $(shell ls $(INCLUDEDIR)/*.h )
-
-ROOT_LIBRARY = $(LIBDIR)/libAnitaAnalysis.${DllSuf}
-
-all: $(ROOT_LIBRARY) $(BINARIES) 
-
-## probably need some magic for Mac OS X here? Yes you do, and it is a truly mysterious dark art
-$(ROOT_LIBRARY) : $(OBJS) | $(LIBDIR) 
-	@echo "Linking $@ ..."
-ifeq ($(PLATFORM),macosx)
-# We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(LIBS) $(OutPutOpt) $@
-ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
-ifeq ($(MACOSX_MINOR),4)
-		ln -sf $@ $(subst .$(DllSuf),.so,$@)
-else
-		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $(LIBS) $^ \
-		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
-endif
-endif
-else
-#	$(LD) $(SOFLAGS) $(LDFLAGS) $(LIBS) $(OBJS) -o $@
-# $(LIBNAME): $(OBJS) | $(LIBDIR)
-# 	@echo Building shared library $@
-	$(LD) $(SOFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(GLIBS) -shared -o $@
-endif
+all: cmake-build 
+clean: cmake-clean
+install: cmake-install 
 
 
+### TODO add doxygen into CMakelists 
+doc: legacy-doc
 
+cmake-build: build/Makefile 
+	@make -C  ./build
 
-$(OBJS): | $(BUILDDIR)
+legacy-doc: 
+	@make -f Makefile.legacy doc 
 
-$(BUILDDIR): 
-	mkdir -p $(BUILDDIR)
+legacy: 
+	@make -f Makefile.legacy 
 
-$(BINDIR): 
-	mkdir -p $(BINDIR)
+legacy-clean: 
+	@make -f Makefile.legacy clean 
 
-$(LIBDIR): 
-	mkdir -p $(LIBDIR)
+legacy-install: 
+	@make -f Makefile.legacy install 
 
-$(BUILDDIR)/%.o: src/%.cc $(INCLUDES) Makefile | $(BUILDDIR) $(VECTORIZE)
-	@echo Compiling  $< 
-	$(LD)  -I./include $(CXXFLAGS) -o $@ -c $< 
+configure: build/Makefile 
+	@ccmake . build 
 
-$(BUILDDIR)/%.o: build/%.cc $(INCLUDES) Makefile | $(BUILDDIR) 
-	@echo Compiling  $< 
-	$(LD)  -I../include -I./ $(CXXFLAGS) -o $@ -c $< 
+cmake-install: 
+	@make -C ./build install 
 
+build/Makefile: 
+	@echo "Setting up cmake build. Use "make legacy" to use legacy Makefile" 
+	@mkdir -p build 
+	@cd build && cmake ../ 
 
-$(BINDIR)/%: %.cc $(INCLUDES) Makefile $(ROOT_LIBRARY) | $(BINDIR)
-	@echo Compiling $<
-	$(LD)  -I./include -I./ $(CXXFLAGS) -o $@ $(LDFLAGS) -L./$(LIBDIR) -lAnitaAnalysis  $< 
+distclean: 
+	@echo "Removing cmake directory" 
+	@rm -rf build 
 
-$(BUILDDIR)/analysisDict.cc: $(INCLUDES) LinkDef.h | $(BUILDDIR)
-	@echo Running rootcint
-	rootcint  -f $@ -c -p -I$(ANITA_UTIL_INSTALL_DIR)/include $(INCLUDES) LinkDef.h
-
-install: $(ROOT_LIBRARY)
-ifndef ANITA_UTIL_INSTALL_DIR 
-	$(error Please define ANITA_UTIL_INSTALL_DIR)
-endif 
-	install -d $(ANITA_UTIL_INSTALL_DIR)/lib 
-	install -d $(ANITA_UTIL_INSTALL_DIR)/include 
-	install -c -m 755 $(ROOT_LIBRARY) $(ANITA_UTIL_INSTALL_DIR)/lib
-	install -c -m 644 $(INCLUDES) $(ANITA_UTIL_INSTALL_DIR)/include 
-	if [ -e $(BUILDDIR)/analysisDict_rdict.pcm ];  then install -c -m 755 $(BUILDDIR)/analysisDict_rdict.pcm $(ANITA_UTIL_INSTALL_DIR)/lib; fi; 
-
-
-doc:  $(INCLUDES) 
-	doxygen doc/Doxyfile 
-	make -C doc/latex
-
-#### Download and unzip Agner Fog's VCL vectorization class  
-$(VECTORDIR): 
-	mkdir -p $(VECTORDIR) 
-	curl http://www.agner.org/optimize/vectorclass.zip > $(VECTORDIR)/vectorclass.zip 
-	unzip $(VECTORDIR)/vectorclass.zip -d $(VECTORDIR) 
-	unzip $(VECTORDIR)/special.zip -d $(VECTORDIR) 
-
-
-
-clean: 
-	rm -rf build
-	rm -rf bin
-	rm -rf lib
+cmake-clean: build/Makefile 
+	@make -C ./build clean 
