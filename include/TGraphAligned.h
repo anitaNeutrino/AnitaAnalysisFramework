@@ -17,8 +17,8 @@ class TGraphAligned : public TGraph {
 
 
   /** This is the alignment */ 
-  static const UInt_t ALIGNMENT = 32; 
-  typedef Double_t * aligned_double_v __attribute__((aligned (ALIGNMENT))); 
+#define TGRAPH_ALIGNED_ALIGNMENT 32 
+  typedef Double_t * aligned_double_v __attribute__((aligned (TGRAPH_ALIGNED_ALIGNMENT))); 
   //Have to reimplement all interesting constructors, unfortunately, since we
   //unfortunately cannot call the TGraph constructor and have it call our
   //implementation of CtorAllocate 

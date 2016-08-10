@@ -14,6 +14,7 @@ int err = 0; // error checking for posix_memalign
 
 ClassImp(TGraphAligned); 
 
+#define ALIGNMENT TGRAPH_ALIGNED_ALIGNMENT
 
 TGraphAligned::TGraphAligned()
   :TGraph()
