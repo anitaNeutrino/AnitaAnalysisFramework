@@ -44,7 +44,7 @@ class FilterStrategy
 
 
     /** Output a string describing the strategy. User responsible for freeing.  */ 
-    char *  describe() const; 
+    // char *  describe() const; 
 
     /** finish */ 
     void done(); 
