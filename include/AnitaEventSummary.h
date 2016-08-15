@@ -2,12 +2,15 @@
 #define _ANITA_EVENT_SUMMARY_H_
 
 #include "TObject.h" 
-#include "Adu5Pat.h"
-#include "UsefulAdu5Pat.h" 
-#include "RawAnitaHeader.h"
-#include <iostream>
+#include "AnitaConventions.h" 
+class UsefulAdu5Pat; 
+class RawAnitaHeader; 
 
-/** Common analysis output format */ 
+/** Common analysis output format 
+ *  
+ *  Needless to say, there's no guarantee that everything will be filled, so be wary if something is 0 (it may not have been filled).   
+ *
+ * */ 
 
 
 class AnitaEventSummary 
@@ -39,11 +42,12 @@ public:
 
 
     Double_t theta_adjustment_needed; /// If an event barely missed the ground, it is useful to see the coordinates at which it would hit if theta adjustment by a small amount. This is the calculated small amount that leads to it hitting the ground. 
+    Double_t phi_separation; //angular separation from higher value peak in same event. 1000 if highest value event (i.e. first hypothesis) 
 
     Bool_t triggered; /// was this in a triggered phi sector? 
     Bool_t masked; /// was this in a masked phi sector? 
 
-    ClassDefNV(PointingHypothesis,8); 
+    ClassDefNV(PointingHypothesis,9); 
   }; 
 
   /** Stores information about a waveform (coherent or deconvolve) */ 
@@ -59,9 +63,17 @@ public:
     Double_t xPolPeakHilbert;  // Peak of xpol hilbert Envelope
     Double_t I,Q,U,V;  // Stokes Parameters
     Double_t bandwidth;  /// bandwidth of power spectrum 
+
+    //Shape parameters, computed using hilbert envelope 
+    Double_t riseTime_10_90;  /// Rise time of hilbert env from 10% to 90% of peak
+    Double_t riseTime_10_50;  /// Rise time of hilbert env from 10% to 50% of peak
+    Double_t fallTime_90_10;  /// Fall time of hilbert env from 90% to 10% of peak
+    Double_t fallTime_50_10;  /// Fall time of hilbert env from 50% to 10% of peak
+    Double_t width_50_50;   /// Width from first envelope crossing of 50 percent of peak to last 
+    Double_t width_10_10;  /// Width from first envelope crossing of 10 percent of peak to last 
     Int_t numAntennasInCoherent; // number of antennas used to make this 
 
-    ClassDefNV(WaveformInfo, 2); 
+    ClassDefNV(WaveformInfo, 3); 
   }; 
 
 
@@ -103,10 +115,12 @@ public:
   class SourceHypothesis
   {
     public:
-      SourceHypothesis() { ; }
+      SourceHypothesis() { reset(); }
       Double_t theta;
       Double_t phi;
       Double_t distance;
+
+      void reset() { theta = -999; phi = -999; distance = -999; } 
       
 
       ClassDefNV(SourceHypothesis,1);
@@ -134,8 +148,6 @@ public:
   SourceHypothesis wais;
   SourceHypothesis ldb;
 
-  // Adu5Pat pat;
-  // RawAnitaHeader header;
 
   AnitaEventSummary();
   AnitaEventSummary(const RawAnitaHeader* header);

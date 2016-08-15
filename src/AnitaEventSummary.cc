@@ -1,5 +1,8 @@
 #include "AnitaEventSummary.h"
 
+#include "RawAnitaHeader.h" 
+#include "UsefulAdu5Pat.h"
+
 //are these even necessary anymore? Who knows! 
 //ClassImp(AnitaEventSummary)
 //ClassImp(AnitaEventSummary::PointingHypothesis)
@@ -72,25 +75,13 @@ void AnitaEventSummary::zeroInternals(){
       memset(&deconvolved[polInd][dir],0,sizeof(WaveformInfo)); 
     }
   }
-
-  flags.isGood = 0;
-  flags.isRF = 0;
-  flags.isAdu5Trigger = 0;
-  flags.isG12Trigger = 0;
-  flags.isSoftwareTrigger = 0;
-  flags.isMinBiasTrigger = 0;
-  flags.isPayloadBlast = 0; 
-  flags.nadirFlag = 0; 
-  flags.strongCWFlag = 0;
-  flags.isHPolTrigger = 0;
-  flags.isVPolTrigger = 0;
+  memset(&flags,0, sizeof(EventFlags)); 
   flags.pulser = EventFlags::NONE; 
-  flags.isVarner = 0; 
-  flags.isVarner2 = 0; 
 
-  sun.theta = -999;
-  sun.phi = -999;
-  sun.distance = -999;
+  sun.reset();
+  wais.reset(); 
+  ldb.reset(); 
+
 }
 
 
@@ -138,7 +129,7 @@ void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat){
 
 
   pat->getSunPosition(sun.phi, sun.theta);
-  sun.distance = -999;  // I guess in theory we could compute this! 
+  sun.distance = 150e9;  // I guess in theory we could compute this! 
 
   pat->getThetaAndPhiWaveWaisDivide(wais.theta, wais.phi);
   wais.theta *= 180/ TMath::Pi(); 
