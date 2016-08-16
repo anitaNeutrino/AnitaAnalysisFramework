@@ -4,7 +4,7 @@
 #include "TMath.h"
 #ifdef __APPLE__
 #include <stdlib.h>
-int err = 0; // error checking for posix_memalign
+static int err = 0; // error checking for posix_memalign
 #else
 #include <malloc.h>
 #endif
@@ -28,7 +28,6 @@ TGraphAligned::TGraphAligned(Int_t n)
   SetName("Graph"); 
   fNpoints =n; 
   if (!CtorAllocate()) return; 
-
   FillZero(0, fNpoints); 
 }
 
@@ -147,6 +146,14 @@ Bool_t TGraphAligned::CtorAllocate()
         fY = (Double_t*) memalign(ALIGNMENT, fNpoints * sizeof(Double_t)); 		
 #endif
   }
+
+
+  if (fX == NULL || fY == NULL) 
+  {
+    fprintf(stderr, "Could not allocate aligned memory in TGraphAligned::CtorAllocate()\n"); 
+    return kFALSE; 
+  }
+
   return kTRUE;
 }
 
