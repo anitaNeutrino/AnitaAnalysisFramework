@@ -268,6 +268,60 @@ void TGraphAligned::undBize()
 }
 
 
+Double_t TGraphAligned::getSumV2(Int_t istart, Int_t iend) const
+{
+  aligned_double_v v = GetY(); 
+  __builtin_prefetch(v);  // This is really an academic exercise at this point
+  int N = GetN();  
+  int real_start = istart >= 0 ? TMath::Min(istart, N-1) : TMath::Max(0, N + istart)  ; 
+  int real_end = iend >= 0 ? TMath::Min(iend, N-1) : TMath::Max(0, N + iend)  ; 
+
+  double sum2 = 0; 
+
+
+  for (int i = real_start; i <= real_end; i++) 
+  {
+    sum2 +=  v[i]*v[i]; 
+  }
+
+  return sum2; 
+
+}
+
+void TGraphAligned::getMeanAndRMS(Double_t * mean, Double_t * rms, Int_t istart, Int_t iend) const
+{
+  aligned_double_v v = GetY(); 
+  __builtin_prefetch(v); 
+  int N = GetN(); 
+  int real_start = istart >= 0 ? TMath::Min(istart, N-1) : TMath::Max(0, N + istart)  ; 
+  int real_end = iend >= 0 ? TMath::Min(iend, N-1) : TMath::Max(0, N + iend)  ; 
+
+  double sum = 0; 
+  double sum2 = 0; 
+
+
+  //why the fuck is this not autovectorizing?!?? !?!?!? 
+  //is it because hadd is too slow? 
+  for (int i = real_start; i <= real_end; i++) 
+  {
+    sum +=  v[i]; 
+    sum2 +=  v[i]*v[i]; 
+  }
+
+  double mn = sum/N; 
+  if (mean) *mean = mn; 
+
+  if (rms) 
+  {
+    double mn2 = mn*mn; 
+    *rms = sqrt(sum2/N - mn2); 
+  }
+}
+
+
+
+
+
 void TGraphAligned::dBize(double mindB) 
 {
   int n = GetN(); 
