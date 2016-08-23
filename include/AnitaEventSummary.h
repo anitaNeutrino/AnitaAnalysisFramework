@@ -19,6 +19,7 @@ public:
 
   /** The maximum number of hypotheses storable per polarization */ 
   static const Int_t maxDirectionsPerPol = 5; 
+  static const Int_t peaksPerSpectrum = 3; 
 
   /** A pointing hypothesis stores the results of interferometric pointing */ 
   class PointingHypothesis 
@@ -50,6 +51,8 @@ public:
     ClassDefNV(PointingHypothesis,9); 
   }; 
 
+
+
   /** Stores information about a waveform (coherent or deconvolve) */ 
   class WaveformInfo
   {
@@ -61,8 +64,18 @@ public:
     Double_t peakVal;  /// peak value
     Double_t xPolPeakVal;  // Peak of xpol trace
     Double_t xPolPeakHilbert;  // Peak of xpol hilbert Envelope
+
     Double_t I,Q,U,V;  // Stokes Parameters
-    Double_t bandwidth;  /// bandwidth of power spectrum 
+
+    Double_t totalPower;  ///Total power in waveform
+    Double_t totalPowerXpol;  ///Total power in xPol waveform
+
+    //spectrum info 
+    Double_t bandwidth[peaksPerSpectrum];  /// bandwidth of each peak (implementation defined, may not be comparable between analyses) 
+    Double_t peakFrequency[peaksPerSpectrum]; //peak frequency of power spectrum 
+    Double_t peakPower[peaksPerSpectrum]; //power within +/- bandwidth of each peak 
+    Double_t spectrumSlope;  ///  Slope of line fit to spectrum (in log-space, so this is spectral-index) 
+    Double_t spectrumIntercept; /// Intercept of line fit to spectrum (in log-space) 
 
     //Shape parameters, computed using hilbert envelope 
     Double_t riseTime_10_90;  /// Rise time of hilbert env from 10% to 90% of peak
@@ -71,9 +84,11 @@ public:
     Double_t fallTime_50_10;  /// Fall time of hilbert env from 50% to 10% of peak
     Double_t width_50_50;   /// Width from first envelope crossing of 50 percent of peak to last 
     Double_t width_10_10;  /// Width from first envelope crossing of 10 percent of peak to last 
+    Double_t power_10_10;  /// Power enclosed within 10_10 width
+    Double_t power_50_50;  /// Power enclosed within 50_50 width
     Int_t numAntennasInCoherent; // number of antennas used to make this 
 
-    ClassDefNV(WaveformInfo, 3); 
+    ClassDefNV(WaveformInfo, 4); 
   }; 
 
 
@@ -159,7 +174,7 @@ public:
   
   private: 
 
-    ClassDefNV(AnitaEventSummary, 9); 
+    ClassDefNV(AnitaEventSummary, 10); 
 }; 
 
 
