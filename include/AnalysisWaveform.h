@@ -239,7 +239,6 @@ class AnalysisWaveform
     void setPowerCalculationOptions(PowerCalculationOptions & opt); 
 
 
-
   private: 
     void calculateEvenFromUneven() const; 
     void calculateEvenFromFreq() const;  

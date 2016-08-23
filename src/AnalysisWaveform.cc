@@ -408,19 +408,21 @@ void AnalysisWaveform::calculateFreqFromEven() const
 
   assert(g->GetN() > 0); 
   dt = g->GetX()[1] - g->GetX()[0]; 
+  int old_fft_len = fft_len; 
   fft_len = g->GetN()/2+1;  
   df = 1./ (g->GetN() * dt); 
 
 
-  if (fft) 
+  if (fft &&  old_fft_len != fft_len) 
   {
     free(fft); 
+    fft = 0; 
   }
-#ifdef __APPLE__
-  fft = (FFTWComplex*) malloc(sizeof(FFTWComplex) *(fft_len));
-#else
-  fft = (FFTWComplex*) memalign(ALIGNMENT, sizeof(FFTWComplex) *(fft_len));
-#endif
+
+  if (!fft) 
+  {
+    posix_memalign( (void**) &fft, ALIGNMENT, sizeof(FFTWComplex) * fft_len); 
+  }
 
   FFTtools::doFFT(g->GetN(), g->GetY(),fft); 
 
@@ -444,12 +446,9 @@ void AnalysisWaveform::updateFreq(int new_N, const FFTWComplex * new_fft, double
   if (new_N && new_N != g_even.GetN())
   {
     free(fft); 
-#ifdef __APPLE__
-    fft = (FFTWComplex*) malloc(sizeof(FFTWComplex) *(new_N/2+1));
-  #else
-    fft = (FFTWComplex*) memalign(ALIGNMENT, sizeof(FFTWComplex) *(new_N/2+1));
-#endif
+
     fft_len = new_N/2 + 1; 
+    posix_memalign( (void**) &fft, ALIGNMENT, sizeof(FFTWComplex) * fft_len); 
     g_even.Set(new_N); 
   }
 
@@ -517,7 +516,7 @@ const AnalysisWaveform * AnalysisWaveform::hilbertTransform() const
 
     FFTWComplex * hilbert = hilbert_transform->updateFreq(); 
     for (int i = 0; i < fft_len; i++) 
-    {
+    {//todo: check if this gets vectorized  
       double temp_im = hilbert[i].im; 
       hilbert[i].im = hilbert[i].re; 
       hilbert[i].re = - temp_im; 
@@ -623,6 +622,7 @@ void AnalysisWaveform::evalEven(int N, const double * __restrict t, double * __r
   if (Ng < 1) return; 
   const double *y = g->GetY(); 
   __builtin_prefetch(y); 
+  __builtin_prefetch(t); 
   __builtin_prefetch(v,1); 
 
   double t0 = g->GetX()[0]; 
