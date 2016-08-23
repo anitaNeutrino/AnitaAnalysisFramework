@@ -40,6 +40,12 @@ class TGraphAligned : public TGraph {
     void dBize(double mindB=-100); 
     void undBize(); 
 
+
+
+    void getMeanAndRMS(Double_t * mean, Double_t *  rms, Int_t istart = 0, Int_t iend = -1) const; 
+    Double_t getSumV2(Int_t istart = 0, Int_t iend = -1) const; 
+
+
     aligned_double_v GetX() const { return fX; } 
     aligned_double_v GetY() const { return fY; } 
 
