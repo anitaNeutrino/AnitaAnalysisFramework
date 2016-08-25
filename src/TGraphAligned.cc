@@ -15,6 +15,7 @@ ClassImp(TGraphAligned);
 TGraphAligned::TGraphAligned()
   :TGraph()
 {
+  SetEditable(0); 
   //don't think we need to do anything in this case. 
 }
 
@@ -25,6 +26,7 @@ TGraphAligned::TGraphAligned(Int_t n)
   fNpoints =n; 
   if (!CtorAllocate()) return; 
   FillZero(0, fNpoints); 
+  SetEditable(0); 
 }
 
 TGraphAligned& TGraphAligned::operator=(const TGraphAligned &gr)
@@ -89,6 +91,7 @@ TGraphAligned& TGraphAligned::operator=(const TGraphAligned &gr)
          memcpy(fY, gr.fY, n);
       }
    }
+   SetEditable(0); 
    return *this;
 }
 
@@ -106,6 +109,8 @@ TGraphAligned::TGraphAligned(Int_t n, const Double_t * x, const Double_t * y)
    n = fNpoints * sizeof(Double_t);
    memcpy(fX, x, n);
    memcpy(fY, y, n);
+
+  SetEditable(0); 
 }
 
 
