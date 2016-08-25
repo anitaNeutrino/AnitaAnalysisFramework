@@ -24,5 +24,6 @@
 #pragma link C++ class SimplePassBandFilter+;
 #pragma link C++ class SimpleNotchFilter+;
 #pragma link C++ class ALFAFilter+;
+#pragma link C++ class HybridFilter+;
 #endif
 

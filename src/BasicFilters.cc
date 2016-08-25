@@ -38,4 +38,15 @@ void SimpleNotchFilter::processOne(AnalysisWaveform* g)
 }
 
 
+void HybridFilter::process(FilteredAnitaEvent * event) 
+{
+#ifdef USE_OMP
+#pragma omp  parallel for 
+#endif
+  for (int i = 0; i < NUM_SEAVEYS; i++) 
+  {
+    AnalysisWaveform::basisChange(getWf(event,i, AnitaPol::kHorizontal), getWf(event,i,AnitaPol::kVertical)); 
+  }
 
+
+}

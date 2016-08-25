@@ -239,6 +239,12 @@ class AnalysisWaveform
     void setPowerCalculationOptions(PowerCalculationOptions & opt); 
 
 
+    /** change between vpol / hpol and lcp / rcp 
+     *
+     * */ 
+    static void basisChange(AnalysisWaveform * __restrict hpol_or_lcp, AnalysisWaveform * __restrict vpol_or_rcp); 
+
+
   private: 
     void calculateEvenFromUneven() const; 
     void calculateEvenFromFreq() const;  

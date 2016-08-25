@@ -959,3 +959,35 @@ int AnalysisWaveform::Nfreq() const
   return fft_len;  
 }
 
+
+void AnalysisWaveform::basisChange(AnalysisWaveform * __restrict x, 
+    AnalysisWaveform * __restrict y)  {
+
+
+
+  int N = TMath::Min(x->Neven(), y->Neven()); 
+
+  //is this right? who knows
+  const TGraphAligned * g_yh = x->hilbertTransform()->even(); 
+  const TGraphAligned * g_x = x->even();
+
+  const double one_over_sqrt2 = 1./sqrt(2); 
+
+  double new_x[N] __attribute__((aligned)); 
+  double new_y[N] __attribute__((aligned)); 
+
+  for (int i = 0; i < N; i++) 
+  {
+    new_x[i] = one_over_sqrt2 * ( g_x->GetY()[i] - g_yh->GetY()[i]); 
+    new_y[i] = one_over_sqrt2 * ( g_x->GetY()[i] + g_yh->GetY()[i]); 
+  }
+
+
+  memcpy(x->updateEven()->GetY(), new_x, N * sizeof(double)); 
+  memcpy(y->updateEven()->GetY(), new_y, N * sizeof(double)); 
+
+  x->forceEvenSize(N); 
+  y->forceEvenSize(N); 
+
+}
+

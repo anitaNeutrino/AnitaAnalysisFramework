@@ -79,5 +79,15 @@ class ALFAFilter : public FilterOperation
 }; 
 
 
+class HybridFilter : public FilterOperation
+{
+
+  public:
+
+    const char * tag () const { return "HybridFilter"; } 
+    const char * description () const { return "Hybrid Filter"; } 
+    virtual void process(FilteredAnitaEvent * event); 
+};
+
 
 #endif 
