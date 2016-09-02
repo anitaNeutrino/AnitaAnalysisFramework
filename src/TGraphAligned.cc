@@ -305,6 +305,27 @@ void TGraphAligned::getMeanAndRMS(Double_t * mean, Double_t * rms, Int_t istart,
 }
 
 
+//TODO, this can be optimized mostly likely
+double * TGraphAligned::getMoments(int N, double origin, double * moment) const
+{
+  if (!moment) moment = new double[N]; 
+
+
+  for (int i = 0; i < N; i++ )
+  {
+    int n = i+1; 
+    double sum = 0; 
+    for (int j = 0; j < GetN(); j++) 
+    {
+      sum += TMath::Power(fX[j] - origin, n) * fY[j]; 
+    }
+
+    moment[i] = sum; 
+  }
+
+
+  return moment; 
+}
 
 
 
