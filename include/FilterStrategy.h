@@ -31,7 +31,7 @@ class FilterStrategy
     virtual ~FilterStrategy() {done(); } 
 
     /** Adds an operation to the strategy. This may only be done before any events are processed */ 
-    void addOperation(FilterOperation* f); 
+    void addOperation(FilterOperation* f, bool enable_output = false); 
 
     /** Process an event using this strategy */
     void process(FilteredAnitaEvent * event); 
@@ -52,9 +52,10 @@ class FilterStrategy
   private: 
      bool started; 
      std::vector<FilterOperation*> operations;
+     std::vector<bool> enable_outputs; 
      TFile * f; 
      std::vector<TTree *> trees; 
-     std::vector<std::vector<double> > outputStore; 
+     std::vector<std::vector<std::vector<double> > >outputStore; 
      std::multiset<std::string> used_ids; 
 }; 
 

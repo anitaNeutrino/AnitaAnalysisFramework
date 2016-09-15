@@ -51,7 +51,7 @@ The filter framework is intended to provide a common, yet flexible, way of filte
  
  Each FilterOperation has a tag and description, which are supposed to be meaningful. 
 
- Additionally, each FilterOperation may define output quantities (necessarily doubles)  which may be saved to an output tree. 
+ Additionally, each FilterOperation may define output quantities (doubles or arrays of doubles)  which may be saved to an output tree. 
  This could be useful for diagnostics and eventually cuts. 
 
  \subsection filterstrategy FilterStrategy

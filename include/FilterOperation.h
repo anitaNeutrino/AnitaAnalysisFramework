@@ -27,14 +27,17 @@ class FilterOperation
 
     // If you want to output stuff to trees, define the output here 
     
-    /** The number of output variables (doubles) defined by this operatoin */
+    /** The number of output variables (doubles or double arrays) defined by this operation */
     virtual unsigned nOutputs() const  { return 0; } 
 
     /** The name of the ith output variable */ 
     virtual const char *  outputName(unsigned i) const  { (void) i; return ""; } 
 
-    /** Fills an array of doubls with the output ariables */ 
-    virtual void fillOutputs(double * vars) const{ (void) vars; return; } 
+    /** The length of the ith output variable  (it's a double array of this size)*/ 
+    virtual unsigned outputLength(unsigned i) const { (void) i; return 0; } 
+
+    /** Fill the ith output */ 
+    virtual void fillOutput(unsigned i, double * v) const{ (void) v; (void) i;  return; } 
 
     /** Destructor */ 
     virtual ~FilterOperation(); 

@@ -79,6 +79,7 @@ public:
     Double_t spectrumIntercept; /// Intercept of line fit to spectrum (in log-space) 
 
     //Shape parameters, computed using hilbert envelope 
+    // This should probably taken out into its own class 
     Double_t riseTime_10_90;  /// Rise time of hilbert env from 10% to 90% of peak
     Double_t riseTime_10_50;  /// Rise time of hilbert env from 10% to 50% of peak
     Double_t fallTime_90_10;  /// Fall time of hilbert env from 90% to 10% of peak
@@ -87,9 +88,13 @@ public:
     Double_t width_10_10;  /// Width from first envelope crossing of 10 percent of peak to last 
     Double_t power_10_10;  /// Power enclosed within 10_10 width
     Double_t power_50_50;  /// Power enclosed within 50_50 width
+    Double_t peakTime;  // Time that peak hilbert env occurs
+    Double_t peakMoments[5];  // moments about Peak  (1st - 5th moments) 
+
+
     Int_t numAntennasInCoherent; // number of antennas used to make this 
 
-    ClassDefNV(WaveformInfo, 4); 
+    ClassDefNV(WaveformInfo, 5); 
   }; 
 
 

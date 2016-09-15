@@ -37,6 +37,9 @@ class TGraphAligned : public TGraph {
      *  I think this should fire also for TGraphAligned, but not sure */ 
     TGraphAligned(const TGraph  &); 
 
+
+    double * getMoments(int i, double origin, double * moments = 0) const; 
+
     void dBize(double mindB=-100); 
     void undBize(); 
 

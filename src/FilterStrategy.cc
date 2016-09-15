@@ -51,10 +51,13 @@ void FilterStrategy::process(FilteredAnitaEvent * ev)
     }
 
     // fill the output trees 
-    if (f && operations[op]->nOutputs() > 0)
+    if (f && operations[op]->nOutputs() > 0 && enable_outputs[op])
     {
       f->cd(); 
-      operations[op]->fillOutputs(&outputStore[tree_index][0]); 
+      for (unsigned j = 0; j < operations[op]->nOutputs(); j++)
+      {
+        operations[op]->fillOutput(j,&outputStore[tree_index][j][0]); 
+      }
       trees[tree_index]->Fill(); 
       tree_index++; 
     }
@@ -62,7 +65,7 @@ void FilterStrategy::process(FilteredAnitaEvent * ev)
 }
 
 
-void FilterStrategy::addOperation(FilterOperation* fo) 
+void FilterStrategy::addOperation(FilterOperation* fo, bool enable_output) 
 {
   if (started) 
   {
@@ -71,8 +74,9 @@ void FilterStrategy::addOperation(FilterOperation* fo)
   }
 
   operations.push_back(fo);
+  enable_outputs.push_back(enable_output); 
 
-  if (f && fo->nOutputs()) 
+  if (f && fo->nOutputs() && enable_output) 
   {
     const char * tag = fo->tag(); 
     std::string stag(tag); 
@@ -84,12 +88,14 @@ void FilterStrategy::addOperation(FilterOperation* fo)
     TString tagstr = i ? TString::Format("%s%d",tag,i) : TString(tag); 
     TTree * tree = new TTree(tagstr.Data(), fo->description()); 
     trees.push_back(tree); 
-    std::vector<double> store(fo->nOutputs()); 
+    std::vector<std::vector<double> > store(fo->nOutputs()); 
+    size_t which_store = outputStore.size();
     outputStore.push_back(store); 
 
     for (unsigned j = 0; j < fo->nOutputs(); j++) 
     {
-      tree->Branch(fo->outputName(j), &outputStore[outputStore.size()-1][j]); 
+      outputStore[which_store][j].insert(outputStore[which_store][j].end(),fo->outputLength(j),0); 
+      tree->Branch(fo->outputName(j), &outputStore[which_store][j][0], TString::Format("%s[%d]/D",fo->outputName(j), fo->outputLength(j))); 
     }
   }
 }
