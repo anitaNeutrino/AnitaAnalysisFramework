@@ -35,6 +35,7 @@ public:
     Double_t latitude;/// on continent, or -9999 if doesn't intersect
     Double_t longitude;/// on continent, or -9999 if doesn't intersect
     Double_t altitude;/// on continent, or -9999 if doesn't intersect
+    Double_t distanceToSource; /// on continent, or -9999 if doesn't intersect
     
     Double_t sigma_theta;  ///error on theta
     Double_t sigma_phi;  /// error on phi
@@ -48,7 +49,7 @@ public:
     Bool_t triggered; /// was this in a triggered phi sector? 
     Bool_t masked; /// was this in a masked phi sector? 
 
-    ClassDefNV(PointingHypothesis,9); 
+    ClassDefNV(PointingHypothesis,10); 
   }; 
 
 
@@ -146,6 +147,7 @@ public:
  
   Int_t run;
   UInt_t eventNumber;
+  UInt_t realTime;
   
   
   Int_t nPeaks[AnitaPol::kNotAPol]; ///Number of peaks actually found; this might be less than maxDirectionsPerPol 
@@ -174,7 +176,7 @@ public:
   
   private: 
 
-    ClassDefNV(AnitaEventSummary, 10); 
+    ClassDefNV(AnitaEventSummary, 11); 
 }; 
 
 
