@@ -2,6 +2,7 @@
 #include "TGraph.h" 
 #include "FilteredAnitaEvent.h" 
 #include <string.h> 
+#include <assert.h>
 
 
 FilterOperation::~FilterOperation()
@@ -20,8 +21,8 @@ ConditionalFilterOperation::ConditionalFilterOperation(UniformFilterOperation * 
                                                        const char * condition_tag_suffix, const char * condition_description_suffix, bool should_own_operation) 
                                                        : fn(condition), fo(operation), own(should_own_operation)
 {
-  asprintf(&condition_tag, "%s_%s", fo->tag(), condition_tag_suffix); 
-  asprintf(&condition_desc, "%s (if %s) ", fo->description(), condition_description_suffix); 
+  assert(asprintf(&condition_tag, "%s_%s", fo->tag(), condition_tag_suffix) > 0 ); 
+  assert(asprintf(&condition_desc, "%s (if %s) ", fo->description(), condition_description_suffix) > 0); 
 }
 
 
