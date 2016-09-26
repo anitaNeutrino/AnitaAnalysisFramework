@@ -62,6 +62,9 @@ class FilteredAnitaEvent
    /** Return the header */ 
    const RawAnitaHeader * getHeader() const { return header; } 
 
+   void getAverageSpectrum (TGraph * target, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol ) const; 
+   void getMedianSpectrum  (TGraph * target, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol , double pctile = 0.5) const; 
+
   private: 
    AnalysisWaveform *rawGraphs[NUM_SEAVEYS*AnitaPol::kNotAPol]; 
    AnalysisWaveform *rawGraphsByAntPol[AnitaPol::kNotAPol][NUM_SEAVEYS]; 

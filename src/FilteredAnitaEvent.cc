@@ -3,6 +3,7 @@
 #include "FilterStrategy.h"
 #include "AnalysisWaveform.h"
 #include "AnitaGeomTool.h"
+#include <algorithm>
 
 
 
@@ -94,8 +95,68 @@ FilteredAnitaEvent::~FilteredAnitaEvent()
 }
 
 
+void FilteredAnitaEvent::getMedianSpectrum(TGraph * target, AnitaPol::AnitaPol_t pol, double frac) const
+{
+  target->Set(131); 
+
+  AnitaPol::AnitaPol_t pol_start =pol == AnitaPol::kVertical ? AnitaPol::kVertical : AnitaPol::kHorizontal;  
+  AnitaPol::AnitaPol_t pol_end = pol == AnitaPol::kHorizontal ? AnitaPol::kHorizontal : AnitaPol::kVertical; 
+
+//  memset(target->GetY(),0, target->GetN() * sizeof(double)); 
+  memcpy(target->GetX(),filteredGraphsByAntPol[pol_start][0]->power()->GetX(), target->GetN() * sizeof(double)); 
+
+  int n = NUM_SEAVEYS * (int(pol_end) - int(pol_start) +1); 
 
 
+  double vals[n]; 
+  int i = 0; 
+
+  //Can paralellize this loop if it's helpful 
+  for (int j = 0; j < 131; j++) 
+  {
+    i = 0; 
+    for (int pol = (int) pol_start; pol <=(int) pol_end; pol++ ) 
+    {
+      for (int ant = 0; ant < NUM_SEAVEYS; ant++) 
+      {
+        //TODO: Is it faster just to put things into a set? 
+        vals[i++] = filteredGraphsByAntPol[pol][ant]->powerdB()->GetY()[j];  
+      }
+    }
+    std::nth_element(vals, vals + int(n*frac), vals +n); 
+    target->GetY()[j] = vals[int(n*frac)]; 
+  }
+}
 
 
+void FilteredAnitaEvent::getAverageSpectrum(TGraph * target, AnitaPol::AnitaPol_t pol) const
+{
+  target->Set(131); 
+
+  AnitaPol::AnitaPol_t pol_start =pol == AnitaPol::kVertical ? AnitaPol::kVertical : AnitaPol::kHorizontal;  
+  AnitaPol::AnitaPol_t pol_end = pol == AnitaPol::kHorizontal ? AnitaPol::kHorizontal : AnitaPol::kVertical; 
+
+  memset(target->GetY(),0, target->GetN() * sizeof(double)); 
+  memcpy(target->GetX(),filteredGraphsByAntPol[pol_start][0]->power()->GetX(), target->GetN() * sizeof(double)); 
+
+  int n = NUM_SEAVEYS * (int(pol_end) - int(pol_start) +1); 
+
+  for (int pol = (int) pol_start; pol <=(int) pol_end; pol++ ) 
+  {
+    for (int ant = 0; ant < NUM_SEAVEYS; ant++) 
+    {
+      for (int j = 0; j < 131; j++) 
+      {
+        target->GetY()[j] += filteredGraphsByAntPol[pol][ant]->power()->GetY()[j]/n;  
+      }
+    }
+  }
+
+  for (int j = 0; j < 131; j++) 
+  {
+    target->GetY()[j] = 10 * TMath::Log10(target->GetY()[j]); 
+  }
+
+
+}
 
