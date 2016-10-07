@@ -446,7 +446,7 @@ void AnalysisWaveform::updateFreq(int new_N, const FFTWComplex * new_fft, double
   if (new_N && new_N != g_even.GetN())
   {
     free(fft); 
-
+    fft = 0; 
     fft_len = new_N/2 + 1; 
     assert(!posix_memalign( (void**) &fft, ALIGNMENT, sizeof(FFTWComplex) * fft_len)); 
     g_even.Set(new_N); 
@@ -597,7 +597,9 @@ const TGraphAligned * AnalysisWaveform::power() const
 AnalysisWaveform::~AnalysisWaveform() 
 {
   if (fft) 
+  {
     free(fft); 
+  }
 
   if (hilbert_transform) 
     delete hilbert_transform; 
@@ -968,7 +970,7 @@ void AnalysisWaveform::basisChange(AnalysisWaveform * __restrict x,
   int N = TMath::Min(x->Neven(), y->Neven()); 
 
   //is this right? who knows
-  const TGraphAligned * g_yh = x->hilbertTransform()->even(); 
+  const TGraphAligned * g_yh = y->hilbertTransform()->even(); 
   const TGraphAligned * g_x = x->even();
 
   const double one_over_sqrt2 = 1./sqrt(2); 
@@ -990,4 +992,30 @@ void AnalysisWaveform::basisChange(AnalysisWaveform * __restrict x,
   y->forceEvenSize(N); 
 
 }
+
+void AnalysisWaveform::sumDifference( AnalysisWaveform * __restrict x, AnalysisWaveform * __restrict y) 
+{
+  int N = TMath::Min(x->Neven(), y->Neven()); 
+
+  //is this right? who knows
+  const TGraphAligned * g_x = x->even(); 
+  const TGraphAligned * g_y = y->even();
+
+  double new_x[N] __attribute__((aligned)); 
+  double new_y[N] __attribute__((aligned)); 
+
+  for (int i = 0; i < N; i++) 
+  {
+    new_x[i] = 0.5 * ( g_x->GetY()[i] + g_y->GetY()[i] ); 
+    new_y[i] = 0.5 * ( g_x->GetY()[i] - g_y->GetY()[i] ); 
+  }
+
+
+  memcpy(x->updateEven()->GetY(), new_x, N * sizeof(double)); 
+  memcpy(y->updateEven()->GetY(), new_y, N * sizeof(double)); 
+
+  x->forceEvenSize(N); 
+  y->forceEvenSize(N); 
+}
+
 

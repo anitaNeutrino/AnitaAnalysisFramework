@@ -244,6 +244,11 @@ class AnalysisWaveform
      * */ 
     static void basisChange(AnalysisWaveform * __restrict hpol_or_lcp, AnalysisWaveform * __restrict vpol_or_rcp); 
 
+    /** Change between a ,b -> (a + b)/2, (a - b)/2 
+     * */ 
+    static void sumDifference(AnalysisWaveform * __restrict a, AnalysisWaveform * __restrict b); 
+
+
 
   private: 
     void calculateEvenFromUneven() const; 
