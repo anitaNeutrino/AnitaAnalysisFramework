@@ -50,3 +50,16 @@ void HybridFilter::process(FilteredAnitaEvent * event)
 
 
 }
+
+void SumDifferenceFilter::process(FilteredAnitaEvent * event) 
+{
+#ifdef USE_OMP
+#pragma omp  parallel for 
+#endif
+  for (int i = 0; i < NUM_SEAVEYS; i++) 
+  {
+    AnalysisWaveform::sumDifference(getWf(event,i, AnitaPol::kHorizontal), getWf(event,i,AnitaPol::kVertical)); 
+  }
+
+
+}

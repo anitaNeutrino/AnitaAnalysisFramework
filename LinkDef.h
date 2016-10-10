@@ -25,5 +25,6 @@
 #pragma link C++ class SimpleNotchFilter+;
 #pragma link C++ class ALFAFilter+;
 #pragma link C++ class HybridFilter+;
+#pragma link C++ class SumDifference+;
 #endif
 

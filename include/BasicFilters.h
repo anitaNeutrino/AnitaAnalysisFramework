@@ -89,5 +89,16 @@ class HybridFilter : public FilterOperation
     virtual void process(FilteredAnitaEvent * event); 
 };
 
+class SumDifferenceFilter : public FilterOperation
+{
+
+  public:
+
+    const char * tag () const { return "SumDifferenceFilter"; } 
+    const char * description () const { return "SumDifference Filter"; } 
+    virtual void process(FilteredAnitaEvent * event); 
+};
+
+
 
 #endif 

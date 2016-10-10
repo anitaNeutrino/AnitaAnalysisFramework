@@ -46,10 +46,14 @@ public:
     Double_t theta_adjustment_needed; /// If an event barely missed the ground, it is useful to see the coordinates at which it would hit if theta adjustment by a small amount. This is the calculated small amount that leads to it hitting the ground. 
     Double_t phi_separation; //angular separation from higher value peak in same event. 1000 if highest value event (i.e. first hypothesis) 
 
+    Double_t dphi_rough;  /// phi - phi rough
+    Double_t dtheta_rough; /// theta - theta rough 
+
+
     Bool_t triggered; /// was this in a triggered phi sector? 
     Bool_t masked; /// was this in a masked phi sector? 
 
-    ClassDefNV(PointingHypothesis,10); 
+    ClassDefNV(PointingHypothesis,11); 
   }; 
 
 
