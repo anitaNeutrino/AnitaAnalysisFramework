@@ -133,7 +133,10 @@ public:
     Bool_t isVarner;
     Bool_t isVarner2;
 
-    ClassDefNV(EventFlags,3); 
+    Double_t meanPower; 
+    Double_t medianPower; 
+
+    ClassDefNV(EventFlags,4); 
   };
 
   /** A Source Hypothesis tells us about different potential sources of signals (e.g. calibration pulser) */ 

@@ -65,6 +65,10 @@ class FilteredAnitaEvent
    void getAverageSpectrum (TGraph * target, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol ) const; 
    void getMedianSpectrum  (TGraph * target, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol , double pctile = 0.5) const; 
 
+   double getAveragePower(AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol, bool filtered = false) const; 
+   double getMedianPower(AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol, bool filtered = false) const; 
+
+
   private: 
    AnalysisWaveform *rawGraphs[NUM_SEAVEYS*AnitaPol::kNotAPol]; 
    AnalysisWaveform *rawGraphsByAntPol[AnitaPol::kNotAPol][NUM_SEAVEYS]; 

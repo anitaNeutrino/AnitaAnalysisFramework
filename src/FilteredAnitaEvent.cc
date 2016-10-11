@@ -95,6 +95,52 @@ FilteredAnitaEvent::~FilteredAnitaEvent()
 }
 
 
+double FilteredAnitaEvent::getAveragePower(AnitaPol::AnitaPol_t pol, bool filtered) const
+{
+
+  AnitaPol::AnitaPol_t pol_start =pol == AnitaPol::kVertical ? AnitaPol::kVertical : AnitaPol::kHorizontal;  
+  AnitaPol::AnitaPol_t pol_end = pol == AnitaPol::kHorizontal ? AnitaPol::kHorizontal : AnitaPol::kVertical; 
+
+  double sum = 0; 
+
+  int n = NUM_SEAVEYS * (int(pol_end) - int(pol_start) +1); 
+
+  for (int pol = (int) pol_start; pol <=(int) pol_end; pol++ ) 
+  {
+    for (int ant = 0; ant < NUM_SEAVEYS; ant++) 
+    {
+      sum += ( filtered ?  filteredGraphsByAntPol[pol][ant] : rawGraphsByAntPol[pol][ant])->uneven()->getSumV2(); 
+    }
+  }
+
+  return sum/n; 
+
+}
+
+double FilteredAnitaEvent::getMedianPower(AnitaPol::AnitaPol_t pol, bool filtered) const
+{
+
+  AnitaPol::AnitaPol_t pol_start =pol == AnitaPol::kVertical ? AnitaPol::kVertical : AnitaPol::kHorizontal;  
+  AnitaPol::AnitaPol_t pol_end = pol == AnitaPol::kHorizontal ? AnitaPol::kHorizontal : AnitaPol::kVertical; 
+  int n = NUM_SEAVEYS * (int(pol_end) - int(pol_start) +1); 
+
+  double vals[n]; 
+
+
+  int i = 0; 
+  for (int pol = (int) pol_start; pol <=(int) pol_end; pol++ ) 
+  {
+    for (int ant = 0; ant < NUM_SEAVEYS; ant++) 
+    {
+      vals[i++] = ( filtered ?  filteredGraphsByAntPol[pol][ant] : rawGraphsByAntPol[pol][ant])->uneven()->getSumV2(); 
+    }
+  }
+
+  std::nth_element(vals, vals + n/2, vals +n); 
+  return vals[n/2];
+}
+
+
 void FilteredAnitaEvent::getMedianSpectrum(TGraph * target, AnitaPol::AnitaPol_t pol, double frac) const
 {
   target->Set(131); 
