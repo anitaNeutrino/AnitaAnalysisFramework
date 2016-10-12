@@ -919,17 +919,53 @@ void AnalysisWaveform::setPowerCalculationOptions(PowerCalculationOptions & opt)
   power_db_dirty = true; 
 }
 
-void AnalysisWaveform::padEven(int npad)
+void AnalysisWaveform::padEven(int npad, int where)
 {
   if (npad < 1) return; 
   TGraphAligned * g = updateEven(); 
   int old_n = g->GetN(); 
   g->Set(g->GetN() *(1+npad)); 
-  for (int i = old_n; i < g->GetN(); i++) 
+  df /= (1+npad); 
+
+
+
+  if (where > 0) 
   {
-    g->GetX()[i] = g->GetX()[i-1] + dt; 
-    g->GetY()[i] = 0; 
+    for (int i = old_n; i < g->GetN(); i++) 
+    {
+      g->GetX()[i] = g->GetX()[i-1] + dt; 
+      g->GetY()[i] = 0; 
+    }
   }
+  else  if (where < 0) 
+  {
+    memcpy(g->GetY() + old_n, g->GetY(), old_n * sizeof(double)); 
+    memcpy(g->GetX() + old_n, g->GetX(), old_n * sizeof(double)); 
+    for (int i = old_n-1; i >= 0; i--)
+    {
+      g->GetX()[i] = g->GetX()[i+1] - dt; 
+      g->GetY()[i] = 0; 
+    }
+  }
+
+  else if (where == 0) 
+  {
+    memmove(g->GetY() + old_n/2, g->GetY(), old_n * sizeof(double)); 
+    memmove(g->GetX() + old_n/2, g->GetX(), old_n * sizeof(double)); 
+
+    for (int i = old_n/2-1; i >= 0; i--) 
+    {
+      g->GetX()[i] = g->GetX()[i+1] - dt; 
+      g->GetY()[i] = 0; 
+    }
+    for (int i = old_n + old_n/2; i < g->GetN(); i++) 
+    {
+      g->GetX()[i] = g->GetX()[i-1] + dt; 
+      g->GetY()[i] = 0; 
+    }
+  }
+
+
   if (npad >= 1) just_padded = true; 
 }
 
