@@ -229,8 +229,15 @@ class AnalysisWaveform
     void updateUneven(const TGraph * replace_uneven); 
 
 
-    /** pad the even waveform (equivalent to upsampling the frequency) */
-    void padEven(int factor); 
+    /** pad the even waveform (equivalent to upsampling the frequency). 
+     *
+     *
+     * if where > 0, zeroes will be added at the end
+     * if where < 0, zeroes will be added at the beginning
+     * if where == 0, zeroes will be padded before and after
+     *  
+     * */
+    void padEven(int factor, int where = 1); 
 
     /** pad the frequency (equivalent to upsampling the even values) */
     void padFreq(int factor); 
