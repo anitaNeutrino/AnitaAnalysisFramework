@@ -21,8 +21,11 @@ ConditionalFilterOperation::ConditionalFilterOperation(UniformFilterOperation * 
                                                        const char * condition_tag_suffix, const char * condition_description_suffix, bool should_own_operation) 
                                                        : fn(condition), fo(operation), own(should_own_operation)
 {
-  assert(asprintf(&condition_tag, "%s_%s", fo->tag(), condition_tag_suffix) > 0 ); 
-  assert(asprintf(&condition_desc, "%s (if %s) ", fo->description(), condition_description_suffix) > 0); 
+  int ret = asprintf(&condition_tag, "%s_%s", fo->tag(), condition_tag_suffix) ; 
+  assert(ret > 0); 
+
+  ret = asprintf(&condition_desc, "%s (if %s) ", fo->description(), condition_description_suffix); 
+  assert( ret > 0); 
 }
 
 

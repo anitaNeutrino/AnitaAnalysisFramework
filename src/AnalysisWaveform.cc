@@ -421,7 +421,9 @@ void AnalysisWaveform::calculateFreqFromEven() const
 
   if (!fft) 
   {
-    assert(!posix_memalign( (void**) &fft, ALIGNMENT, sizeof(FFTWComplex) * fft_len)); 
+
+    int ret = posix_memalign( (void**) &fft, ALIGNMENT, sizeof(FFTWComplex) * fft_len);
+    assert(!ret); 
   }
 
   FFTtools::doFFT(g->GetN(), g->GetY(),fft); 
@@ -448,7 +450,8 @@ void AnalysisWaveform::updateFreq(int new_N, const FFTWComplex * new_fft, double
     free(fft); 
     fft = 0; 
     fft_len = new_N/2 + 1; 
-    assert(!posix_memalign( (void**) &fft, ALIGNMENT, sizeof(FFTWComplex) * fft_len)); 
+    int ret = posix_memalign( (void**) &fft, ALIGNMENT, sizeof(FFTWComplex) * fft_len); 
+    assert(!ret); 
     g_even.Set(new_N); 
   }
 
