@@ -40,7 +40,7 @@ class TGraphAligned : public TGraph {
 
     double * getMoments(int i, double origin, double * moments = 0) const; 
 
-    void dBize(double mindB=-100); 
+    void dBize(double mindB=-200); 
     void undBize(); 
 
 
