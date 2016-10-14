@@ -135,8 +135,10 @@ public:
 
     Double_t meanPower; 
     Double_t medianPower; 
+    Double_t meanPowerFiltered; 
+    Double_t medianPowerFiltered; 
 
-    ClassDefNV(EventFlags,4); 
+    ClassDefNV(EventFlags,5); 
   };
 
   /** A Source Hypothesis tells us about different potential sources of signals (e.g. calibration pulser) */ 
