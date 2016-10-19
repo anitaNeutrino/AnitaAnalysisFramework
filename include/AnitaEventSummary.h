@@ -133,12 +133,16 @@ public:
     Bool_t isVarner;
     Bool_t isVarner2;
 
-    Double_t meanPower; 
-    Double_t medianPower; 
-    Double_t meanPowerFiltered; 
-    Double_t medianPowerFiltered; 
+    /** These are used to cut out payload blasts and stuf like that. 
+     *  The first element is the total, and then the next are by ring 
+     *  So to get the top ring, do 1 + AnitaRing::kTopRing, etc. 
+     */
+    Double_t meanPower[1+AnitaRing::kNotARing]; 
+    Double_t medianPower[1+AnitaRing::kNotARing]; 
+    Double_t meanPowerFiltered[1+AnitaRing::kNotARing]; 
+    Double_t medianPowerFiltered[1+AnitaRing::kNotARing]; 
 
-    ClassDefNV(EventFlags,5); 
+    ClassDefNV(EventFlags,6); 
   };
 
   /** A Source Hypothesis tells us about different potential sources of signals (e.g. calibration pulser) */ 
