@@ -5,6 +5,7 @@
 #include "AnitaGeomTool.h"
 #include <algorithm>
 
+static AnitaGeomTool * geom = AnitaGeomTool::Instance(); 
 
 
 //ClassImp(FilteredAnitaEvent); 
@@ -28,7 +29,6 @@ FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterSt
 {
 
   // Initialize the filtered graphs with the raw graphs from Raw Anita Event 
-  AnitaGeomTool * geom = AnitaGeomTool::Instance(); 
   
   for (int pol = AnitaPol::kHorizontal; pol <= AnitaPol::kVertical; pol++)
   {
@@ -95,7 +95,7 @@ FilteredAnitaEvent::~FilteredAnitaEvent()
 }
 
 
-double FilteredAnitaEvent::getAveragePower(AnitaPol::AnitaPol_t pol, bool filtered) const
+double FilteredAnitaEvent::getAveragePower(AnitaPol::AnitaPol_t pol, AnitaRing::AnitaRing_t ring, bool filtered) const
 {
 
   AnitaPol::AnitaPol_t pol_start =pol == AnitaPol::kVertical ? AnitaPol::kVertical : AnitaPol::kHorizontal;  
@@ -104,11 +104,13 @@ double FilteredAnitaEvent::getAveragePower(AnitaPol::AnitaPol_t pol, bool filter
   double sum = 0; 
 
   int n = NUM_SEAVEYS * (int(pol_end) - int(pol_start) +1); 
+  if (ring != AnitaRing::kNotARing) n/=AnitaRing::kNotARing; 
 
   for (int pol = (int) pol_start; pol <=(int) pol_end; pol++ ) 
   {
     for (int ant = 0; ant < NUM_SEAVEYS; ant++) 
     {
+      if (ring != AnitaRing::kNotARing && geom->getRingFromAnt(ant) != ring) continue; 
       sum += ( filtered ?  filteredGraphsByAntPol[pol][ant] : rawGraphsByAntPol[pol][ant])->uneven()->getSumV2(); 
     }
   }
@@ -117,12 +119,15 @@ double FilteredAnitaEvent::getAveragePower(AnitaPol::AnitaPol_t pol, bool filter
 
 }
 
-double FilteredAnitaEvent::getMedianPower(AnitaPol::AnitaPol_t pol, bool filtered) const
+double FilteredAnitaEvent::getMedianPower(AnitaPol::AnitaPol_t pol, AnitaRing::AnitaRing_t ring, bool filtered) const
 {
 
   AnitaPol::AnitaPol_t pol_start =pol == AnitaPol::kVertical ? AnitaPol::kVertical : AnitaPol::kHorizontal;  
   AnitaPol::AnitaPol_t pol_end = pol == AnitaPol::kHorizontal ? AnitaPol::kHorizontal : AnitaPol::kVertical; 
+
   int n = NUM_SEAVEYS * (int(pol_end) - int(pol_start) +1); 
+
+  if (ring != AnitaRing::kNotARing) n/=AnitaRing::kNotARing; 
 
   double vals[n]; 
 
@@ -132,6 +137,7 @@ double FilteredAnitaEvent::getMedianPower(AnitaPol::AnitaPol_t pol, bool filtere
   {
     for (int ant = 0; ant < NUM_SEAVEYS; ant++) 
     {
+      if (ring != AnitaRing::kNotARing && geom->getRingFromAnt(ant) != ring) continue; 
       vals[i++] = ( filtered ?  filteredGraphsByAntPol[pol][ant] : rawGraphsByAntPol[pol][ant])->uneven()->getSumV2(); 
     }
   }
