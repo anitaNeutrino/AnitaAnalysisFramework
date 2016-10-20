@@ -626,11 +626,13 @@ void AnalysisWaveform::evalEven(int N, const double * __restrict t, double * __r
   int Ng = g->GetN(); 
   if (Ng < 1) return; 
   const double *y = g->GetY(); 
-  __builtin_prefetch(y); 
-  __builtin_prefetch(t); 
-  __builtin_prefetch(v,1); 
+//  __builtin_prefetch(y); 
+//  __builtin_prefetch(t); 
+//  __builtin_prefetch(v,1); 
 
   double t0 = g->GetX()[0]; 
+
+
 
 #ifndef ENABLE_VECTORIZE
   for (int i = 0; i < N; i++) 
@@ -660,42 +662,51 @@ void AnalysisWaveform::evalEven(int N, const double * __restrict t, double * __r
   VEC v_t; 
   VEC v_t0(t0); 
   VEC inv_dt(1./dt); 
+  IVEC dont_get_out_of_bounds; 
+
+  for (int i = 0; i < VEC_N; i++)
+  {
+    dont_get_out_of_bounds.insert(i, i >= leftover ? 1 : 0 ); 
+  }
+
   for (int i = 0; i < nit; i++)
   {
     v_t.load(t + i * VEC_N); 
     VEC xval = (v_t - v_t0) * inv_dt; 
     VEC truncated_xval = truncate(xval); 
+    VEC frac = xval - truncated_xval; 
     IVEC bin_low = truncate_to_int(truncated_xval); 
 
-    IVEC branchless_too_low = bin_low < 0; 
-    IVEC branchless_too_high = bin_low >= Ng; 
-    IVEC branchless_on_edge = bin_low== Ng-1; 
+    IVEC branchless_too_low = bin_low < IVEC(0); 
+    IVEC branchless_too_high = bin_low >= IVEC(Ng); 
+    IVEC branchless_on_edge = bin_low== IVEC(Ng-1); 
 
     int scalar_out_of_bounds =  int(i == nit-1 && leftover > 0); 
-    IVEC out_of_bounds  = scalar_out_of_bounds; 
+    IVEC out_of_bounds = scalar_out_of_bounds * dont_get_out_of_bounds;
+
     IVEC bin_high = bin_low+1; 
 
-    IVEC too_low_or_too_high = (1-branchless_too_low) * (1-branchless_too_high) * out_of_bounds ; 
+    //Optimistically grab it. Hopefully it's not out of bounds. 
+    __builtin_prefetch(y+bin_low[0]); 
+
+    IVEC too_low_or_too_high = (1-branchless_too_low) * (1-branchless_too_high) * (1-out_of_bounds); 
     IVEC kill_it = too_low_or_too_high *  ( 1- branchless_on_edge);  
 
     bin_low  *= too_low_or_too_high; 
     bin_high *= kill_it; 
 
-    int indices_low[VEC_N]; 
-    int indices_high[VEC_N]; 
-    bin_low.store(indices_low); 
-    bin_high.store(indices_high); 
-
-    VEC val_low; 
-    VEC val_high; 
+    double  lowv[VEC_N]; 
+    double  highv[VEC_N]; 
     for (int j = 0; j < VEC_N; j++)
     {
-      val_low.insert(j,y[indices_low[j]]); 
-      val_high.insert(j,y[indices_high[j]]); 
+      lowv[j] = y[bin_low[j]]; 
+      highv[j] = y[bin_high[j]]; 
     }
 
-    VEC frac = xval - truncated_xval; 
-    VEC val = val_low + frac * (val_high - val_low); 
+    VEC val_low; val_low.load(lowv); 
+    VEC val_high; val_high.load(highv); 
+
+    VEC val = mul_add(frac , (val_high - val_low), val_low); 
     
     if (scalar_out_of_bounds)
     {

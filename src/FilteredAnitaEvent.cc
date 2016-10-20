@@ -119,6 +119,7 @@ double FilteredAnitaEvent::getAveragePower(AnitaPol::AnitaPol_t pol, AnitaRing::
 
 }
 
+
 double FilteredAnitaEvent::getMedianPower(AnitaPol::AnitaPol_t pol, AnitaRing::AnitaRing_t ring, bool filtered) const
 {
 
@@ -208,6 +209,44 @@ void FilteredAnitaEvent::getAverageSpectrum(TGraph * target, AnitaPol::AnitaPol_
   {
     target->GetY()[j] = 10 * TMath::Log10(target->GetY()[j]); 
   }
+
+
+}
+
+void FilteredAnitaEvent::getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_ratio, double * min_ratio, int* max_sector, int* min_sector, AnitaRing::AnitaRing_t ring1 , AnitaRing::AnitaRing_t ring2 ) 
+{
+  
+  double max = 0; 
+  double min = 0; 
+  int imax = -1; 
+  int imin = -1; 
+
+  for (int i = 0; i < NUM_PHI; i++) 
+  {
+    int ant1 = geom->getAntFromPhiRing(i, ring1); 
+    int ant2 = geom->getAntFromPhiRing(i, ring2); 
+
+    double peak1 = rawGraphs[pol][ant1].uneven()->peakVal(0, 0,-1,true); 
+    double peak2 = rawGraphs[pol][ant2].uneven()->peakVal(0, 0,-1,true); 
+
+    double ratio = peak1/peak2; 
+
+    if ( imax < 0 || ratio > max ) 
+    {
+      imax = i; 
+      max = ratio;
+    }
+    if ( imax < 0 || ratio < min ) 
+    {
+      imin = i; 
+      min = ratio;
+    }
+  }
+
+  if (max_ratio) *max_ratio = max; 
+  if (min_ratio) *min_ratio = min; 
+  if (max_sector) *max_sector= imax; 
+  if (min_sector) *min_sector= imin; 
 
 
 }

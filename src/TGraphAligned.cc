@@ -341,3 +341,23 @@ void TGraphAligned::dBize(double mindB)
 
 }
 
+
+static bool abs_compare(double a, double b)
+{
+      return (std::abs(a) < std::abs(b));
+}
+
+Double_t TGraphAligned::peakVal(Int_t * location, Int_t istart, Int_t iend, bool abs) const
+{
+
+  int end = iend < 0 ? GetN() + iend : iend; 
+
+  double * where = abs ? std::max_element(GetY()+istart, GetY() + end, abs_compare) : std::max_element(GetY()+istart, GetY() + end); 
+  if (location) *location = Int_t(where - GetY()); 
+
+  return *where; 
+}
+
+
+
+

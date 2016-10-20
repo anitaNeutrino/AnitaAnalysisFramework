@@ -48,6 +48,8 @@ class TGraphAligned : public TGraph {
     void getMeanAndRMS(Double_t * mean, Double_t *  rms, Int_t istart = 0, Int_t iend = -1) const; 
     Double_t getSumV2(Int_t istart = 0, Int_t iend = -1) const; 
 
+    Double_t peakVal(Int_t * location = 0, Int_t istart= 0, Int_t iend = -1, bool abs = false) const; 
+
 
     aligned_double_v GetX() const { return fX; } 
     aligned_double_v GetY() const { return fY; } 

@@ -142,7 +142,12 @@ public:
     Double_t meanPowerFiltered[1+AnitaRing::kNotARing]; 
     Double_t medianPowerFiltered[1+AnitaRing::kNotARing]; 
 
-    ClassDefNV(EventFlags,6); 
+    Double_t maxBottomToTopRatio[AnitaPol::kNotAPol]; 
+    int maxBottomTopTopRatioSector[AnitaPol::kNotAPol]; 
+    Double_t minBottomToTopRatio[AnitaPol::kNotAPol]; 
+    int minBottomTopTopRatioSector[AnitaPol::kNotAPol]; 
+
+    ClassDefNV(EventFlags,7); 
   };
 
   /** A Source Hypothesis tells us about different potential sources of signals (e.g. calibration pulser) */ 
