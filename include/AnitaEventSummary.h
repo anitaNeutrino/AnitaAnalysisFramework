@@ -143,9 +143,9 @@ public:
     Double_t medianPowerFiltered[1+AnitaRing::kNotARing]; 
 
     Double_t maxBottomToTopRatio[AnitaPol::kNotAPol]; 
-    int maxBottomTopTopRatioSector[AnitaPol::kNotAPol]; 
+    int maxBottomToTopRatioSector[AnitaPol::kNotAPol]; 
     Double_t minBottomToTopRatio[AnitaPol::kNotAPol]; 
-    int minBottomTopTopRatioSector[AnitaPol::kNotAPol]; 
+    int minBottomToTopRatioSector[AnitaPol::kNotAPol]; 
 
     ClassDefNV(EventFlags,7); 
   };
