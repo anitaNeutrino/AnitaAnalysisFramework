@@ -68,7 +68,7 @@ class FilteredAnitaEvent
    void getMedianSpectrum  (TGraph * target, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol , double pctile = 0.5) const; 
    double getAveragePower(AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol, AnitaRing::AnitaRing_t ring = AnitaRing::kNotARing, bool filtered = false) const; 
    double getMedianPower(AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol,  AnitaRing::AnitaRing_t ring = AnitaRing::kNotARing, bool filtered = false) const; 
-   void getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_ratio, double * min_ratio, int* max_sector, int* min_sector, AnitaRing::AnitaRing_t ring1 = AnitaRing::kBottomRing, AnitaRing::AnitaRing_t ring2 = AnitaRing::kTopRing); 
+   void getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_ratio, double * min_ratio, int* max_sector, int* min_sector, AnitaRing::AnitaRing_t ring1 = AnitaRing::kBottomRing, AnitaRing::AnitaRing_t ring2 = AnitaRing::kTopRing) const; 
 
   private: 
    AnalysisWaveform *rawGraphs[NUM_SEAVEYS*AnitaPol::kNotAPol]; 

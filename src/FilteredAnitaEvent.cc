@@ -213,7 +213,7 @@ void FilteredAnitaEvent::getAverageSpectrum(TGraph * target, AnitaPol::AnitaPol_
 
 }
 
-void FilteredAnitaEvent::getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_ratio, double * min_ratio, int* max_sector, int* min_sector, AnitaRing::AnitaRing_t ring1 , AnitaRing::AnitaRing_t ring2 ) 
+void FilteredAnitaEvent::getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_ratio, double * min_ratio, int* max_sector, int* min_sector, AnitaRing::AnitaRing_t ring1 , AnitaRing::AnitaRing_t ring2 )  const
 {
   
   double max = 0; 
