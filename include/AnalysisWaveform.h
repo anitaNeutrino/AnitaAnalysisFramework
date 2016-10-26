@@ -49,10 +49,8 @@ class AnalysisWaveform
 
   public: 
 
-#ifdef ANITA_ANALYSIS_DEBUG
     /** Enable (or disable) a bunch of debugging crap. Only possible with ANITA_ANALYSIS_DEBUG defined to avoid slow branches */
     static void enableDebug(bool enable);  
-#endif
 
 
     /** The interpolation method used to transform in between evenly-sampled and unevenly-sampled waveforms */ 

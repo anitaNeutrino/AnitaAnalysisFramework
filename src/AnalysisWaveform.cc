@@ -33,6 +33,8 @@ AnalysisWaveform::InterpolationOptions AnalysisWaveform::defaultInterpolationOpt
 #ifdef ANITA_ANALYSIS_DEBUG
 static bool DEBUGON = false; 
 void AnalysisWaveform::enableDebug(bool debug) { DEBUGON = debug; } 
+#else
+void AnalysisWaveform::enableDebug(bool debug) { fprintf(stderr, "enableDebug(%d) ineffective without ANITA_ANALYSIS_DEBUG defined\n", debug); } 
 #endif 
 
 
@@ -94,6 +96,7 @@ AnalysisWaveform::AnalysisWaveform(int N, const double *x, const double * y, dou
   hilbert_envelope_dirty = true; 
   phase_dirty = true;
   just_padded = false; 
+  fft_len = 0; 
 }
 
 AnalysisWaveform::AnalysisWaveform(int N, const double * y, double dt, double t0)
@@ -109,6 +112,7 @@ AnalysisWaveform::AnalysisWaveform(int N, const double * y, double dt, double t0
   hilbert_envelope_dirty = true; 
   phase_dirty = true;
   just_padded = false; 
+  df = 0; 
 }
 
 
@@ -172,10 +176,10 @@ const TGraphAligned * AnalysisWaveform::even()  const
 
 #ifdef ANITA_ANALYSIS_DEBUG
   if (DEBUGON) printf("Called even()!\n"); 
-  if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+  if (DEBUGON) printf ("[%p]: \tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", this, must_update_even, must_update_freq, must_update_uneven); 
   //kaboom 
-  assert (!(must_update_even && must_update_freq &&  must_update_uneven)); 
 #endif
+  assert (!(must_update_even && must_update_freq &&  must_update_uneven)); 
 
   if ((must_update_even && must_update_freq)) 
   {
@@ -195,7 +199,7 @@ const FFTWComplex * AnalysisWaveform::freq()  const
 
 #ifdef ANITA_ANALYSIS_DEBUG
   if (DEBUGON) printf("Called freq()!\n"); 
-  if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+  if (DEBUGON) printf ("[%p] \tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", this, must_update_even, must_update_freq, must_update_uneven); 
 #endif
 
   if (must_update_freq) 
@@ -214,7 +218,7 @@ void AnalysisWaveform::updateEven(const TGraph * replace)
 
 #ifdef ANITA_ANALYSIS_DEBUG
   if (DEBUGON) printf("Called updateEven(replace)!\n"); 
-  if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+  if (DEBUGON) printf ("[%p] \tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", this, must_update_even, must_update_freq, must_update_uneven); 
 #endif
 
   g_even.Set(replace->GetN()); 
@@ -247,7 +251,7 @@ TGraphAligned * AnalysisWaveform::updateUneven()
 {
 #ifdef ANITA_ANALYSIS_DEBUG
   if (DEBUGON) printf("Called updateUneven()!\n"); 
-  if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+  if (DEBUGON) printf ("[%p]: \tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n",this, must_update_even, must_update_freq, must_update_uneven); 
 #endif
   TGraphAligned * g = (TGraphAligned*) uneven(); 
   uneven_equals_even = false; 
@@ -261,7 +265,7 @@ FFTWComplex * AnalysisWaveform::updateFreq()
 {
 #ifdef ANITA_ANALYSIS_DEBUG
   if (DEBUGON) printf("Called updateFreq()!\n"); 
-  if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+  if (DEBUGON) printf ("[%p]: \tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n",this, must_update_even, must_update_freq, must_update_uneven); 
 #endif
   FFTWComplex * fr = (FFTWComplex*) freq();
 
@@ -285,7 +289,7 @@ void AnalysisWaveform::updateUneven(const TGraph * replace)
 
 #ifdef ANITA_ANALYSIS_DEBUG
   if (DEBUGON) printf("Called updateUneven(replace)!\n"); 
-  if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+  if (DEBUGON) printf ("[%p]: \tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n",this, must_update_even, must_update_freq, must_update_uneven); 
 #endif
 
 
@@ -442,7 +446,7 @@ void AnalysisWaveform::updateFreq(int new_N, const FFTWComplex * new_fft, double
 
 #ifdef ANITA_ANALYSIS_DEBUG
   if (DEBUGON) printf("Called updateFreq(replace)!\n"); 
-  if (DEBUGON) printf ("\tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n", must_update_even, must_update_freq, must_update_uneven); 
+  if (DEBUGON) printf ("[%p]: \tmust_update_even=%d, must_update_freq=%d, must_update_uneven=%d\n",this, must_update_even, must_update_freq, must_update_uneven); 
 #endif
 
   if (new_N && new_N != g_even.GetN())
@@ -671,7 +675,15 @@ void AnalysisWaveform::evalEven(int N, const double * __restrict t, double * __r
 
   for (int i = 0; i < nit; i++)
   {
-    v_t.load(t + i * VEC_N); 
+    if (i < nit -1 || !leftover)
+    {
+        v_t.load(t + i * VEC_N); 
+    }
+    else
+    {
+      v_t.load_partial(leftover, t+i*VEC_N)  ;
+    }
+
     VEC xval = (v_t - v_t0) * inv_dt; 
     VEC truncated_xval = truncate(xval); 
     VEC frac = xval - truncated_xval; 
