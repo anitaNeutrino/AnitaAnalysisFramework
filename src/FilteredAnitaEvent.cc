@@ -111,7 +111,7 @@ double FilteredAnitaEvent::getAveragePower(AnitaPol::AnitaPol_t pol, AnitaRing::
     for (int ant = 0; ant < NUM_SEAVEYS; ant++) 
     {
       if (ring != AnitaRing::kNotARing && geom->getRingFromAnt(ant) != ring) continue; 
-      sum += ( filtered ?  filteredGraphsByAntPol[pol][ant] : rawGraphsByAntPol[pol][ant])->uneven()->getSumV2(); 
+      sum += ( filtered ?  filteredGraphsByAntPol[pol][ant]->even() : rawGraphsByAntPol[pol][ant]->uneven())->getSumV2(); 
     }
   }
 
@@ -139,7 +139,7 @@ double FilteredAnitaEvent::getMedianPower(AnitaPol::AnitaPol_t pol, AnitaRing::A
     for (int ant = 0; ant < NUM_SEAVEYS; ant++) 
     {
       if (ring != AnitaRing::kNotARing && geom->getRingFromAnt(ant) != ring) continue; 
-      vals[i++] = ( filtered ?  filteredGraphsByAntPol[pol][ant] : rawGraphsByAntPol[pol][ant])->uneven()->getSumV2(); 
+      vals[i++] = ( filtered ?  filteredGraphsByAntPol[pol][ant]->even() : rawGraphsByAntPol[pol][ant]->uneven())->getSumV2(); 
     }
   }
 
@@ -226,8 +226,11 @@ void FilteredAnitaEvent::getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_r
     int ant1 = geom->getAntFromPhiRing(i, ring1); 
     int ant2 = geom->getAntFromPhiRing(i, ring2); 
 
-    double peak1 = rawGraphs[pol][ant1].uneven()->peakVal(0, 0,-1,true); 
-    double peak2 = rawGraphs[pol][ant2].uneven()->peakVal(0, 0,-1,true); 
+//    printf("%d %d %d\n", pol, ant1,ant2); 
+//    printf("%p\n", rawGraphsByAntPol[pol][ant1]); 
+//    printf("%p\n", rawGraphsByAntPol[pol][ant2]); 
+    double peak1 = rawGraphsByAntPol[pol][ant1]->uneven()->peakVal(0, 0,-1,true); 
+    double peak2 = rawGraphsByAntPol[pol][ant2]->uneven()->peakVal(0, 0,-1,true); 
 
     double ratio = peak1/peak2; 
 
