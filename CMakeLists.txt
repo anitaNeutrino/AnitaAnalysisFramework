@@ -172,6 +172,8 @@ endif()
  
 option( ENABLE_OPENMP "Enable OpenMP support") 
 
+
+
 if(ENABLE_OPENMP) 
   FIND_PACKAGE( OpenMP REQUIRED)
   if(OPENMP_FOUND)
@@ -185,6 +187,12 @@ if(ENABLE_OPENMP)
   endif() 
 endif() 
 
+option( ANITA_ANALYSIS_DEBUG "Enable some debug options that probably slow things down " )
+
+
+if (ANITA_ANALYSIS_DEBUG)
+  add_definitions( -DANITA_ANALYSIS_DEBUG) 
+endif()
 
 
 
