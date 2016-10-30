@@ -49,6 +49,7 @@ class TGraphAligned : public TGraph {
     Double_t getSumV2(Int_t istart = 0, Int_t iend = -1) const; 
 
     Double_t peakVal(Int_t * location = 0, Int_t istart= 0, Int_t iend = -1, bool abs = false) const; 
+    Double_t pk2pk(Int_t * location_max = 0, Int_t * location_min = 0, Int_t istart= 0, Int_t iend = -1) const; 
 
 
     aligned_double_v GetX() const { return fX; } 

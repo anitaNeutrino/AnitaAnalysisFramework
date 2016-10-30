@@ -341,7 +341,41 @@ void TGraphAligned::dBize(double mindB)
 
 }
 
+Double_t TGraphAligned::pk2pk(Int_t * location_max, Int_t * location_min, Int_t istart, Int_t iend) const
+{
 
+  int start = istart < 0 ? GetN() + istart : istart; 
+  int end = iend < 0 ? GetN() + iend : iend; 
+
+  int max_index = -1; 
+  int min_index = -1; 
+  double max = 0; 
+  double min = 0 ; 
+  const double * y = GetY(); 
+
+  for (int i = start; i <= end; i++) 
+  {
+    double val =y[i]; 
+    if (max_index < 0 || val > max)
+    {
+      max = val; 
+      max_index = i; 
+    }
+
+    if (min_index < 0 || val > min)
+    {
+      min = val; 
+      min_index = i; 
+    }
+
+
+  }
+
+  if (location_max) *location_max = max_index; 
+  if (location_min) *location_min = min_index; 
+
+  return max-min; 
+}
 
 Double_t TGraphAligned::peakVal(Int_t * location, Int_t istart, Int_t iend, bool abs) const
 {

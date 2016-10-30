@@ -229,8 +229,8 @@ void FilteredAnitaEvent::getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_r
 //    printf("%d %d %d\n", pol, ant1,ant2); 
 //    printf("%p\n", rawGraphsByAntPol[pol][ant1]); 
 //    printf("%p\n", rawGraphsByAntPol[pol][ant2]); 
-    double peak1 = rawGraphsByAntPol[pol][ant1]->uneven()->peakVal(0, 0,-1,true); 
-    double peak2 = rawGraphsByAntPol[pol][ant2]->uneven()->peakVal(0, 0,-1,true); 
+    double peak1 = rawGraphsByAntPol[pol][ant1]->uneven()->pk2pk();
+    double peak2 = rawGraphsByAntPol[pol][ant2]->uneven()->pk2pk(); 
 
     double ratio = peak1/peak2; 
 
