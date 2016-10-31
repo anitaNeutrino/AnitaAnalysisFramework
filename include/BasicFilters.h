@@ -68,12 +68,18 @@ class ALFAFilter : public FilterOperation
     virtual void process(FilteredAnitaEvent * event) 
     {
       pb.processOne( getWf(event, 4, AnitaPol::kHorizontal) ); 
+
+      //cross talk is strong in this one 
+      pb.processOne( getWf(event, 12, AnitaPol::kHorizontal) ); 
     }
+
 
     const char * tag() const { return "ALFAFilter"; } 
     const char * description() const { return descStr.Data(); } 
   private:
     SimplePassBandFilter pb; 
+    double power_before; 
+    double power_after;  
     TString descStr;
 
 }; 
