@@ -362,7 +362,7 @@ Double_t TGraphAligned::pk2pk(Int_t * location_max, Int_t * location_min, Int_t 
       max_index = i; 
     }
 
-    if (min_index < 0 || val > min)
+    if (min_index < 0 || val < min)
     {
       min = val; 
       min_index = i; 
