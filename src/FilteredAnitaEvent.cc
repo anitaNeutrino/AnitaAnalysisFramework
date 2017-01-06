@@ -1,7 +1,9 @@
 #include "FilteredAnitaEvent.h" 
 #include "UsefulAnitaEvent.h"
 #include "FilterStrategy.h"
+#include "RawAnitaHeader.h"
 #include "AnalysisWaveform.h"
+#include "AnitaVersion.h" 
 #include "AnitaGeomTool.h"
 #include <algorithm>
 
@@ -44,6 +46,8 @@ FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterSt
       rawGraphsByAntPol[pol][ant] = rawGraphs[k];  
     }
   }
+
+  anitaVersion = AnitaVersion::getVersionFromUnixTime(header->realTime); 
 
   //tell the strategy to process this
   strategy->process(this); 

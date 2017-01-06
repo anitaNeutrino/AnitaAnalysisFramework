@@ -70,6 +70,8 @@ class FilteredAnitaEvent
    double getMedianPower(AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol,  AnitaRing::AnitaRing_t ring = AnitaRing::kNotARing, bool filtered = false) const; 
    void getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_ratio, double * min_ratio, int* max_sector, int* min_sector, AnitaRing::AnitaRing_t ring1 = AnitaRing::kBottomRing, AnitaRing::AnitaRing_t ring2 = AnitaRing::kTopRing) const; 
 
+   int getAnitaVersion() const { return anitaVersion; } 
+
   private: 
    AnalysisWaveform *rawGraphs[NUM_SEAVEYS*AnitaPol::kNotAPol]; 
    AnalysisWaveform *rawGraphsByAntPol[AnitaPol::kNotAPol][NUM_SEAVEYS]; 
@@ -81,6 +83,8 @@ class FilteredAnitaEvent
    const FilterStrategy * strategy; 
    UsefulAdu5Pat pat; 
    const RawAnitaHeader * header; 
+
+   int anitaVersion; 
 
    bool keep_all_stages; 
    std::vector<AnalysisWaveform *> all_stages[AnitaPol::kNotAPol][NUM_SEAVEYS] ;
