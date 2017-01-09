@@ -7,7 +7,6 @@
 #include "AnitaGeomTool.h"
 #include <algorithm>
 
-static AnitaGeomTool * geom = AnitaGeomTool::Instance(); 
 
 
 //ClassImp(FilteredAnitaEvent); 
@@ -30,6 +29,7 @@ FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterSt
 
 {
 
+  AnitaGeomTool * geom = AnitaGeomTool::Instance(); 
   // Initialize the filtered graphs with the raw graphs from Raw Anita Event 
   
   for (int pol = AnitaPol::kHorizontal; pol <= AnitaPol::kVertical; pol++)
@@ -114,7 +114,7 @@ double FilteredAnitaEvent::getAveragePower(AnitaPol::AnitaPol_t pol, AnitaRing::
   {
     for (int ant = 0; ant < NUM_SEAVEYS; ant++) 
     {
-      if (ring != AnitaRing::kNotARing && geom->getRingFromAnt(ant) != ring) continue; 
+      if (ring != AnitaRing::kNotARing && AnitaGeomTool::getRingFromAnt(ant) != ring) continue; 
       sum += ( filtered ?  filteredGraphsByAntPol[pol][ant]->even() : rawGraphsByAntPol[pol][ant]->uneven())->getSumV2(); 
     }
   }
@@ -142,7 +142,7 @@ double FilteredAnitaEvent::getMedianPower(AnitaPol::AnitaPol_t pol, AnitaRing::A
   {
     for (int ant = 0; ant < NUM_SEAVEYS; ant++) 
     {
-      if (ring != AnitaRing::kNotARing && geom->getRingFromAnt(ant) != ring) continue; 
+      if (ring != AnitaRing::kNotARing && AnitaGeomTool::getRingFromAnt(ant) != ring) continue; 
       vals[i++] = ( filtered ?  filteredGraphsByAntPol[pol][ant]->even() : rawGraphsByAntPol[pol][ant]->uneven())->getSumV2(); 
     }
   }
@@ -227,8 +227,8 @@ void FilteredAnitaEvent::getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_r
 
   for (int i = 0; i < NUM_PHI; i++) 
   {
-    int ant1 = geom->getAntFromPhiRing(i, ring1); 
-    int ant2 = geom->getAntFromPhiRing(i, ring2); 
+    int ant1 = AnitaGeomTool::getAntFromPhiRing(i, ring1); 
+    int ant2 = AnitaGeomTool::getAntFromPhiRing(i, ring2); 
 
 //    printf("%d %d %d\n", pol, ant1,ant2); 
 //    printf("%p\n", rawGraphsByAntPol[pol][ant1]); 
