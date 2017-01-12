@@ -30,6 +30,8 @@ FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterSt
 {
 
   anitaVersion = AnitaVersion::getVersionFromUnixTime(header->realTime); 
+  if (anitaVersion <= 0) anitaVersion = AnitaVersion::get(); 
+
   AnitaGeomTool * geom = AnitaGeomTool::Instance(); 
   // Initialize the filtered graphs with the raw graphs from Raw Anita Event 
   
