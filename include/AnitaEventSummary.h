@@ -51,9 +51,11 @@ public:
 
 
     Bool_t triggered; /// was this in a triggered phi sector? 
+    Bool_t triggered_xpol; /// was this in a triggered xpol phi sector?  
     Bool_t masked; /// was this in a masked phi sector? 
+    Bool_t masked_xpol; /// was this in a masked phi xpol sector? 
 
-    ClassDefNV(PointingHypothesis,11); 
+    ClassDefNV(PointingHypothesis,12); 
   }; 
 
 
@@ -199,7 +201,7 @@ public:
   
   private: 
 
-    ClassDefNV(AnitaEventSummary, 11); 
+  ClassDefNV(AnitaEventSummary, 12); 
 }; 
 
 
