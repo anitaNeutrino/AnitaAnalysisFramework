@@ -6,7 +6,8 @@
 #include "AnitaVersion.h" 
 #include "AnitaGeomTool.h"
 #include <algorithm>
-
+#include "TCanvas.h" 
+#include "TStyle.h" 
 
 
 //ClassImp(FilteredAnitaEvent); 
@@ -29,7 +30,12 @@ FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterSt
 
 {
 
+#ifdef MULTIVERSION_ANITA_ENABLED  
   anitaVersion = AnitaVersion::getVersionFromUnixTime(header->realTime); 
+#else 
+  anitaVersion = 0; 
+#endif 
+
   if (anitaVersion <= 0) anitaVersion = AnitaVersion::get(); 
 
   AnitaGeomTool * geom = AnitaGeomTool::Instance(); 
@@ -259,4 +265,39 @@ void FilteredAnitaEvent::getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_r
 
 
 }
+
+
+void FilteredAnitaEvent::plotSummary(TCanvas * ch, TCanvas * cv) const
+{
+
+  if (!ch) ch = new TCanvas("FilteredAnitaEvent_hpol","HPol", 1000,1000); 
+  if (!cv) cv = new TCanvas("FilteredAnitaEvent_vpol","VPol", 1000,1000); 
+
+  ch->Clear(); 
+  cv->Clear(); 
+
+  ch->Divide(8,NUM_SEAVEYS/8); 
+  cv->Divide(8,NUM_SEAVEYS/8); 
+
+
+  for (int i =0; i < NUM_SEAVEYS; i++) 
+  {
+    ch->cd(i+1); 
+    gStyle->SetLineColor(1); 
+    getRawGraph(i, AnitaPol::kHorizontal)->drawUneven(); 
+    gStyle->SetLineColor(2); 
+    getFilteredGraph(i, AnitaPol::kHorizontal)->drawEven("lsame"); 
+
+    cv->cd(i+1); 
+    gStyle->SetLineColor(1); 
+    getRawGraph(i, AnitaPol::kVertical)->drawUneven(); 
+    gStyle->SetLineColor(2); 
+    getFilteredGraph(i, AnitaPol::kVertical)->drawEven("lsame"); 
+
+
+  }
+
+
+}
+
 

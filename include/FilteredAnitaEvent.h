@@ -9,6 +9,7 @@ class Adu5Pat;
 class TGraph; 
 class RawAnitaHeader; 
 class AnalysisWaveform; 
+class TCanvas; 
 
 class FilterStrategy; 
 
@@ -62,6 +63,7 @@ class FilteredAnitaEvent
    /** Return the header */ 
    const RawAnitaHeader * getHeader() const { return header; } 
 
+   void plotSummary(TCanvas * chpol = 0, TCanvas * cvpol = 0) const; 
 
    /** Various calculations. Don't necessarily have to be in this class. */ 
    void getAverageSpectrum (TGraph * target, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol ) const; 
