@@ -283,20 +283,13 @@ void FilteredAnitaEvent::plotSummary(TCanvas * ch, TCanvas * cv) const
   for (int i =0; i < NUM_SEAVEYS; i++) 
   {
     ch->cd(i+1); 
-    gStyle->SetLineColor(1); 
-    getRawGraph(i, AnitaPol::kHorizontal)->drawUneven(); 
-    gStyle->SetLineColor(2); 
-    getFilteredGraph(i, AnitaPol::kHorizontal)->drawEven("lsame"); 
+    getRawGraph(i, AnitaPol::kHorizontal)->drawUneven("",1); 
+    getFilteredGraph(i, AnitaPol::kHorizontal)->drawEven("lsame",2); 
 
     cv->cd(i+1); 
-    gStyle->SetLineColor(1); 
-    getRawGraph(i, AnitaPol::kVertical)->drawUneven(); 
-    gStyle->SetLineColor(2); 
-    getFilteredGraph(i, AnitaPol::kVertical)->drawEven("lsame"); 
-
-
+    getRawGraph(i, AnitaPol::kVertical)->drawUneven("",1); 
+    getFilteredGraph(i, AnitaPol::kVertical)->drawEven("lsame",2); 
   }
-
 
 }
 

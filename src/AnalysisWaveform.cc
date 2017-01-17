@@ -1009,12 +1009,23 @@ bool AnalysisWaveform::checkIfPaddedInTime() const
   return true; 
 }
 
-void AnalysisWaveform::drawEven(const char * opt) const{ ((TGraphAligned*)even())->Draw(opt); }
-void AnalysisWaveform::drawUneven(const char * opt) const{ ((TGraphAligned*)uneven())->Draw(opt); }
-void AnalysisWaveform::drawPower(const char * opt)const { ((TGraphAligned*)power())->Draw(opt); }
-void AnalysisWaveform::drawPowerdB(const char * opt)const { ((TGraphAligned*)powerdB())->Draw(opt); }
-void AnalysisWaveform::drawPhase(const char * opt) const{ ((TGraphAligned*)phase())->Draw(opt); }
-void AnalysisWaveform::drawHilbertEnvelope(const char * opt) const{ ((TGraphAligned*)hilbertEnvelope())->Draw(opt); }
+static void doDraw(const TGraphAligned * cg,const char * opt,  int color)
+{
+  TGraphAligned * g = (TGraphAligned*) cg; 
+
+  g->SetLineColor(color); 
+  g->SetMarkerColor(color); 
+  g->SetMarkerColor(color); 
+  g->Draw(opt); 
+}
+
+
+void AnalysisWaveform::drawEven(const char * opt, int color) const{ doDraw(even(),opt,color); }
+void AnalysisWaveform::drawUneven(const char * opt, int color) const{ doDraw(uneven(),opt,color); }
+void AnalysisWaveform::drawPower(const char * opt, int color)const { doDraw(power(),opt,color); }
+void AnalysisWaveform::drawPowerdB(const char * opt, int color)const { doDraw(powerdB(),opt,color); }
+void AnalysisWaveform::drawPhase(const char * opt, int color) const{ doDraw(phase(),opt,color); }
+void AnalysisWaveform::drawHilbertEnvelope(const char * opt, int color) const{ doDraw(hilbertEnvelope(),opt,color); }
 
 
 int AnalysisWaveform::Nfreq() const
