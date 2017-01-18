@@ -184,23 +184,23 @@ class AnalysisWaveform
     // drawers since drawing is non-const (and we don't care about silly things like axes for constness)
     
     /** Draw even */ 
-    void drawEven(const char * opt = "", int color=1) const; 
+    void drawEven(const char * opt = "", int color=-1) const; 
 
     /** Draw Hilbert envelope */ 
-    void drawHilbertEnvelope(const char * opt = "", int color=1) const; 
+    void drawHilbertEnvelope(const char * opt = "", int color=-1) const; 
 
     /** Draw uneven */ 
-    void drawUneven(const char * opt = "", int color=1) const; 
+    void drawUneven(const char * opt = "", int color=-1) const; 
 
     /** Draw power */
-    void drawPower(const char * opt = "", int color=1) const; 
+    void drawPower(const char * opt = "", int color=-1) const; 
 
 
     /** Draw power in dB*/
-    void drawPowerdB(const char * opt = "", int color=1) const; 
+    void drawPowerdB(const char * opt = "", int color=-1) const; 
 
     /** Draw phase */
-    void drawPhase(const char * opt = "", int color=1) const; 
+    void drawPhase(const char * opt = "", int color=-1) const; 
 
     /**Evaluate the even waveform at a point. Right now just does linear interpolation */ 
     double evalEven(double t) const; //TODO: add additional evaluation methods other than linear interpolation. indeed, would be best to eval multiple points at same time

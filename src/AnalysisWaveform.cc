@@ -1013,9 +1013,11 @@ static void doDraw(const TGraphAligned * cg,const char * opt,  int color)
 {
   TGraphAligned * g = (TGraphAligned*) cg; 
 
-  g->SetLineColor(color); 
-  g->SetMarkerColor(color); 
-  g->SetMarkerColor(color); 
+  if (color >= 0) 
+  {
+    g->SetLineColor(color); 
+    g->SetMarkerColor(color); 
+  }
   g->Draw(opt); 
 }
 
