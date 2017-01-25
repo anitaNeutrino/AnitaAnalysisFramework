@@ -225,7 +225,7 @@ void FilteredAnitaEvent::getAverageSpectrum(TGraph * target, AnitaPol::AnitaPol_
 
 }
 
-void FilteredAnitaEvent::getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_ratio, double * min_ratio, int* max_sector, int* min_sector, AnitaRing::AnitaRing_t ring1 , AnitaRing::AnitaRing_t ring2 )  const
+void FilteredAnitaEvent::getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_ratio, double * min_ratio, int* max_sector, int* min_sector, AnitaRing::AnitaRing_t ring1 , AnitaRing::AnitaRing_t ring2, int nth )  const
 {
   
   double max = 0; 
@@ -241,8 +241,8 @@ void FilteredAnitaEvent::getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_r
 //    printf("%d %d %d\n", pol, ant1,ant2); 
 //    printf("%p\n", rawGraphsByAntPol[pol][ant1]); 
 //    printf("%p\n", rawGraphsByAntPol[pol][ant2]); 
-    double peak1 = rawGraphsByAntPol[pol][ant1]->uneven()->pk2pk();
-    double peak2 = rawGraphsByAntPol[pol][ant2]->uneven()->pk2pk(); 
+    double peak1 = rawGraphsByAntPol[pol][ant1]->uneven()->pk2pk(nth,nth);
+    double peak2 = rawGraphsByAntPol[pol][ant2]->uneven()->pk2pk(nth,nth); 
 
     double ratio = peak1/peak2; 
 
