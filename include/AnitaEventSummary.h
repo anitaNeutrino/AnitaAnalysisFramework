@@ -178,8 +178,11 @@ public:
   Int_t nPeaks[AnitaPol::kNotAPol]; ///Number of peaks actually found; this might be less than maxDirectionsPerPol 
 
   PointingHypothesis peak[AnitaPol::kNotAPol][maxDirectionsPerPol]; 
+
   WaveformInfo coherent[AnitaPol::kNotAPol][maxDirectionsPerPol]; 
   WaveformInfo deconvolved[AnitaPol::kNotAPol][maxDirectionsPerPol];
+  WaveformInfo coherent_filtered[AnitaPol::kNotAPol][maxDirectionsPerPol]; 
+  WaveformInfo deconvolved_filtered[AnitaPol::kNotAPol][maxDirectionsPerPol];
 
 
   // WaveformInfo maxWaveform;  // do we want this for all ? 
@@ -201,7 +204,7 @@ public:
   
   private: 
 
-  ClassDefNV(AnitaEventSummary, 12); 
+  ClassDefNV(AnitaEventSummary, 13); 
 }; 
 
 

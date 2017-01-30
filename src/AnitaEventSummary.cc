@@ -73,6 +73,8 @@ void AnitaEventSummary::zeroInternals(){
       memset(&peak[polInd][dir],0,sizeof(PointingHypothesis)); 
       memset(&coherent[polInd][dir],0,sizeof(WaveformInfo)); 
       memset(&deconvolved[polInd][dir],0,sizeof(WaveformInfo)); 
+      memset(&coherent_unfiltered[polInd][dir],0,sizeof(WaveformInfo)); 
+      memset(&deconvolved_unfiltered[polInd][dir],0,sizeof(WaveformInfo)); 
     }
   }
   memset(&flags,0, sizeof(EventFlags)); 
