@@ -64,7 +64,7 @@ TTree* AnitaTMVA::makeTMVATree(TTree * in, TFile * outf, const char * tree_name,
 
     for (int i = 0; i < vars.N()+2; i++)
     {
-      char type = vars.at(i).type; 
+      char type = i < vars.N() ? vars.at(i).type : 'I'; 
       switch(type) 
       {
         case 'I':
