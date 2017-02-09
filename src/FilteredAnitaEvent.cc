@@ -241,11 +241,6 @@ void FilteredAnitaEvent::getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_r
   int imax = -1;
   int imin = -1;
 
-  double max = 0;
-  double min = 0;
-  int imax = -1;
-  int imin = -1;
-
   for (int i = 0; i < NUM_PHI; i++)
   {
     int ant1 = AnitaGeomTool::getAntFromPhiRing(i, ring1);
