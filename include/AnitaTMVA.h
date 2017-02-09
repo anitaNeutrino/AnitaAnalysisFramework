@@ -51,7 +51,16 @@ namespace AnitaTMVA
 
     /* Use this TMVA::DataLoader (or a TMVA::Factory if using an old TMVA) */ 
     template <typename T> 
-    void setUpData(T *t) const { for (unsigned i = 0; i < vars.size(); i++) if (!vars[i].spectator)  t->AddVariable(vars[i].name, vars[i].type); } ; 
+    void setUpData(T *t) const
+    { 
+      for (unsigned i = 0; i < vars.size(); i++) 
+      {
+        if (!vars[i].spectator)
+          t->AddVariable(vars[i].name, vars[i].type); 
+        else
+          t->AddSpectator(vars[i].name, vars[i].type); 
+      }
+    }
 
     void add(const MVAVar& var) { vars.push_back(var); }
 

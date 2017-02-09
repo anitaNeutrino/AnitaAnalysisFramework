@@ -237,6 +237,11 @@ void FilteredAnitaEvent::getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_r
 {
 
   double max = 0;
+  double min = 999;
+  int imax = -1;
+  int imin = -1;
+
+  double max = 0;
   double min = 0;
   int imax = -1;
   int imin = -1;
