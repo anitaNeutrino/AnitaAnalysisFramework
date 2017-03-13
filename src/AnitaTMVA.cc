@@ -55,7 +55,7 @@ TTree* AnitaTMVA::makeTMVATree(TTree * in, TFile * outf, const char * tree_name,
 //  printf("%s\n",drawstr.str().c_str()); 
 
   //now the real work happens... 
-  int Nout = in->Draw(drawstr.str().c_str(), cut,"goff"); 
+  int Nout = in->Draw(drawstr.str().c_str(), cut,"paraGoff"); 
  
 
   //This is madness. I should just use a custom selector but I'm too lazy for that right now. 
