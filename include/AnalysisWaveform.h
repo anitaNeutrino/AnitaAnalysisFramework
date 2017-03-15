@@ -240,6 +240,11 @@ class AnalysisWaveform
     /** pad the frequency (equivalent to upsampling the even values) */
     void padFreq(int factor); 
 
+
+    /** pad the frequency with a specific number of points (equivalent to upsampling the even values) */
+    void padFreqAdd(int npad);
+
+
     /** Change the options for calculating the power. This obviously will invalidate power() and powerdB() */
     void setPowerCalculationOptions(PowerCalculationOptions & opt); 
 

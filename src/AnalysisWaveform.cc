@@ -926,6 +926,62 @@ void AnalysisWaveform::padFreq(int npad)
 }
 
 
+
+void AnalysisWaveform::padFreqAdd(int npad)
+{
+  if (npad < 1) return; 
+
+
+
+  //new even size
+  if (g_even.GetN() ==0) (void) even();  //may need to calculate even if it never has been
+  int old_N = g_even.GetN();
+  int new_N = g_even.GetN() + npad; 
+
+  FFTWComplex * new_fft =0; 
+  int ret = posix_memalign( (void**) &new_fft, ALIGNMENT, sizeof(FFTWComplex) * (new_N/2+1));
+  assert(!ret); 
+
+  const FFTWComplex * old_freq = freq(); 
+  //printf("%d\n", fft_len); 
+
+  //copy old
+  memcpy(new_fft, old_freq, TMath::Min(new_N/2+1,fft_len) * sizeof(FFTWComplex));
+
+  //scale
+  double scale = (double(new_N) / old_N); 
+  for (int i =0; i < Nfreq(); i++) { 
+    new_fft[i].re *= scale;
+    new_fft[i].im *= scale; }
+
+
+  // zero rest 
+  memset(new_fft + fft_len, 0, (new_N/2 + 1 - fft_len) * sizeof(FFTWComplex));
+
+  //set new lengths and dt
+  fft_len = new_N/2 + 1; 
+  g_even.Set(new_N); 
+  dt = 1./ (g_even.GetN() * df); 
+
+
+  //swap in new fft
+  free(fft); 
+  fft = new_fft; 
+
+  //others need to update now! 
+  must_update_even = true; 
+  must_update_uneven = !uneven_equals_even; 
+  must_update_freq = false; 
+  power_dirty = true; 
+  power_db_dirty = true; 
+  phase_dirty = true; 
+  hilbert_dirty = true; 
+  hilbert_envelope_dirty = true; 
+  just_padded = false; 
+
+}
+
+
 void AnalysisWaveform::setPowerCalculationOptions(PowerCalculationOptions & opt) 
 {
   power_options = opt; 
