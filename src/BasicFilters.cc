@@ -1,5 +1,6 @@
 #include "BasicFilters.h"
 #include "AnalysisWaveform.h" 
+#include "DigitalFilter.h" 
 #include "FFTWComplex.h" 
 
 void SimplePassBandFilter::processOne(AnalysisWaveform* g) 
@@ -63,3 +64,10 @@ void SumDifferenceFilter::process(FilteredAnitaEvent * event)
 
 
 }
+
+
+void DigitalFilterOperation::processOne(AnalysisWaveform * g) 
+{
+  digi->filterGraph(g->updateEven()); 
+}
+

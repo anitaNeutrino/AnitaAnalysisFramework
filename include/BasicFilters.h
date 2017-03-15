@@ -12,6 +12,12 @@
  *
  */ 
 
+
+namespace FFTtools
+{
+  class DigitalFilter; 
+}
+
 class SimplePassBandFilter : public UniformFilterOperation 
 { 
   public: 
@@ -105,6 +111,20 @@ class SumDifferenceFilter : public FilterOperation
     virtual void process(FilteredAnitaEvent * event); 
 };
 
+
+class DigitalFilterOperation : public UniformFilterOperation 
+{
+  public: 
+    DigitalFilterOperation(const FFTtools::DigitalFilter *digi) : digi(digi) {;}
+    const char * tag () const { return "DigitalFilter"; } 
+    const char * description () const { return "DigitalFilter"; } 
+    virtual void processOne(AnalysisWaveform* wf); 
+
+  private: 
+    const FFTtools::DigitalFilter * digi; 
+
+
+}; 
 
 
 #endif 
