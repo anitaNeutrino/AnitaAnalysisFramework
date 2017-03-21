@@ -14,6 +14,8 @@
 
 #include <iostream>
 #include "UsefulAnitaEvent.h"
+#include "RawAnitaHeader.h"
+
 #include "TString.h"
 #include "AnitaDataset.h"
 
@@ -26,21 +28,25 @@ public:
   // Any output files should probably save the blinding strategy to the tree.
   enum strategy {
     kNoBlinding                          = 0x00,
-    kInsertedEvents                      = 0x01
-    // kAnotherStrategy                     = 0x02,
+    kInsertedVPolEvents                  = 0x01,
+    kInsertedHPolEvents                  = 0x02,
     // kYetAnotherStrategy                  = 0x04,
     // kYetAnotherStill                     = 0x08
+
+
+    kDefault= kInsertedVPolEvents|kInsertedHPolEvents
   };
 
 
+  BlindDataset(strategy theStrat, int run, bool decimated, WaveCalType::WaveCalType_t cal = WaveCalType::kDefault, int anita_version = -1);
+  BlindDataset(int run, bool decimated, WaveCalType::WaveCalType_t cal = WaveCalType::kDefault, int anita_version = -1);
 
 
-  BlindDataset();
-  BlindDataset(strategy strat);
+
 
   /**
    * Get a one line description of the blinding strategy
-   * (please update this in BlindDataset.cxx when you add a strategy.
+   * (please update this in BlindDataset.cc when you add a strategy.
    * @param strat is the strategy to describe.
    * @return the description
    */
@@ -62,20 +68,40 @@ public:
   strategy getStrategy();
 
 
-  /**
-   * Applies the currently set blinding strategy to the events
-   * @param event is the event to be blinded
-   */
-  void applyBlinding(UsefulAnitaEvent* event);
+
+
+
+
+  RawAnitaHeader* header(bool force_load=false); // add a few sneaky tricks to AnitaDataset::header(bool)
+  UsefulAnitaEvent* useful(bool force_load=false); // add a few sneaky tricks to AnitaDataset::header(bool)
+
 
 
 private:
 
-
-  strategy theStrat;
-  bool loadedBlindTrees;
-
+  void zeroPointers();
   void loadBlindTrees();
+
+
+  strategy theStrat; ///!< Currently selected blinding strategy
+  bool loadedBlindTrees; ///!< Have we loaded the tree of events to insert?
+  Int_t needToOverwriteEvent(AnitaPol::AnitaPol_t pol, UInt_t eventNumber);
+  void overwriteHeader(RawAnitaHeader* header, AnitaPol::AnitaPol_t pol, Int_t fakeTreeEntry);
+  void overwriteEvent(UsefulAnitaEvent* useful, AnitaPol::AnitaPol_t pol, Int_t fakeTreeEntry);
+
+  // fake things
+  TFile* fBlindFile; ///!< Pointer to file containing tree of UsefulAnitaEvents to insert
+  TTree* fBlindEventTree[AnitaPol::kNotAPol]; ///!< Tree of UsefulAnitaEvents to insert
+  TTree* fBlindHeadTree[AnitaPol::kNotAPol]; ///!< Tree of headers to insert
+
+  UsefulAnitaEvent* fBlindEvent[AnitaPol::kNotAPol]; ///!< Pointer to fake UsefulAnitaEvent
+  RawAnitaHeader* fBlindHeader[AnitaPol::kNotAPol]; ///!< Pointer to fake header
+
+  // Here we have a set of three vectors that should all be the same length as the elements of each match up.
+  // They are filled in loadBlindTrees
+  std::vector<UInt_t> eventsToOverwrite;
+  std::vector<AnitaPol::AnitaPol_t> polarityOfEventToInsert;
+  std::vector<Int_t> fakeTreeEntries;
 
 };
 
