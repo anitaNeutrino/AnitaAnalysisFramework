@@ -1,9 +1,9 @@
 
-# CMakeLists.txt for AnitaAnalysisFramework 
+# CMakeLists.txt for AnitaAnalysisFramework
 cmake_minimum_required(VERSION 2.8.10)
 project(AnitaAnalysisFramework)
 
-## perhaps this should be changed? 
+## perhaps this should be changed?
 set(libname "AnitaAnalysis")
 
 
@@ -32,7 +32,7 @@ else()
 endif()
 
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${UTIL_SHARE_DIR}/cmake/modules/") 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${UTIL_SHARE_DIR}/cmake/modules/")
 
 #---Locate the ROOT package and defines a number of variables (e.g. ROOT_INCLUDE_DIRS)
 find_package(ROOT REQUIRED COMPONENTS MathMore MathCore RIO Hist Tree Net TMVA)
@@ -50,7 +50,7 @@ if( ${ROOT_VERSION} VERSION_GREATER "5.99/99")
     include(${ROOT_USE_FILE})
 else()
 #    include(RootNewMacros)
-     add_definitions(${ROOT_DEFINITIONS})	
+     add_definitions(${ROOT_DEFINITIONS})
 endif()
 
 message("ROOT_INCLUDE_DIRS is set to ${ROOT_INCLUDE_DIRS}")
@@ -59,7 +59,7 @@ message("ROOT_INCLUDE_DIRS is set to ${ROOT_INCLUDE_DIRS}")
 include_directories(${PROJECT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/include ${FFTW_INCLUDES} ${ZLIB_INCLUDES} ${UTIL_INC_DIR})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXX_FLAGS}")
 file(GLOB HEADER_FILES
-    "include/*.h"    
+    "include/*.h"
 )
 
 file(GLOB_RECURSE SOURCE_FILES src/*.cc)
@@ -85,114 +85,113 @@ install (TARGETS ${libname}
 	ARCHIVE DESTINATION ${UTIL_LIB_DIR}
 	LIBRARY DESTINATION ${UTIL_LIB_DIR}
 	RUNTIME DESTINATION ${UTIL_BIN_DIR})
-      
+install (DIRECTORY calib/ DESTINATION ${UTIL_SHARE_DIR}/anitaCalib)
+
+
 if( ${ROOT_VERSION} VERSION_GREATER "5.99.99")
   install (FILES ${PROJECT_BINARY_DIR}/${DICTNAME}_rdict.pcm DESTINATION ${UTIL_LIB_DIR})
 #  install (FILES ${PROJECT_BINARY_DIR}/lib${libname}.rootmap DESTINATION ${UTIL_LIB_DIR})
-endif() 
+endif()
 
 #################################################################################3
-### The default build configuration is INSANE. No optimization? What is this 1971? 
+### The default build configuration is INSANE. No optimization? What is this 1971?
 
-message (" Adding new build type") 
+message (" Adding new build type")
 
-set(CMAKE_CXX_FLAGS_DEFAULT 
-  "-Os -g -Wall" 
-  CACHE STRING "c++ Flags used during default eventReaderRoot builds" 
-  FORCE ) 
-
-set(CMAKE_C_FLAGS_DEFAULT 
+set(CMAKE_CXX_FLAGS_DEFAULT
   "-Os -g -Wall"
-  CACHE STRING "c Flags used during default eventReaderRoot builds" 
-  FORCE ) 
+  CACHE STRING "c++ Flags used during default eventReaderRoot builds"
+  FORCE )
 
-set(CMAKE_EXE_LINKER_FLAGS_DEFAULT 
+set(CMAKE_C_FLAGS_DEFAULT
+  "-Os -g -Wall"
+  CACHE STRING "c Flags used during default eventReaderRoot builds"
+  FORCE )
+
+set(CMAKE_EXE_LINKER_FLAGS_DEFAULT
   "-g"
-  CACHE STRING "ld Flags used during default eventReaderRoot builds" 
-  FORCE ) 
+  CACHE STRING "ld Flags used during default eventReaderRoot builds"
+  FORCE )
 
-set(CMAKE_SHARED_LINKER_FLAGS_DEFAULT 
+set(CMAKE_SHARED_LINKER_FLAGS_DEFAULT
   "-g"
-  CACHE STRING "ld Flags used during default eventReaderRoot builds" 
-  FORCE ) 
+  CACHE STRING "ld Flags used during default eventReaderRoot builds"
+  FORCE )
 
 
-mark_as_advanced ( CMAKE_CXX_FLAGS_DEFAULT CMAKE_C_FLAGS_DEFAULT CMAKE_EXE_LINKER_FLAGS_DEFAULT CMAKE_SHARED_LINKER_FLAGS_DEFAULT) 
+mark_as_advanced ( CMAKE_CXX_FLAGS_DEFAULT CMAKE_C_FLAGS_DEFAULT CMAKE_EXE_LINKER_FLAGS_DEFAULT CMAKE_SHARED_LINKER_FLAGS_DEFAULT)
 
-if (NOT CMAKE_BUILD_TYPE) 
+if (NOT CMAKE_BUILD_TYPE)
   set (CMAKE_BUILD_TYPE Default
     CACHE STRING "Choose tye type of build: None Debug Release RelWithDebInfo MinSizeRel Default"
-    FORCE ) 
+    FORCE )
 endif()
 
 #################################################################################
-###  Manual vectorization option 
-###  Maybe in the future this can be made a CMake module or something 
-################################################################################# 
+###  Manual vectorization option
+###  Maybe in the future this can be made a CMake module or something
+#################################################################################
 
-set (VECTORDIR vectorclass) 
-option(VECTORIZE "Enable Manual SIMD Vectorization" ON) 
-if (VECTORIZE) 
-  add_definitions( -DENABLE_VECTORIZE ) 
+set (VECTORDIR vectorclass)
+option(VECTORIZE "Enable Manual SIMD Vectorization" ON)
+if (VECTORIZE)
+  add_definitions( -DENABLE_VECTORIZE )
 
-  if(CMAKE_COMPILER_IS_GNUCXX) 
+  if(CMAKE_COMPILER_IS_GNUCXX)
 
-    ### someone should do this for clang if they want it to be as fast as possible 
+    ### someone should do this for clang if they want it to be as fast as possible
     if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.1)
-      add_definitions( -march=native) 
+      add_definitions( -march=native)
     endif()
-    add_definitions(  -fabi-version=0 ) 
-  endif() 
+    add_definitions(  -fabi-version=0 )
+  endif()
 
   if (EXISTS ${VECTORDIR}/vectorclass.zip )
-    message (" Found vectorclass already downloaded... ") 
+    message (" Found vectorclass already downloaded... ")
 
-  else () 
-    file(MAKE_DIRECTORY ${VECTORDIR} ) 
+  else ()
+    file(MAKE_DIRECTORY ${VECTORDIR} )
     message (" Downloading vector class...")
-    file(DOWNLOAD http://www.agner.org/optimize/vectorclass.zip ${VECTORDIR}/vectorclass.zip) 
+    file(DOWNLOAD http://www.agner.org/optimize/vectorclass.zip ${VECTORDIR}/vectorclass.zip)
 
-    #TODO there is probably a more cross platform way of doing this... 
+    #TODO there is probably a more cross platform way of doing this...
     execute_process(COMMAND unzip ${VECTORDIR}/vectorclass.zip -d ${VECTORDIR} )
-    execute_process(COMMAND unzip ${VECTORDIR}/special.zip -d ${VECTORDIR} ) 
-  endif() 
+    execute_process(COMMAND unzip ${VECTORDIR}/special.zip -d ${VECTORDIR} )
+  endif()
 
 
-  ## is this right? who knows 
-  include_directories( ${CMAKE_BINARY_DIR}/${VECTORDIR} ) 
+  ## is this right? who knows
+  include_directories( ${CMAKE_BINARY_DIR}/${VECTORDIR} )
 
 
-endif (VECTORIZE) 
+endif (VECTORIZE)
 
-option ( FORCE_OLD_GPP_ABI " Force old g++ ABI; this might be necessary if using new g++ with ROOT compiled with older g++ or other similar situations" OFF ) 
+option ( FORCE_OLD_GPP_ABI " Force old g++ ABI; this might be necessary if using new g++ with ROOT compiled with older g++ or other similar situations" OFF )
 
-if (FORCE_OLD_GPP_ABI) 
-  add_definitions( -D_GLIBCXX_USE_CXX11_ABI=0 ) 
-endif() 
- 
-option( ENABLE_OPENMP "Enable OpenMP support") 
+if (FORCE_OLD_GPP_ABI)
+  add_definitions( -D_GLIBCXX_USE_CXX11_ABI=0 )
+endif()
+
+option( ENABLE_OPENMP "Enable OpenMP support")
 
 
 
-if(ENABLE_OPENMP) 
+if(ENABLE_OPENMP)
   FIND_PACKAGE( OpenMP REQUIRED)
   if(OPENMP_FOUND)
     message("OPENMP FOUND")
-    add_definitions (-DUSE_OMP) 
+    add_definitions (-DUSE_OMP)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-  else() 
-    message(FATAL_ERROR "you tried to use openmp but Cmake couldn't find compiler support") 
-  endif() 
-endif() 
+  else()
+    message(FATAL_ERROR "you tried to use openmp but Cmake couldn't find compiler support")
+  endif()
+endif()
 
 option( ANITA_ANALYSIS_DEBUG "Enable some debug options that probably slow things down " )
 
 
 if (ANITA_ANALYSIS_DEBUG)
-  add_definitions( -DANITA_ANALYSIS_DEBUG) 
+  add_definitions( -DANITA_ANALYSIS_DEBUG)
 endif()
-
-
-
