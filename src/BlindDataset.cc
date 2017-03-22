@@ -31,6 +31,9 @@ void BlindDataset::zeroPointers(){
   for(int pol=0; pol < AnitaPol::kNotAPol; pol++){
     fBlindHeadTree[pol] = NULL;
     fBlindEventTree[pol] = NULL;
+
+    fBlindHeader[pol] = NULL;
+    fBlindEvent[pol] = NULL;
   }
   fBlindFile = NULL;
 }
@@ -85,16 +88,18 @@ BlindDataset::strategy BlindDataset::getStrategy(){
 
 void BlindDataset::loadBlindTrees() {
 
-  std::cout << __PRETTY_FUNCTION__ << std::endl;
+  // std::cout << __PRETTY_FUNCTION__ << std::endl;
 
   if(!loadedBlindTrees){
 
     // prepare to put ROOT's current directory pointer back to what it was before we opened the blinding file in read mode.
-    TDirectory* originalDir = gDirectory;
+    // TDirectory* originalDir = gDirectory;
 
-    std::cout << __PRETTY_FUNCTION__ << ": here 1" << std::endl;
 
-    // zero internal pointers so can check we find everything.
+    // std::cout << __PRETTY_FUNCTION__ << ": here 1" << std::endl;
+    // gDirectory->pwd();
+    // gDirectory->ls();
+
     fBlindFile = NULL;
 
     char calibDir[FILENAME_MAX];
@@ -113,14 +118,13 @@ void BlindDataset::loadBlindTrees() {
       strncpy(calibDir,calibEnv,FILENAME_MAX);
     }
 
-    std::cout << __PRETTY_FUNCTION__ << ": here 2" << std::endl;
+    // std::cout << __PRETTY_FUNCTION__ << ": here 2" << std::endl;
 
 
     // these are the fake events, that will be inserted in place of some min bias events
     sprintf(fileName, "%s/insertedDataFile.root", calibDir);
     fBlindFile = TFile::Open(fileName);
 
-    gDirectory->ls();
 
     if(fBlindFile){
 
@@ -139,18 +143,17 @@ void BlindDataset::loadBlindTrees() {
 	// If you found the data then prepare for data reading
 	if(fBlindHeadTree[pol] && fBlindEventTree[pol]){
 
-	  // std::cout << "This is the header tree \t" << fBlindHeadTree[pol]->GetName() << std::endl;
-	  // fBlindHeadTree[pol]->GetListOfBranches()->Print();
-
-	  // std::cout << "\n\n\n\n\n" << std::endl;
-
-	  // std::cout << "This is the event tree \t" << fBlindEventTree[pol]->GetName() << std::endl;
-	  // fBlindEventTree[pol]->GetListOfBranches()->Print();
-
-	  // std::cout << "\n\n\n\n\n" << std::endl;
-
 	  fBlindHeadTree[pol]->SetBranchAddress("header", &fBlindHeader[pol]);
 	  fBlindEventTree[pol]->SetBranchAddress("event", &fBlindEvent[pol]);
+
+
+	  // for(Long64_t entry=0; entry < fBlindHeadTree[pol]->GetEntries(); entry++){
+	  //   // std::cerr << entry << "\t";
+	  //   fBlindHeadTree[pol]->GetEntry(entry);
+	  //   std::cerr << entry << "\t";
+	  //   fBlindEventTree[pol]->GetEntry(entry);
+	  //   std::cerr << entry << std::endl;
+	  // }
 	}
 	else{
 	  // complain if you can't find the data
@@ -165,7 +168,7 @@ void BlindDataset::loadBlindTrees() {
 		<< "Unable to find " << fileName << " for inserted event blinding." << std::endl;
     }
 
-    std::cout << __PRETTY_FUNCTION__ << ": here 3" << std::endl;
+    // std::cout << __PRETTY_FUNCTION__ << ": here 3" << std::endl;
 
     // these are the min bias event numbers to be overwritten, with the entry in the fakeEventTree
     // that is used to overwrite the event
@@ -181,8 +184,7 @@ void BlindDataset::loadBlindTrees() {
       fakeTreeEntries.push_back(fakeTreeEntry);
       AnitaPol::AnitaPol_t thePol = AnitaPol::AnitaPol_t(pol);
       polarityOfEventToInsert.push_back(thePol);
-      std::cout << overwrittenEventNumber << "\t" << fakeTreeEntry << "\t" << thePol << std::endl;
-      // std::cout << overwrittenEventInfo.at(overwrittenEventInfo.size()-1).first << "\t" << overwrittenEventInfo.at(overwrittenEventInfo.size()-1).second << std::endl;
+      // std::cout << overwrittenEventNumber << "\t" << fakeTreeEntry << "\t" << thePol << std::endl;
       numEvents++;
     }
     if(numEvents==0){
@@ -191,9 +193,13 @@ void BlindDataset::loadBlindTrees() {
     }
 
     // put ROOT's current directory pointer back to what it was before we opened the blinding file in read mode.
-    gDirectory = originalDir;
+
+    loadedBlindTrees = true;
+
   }
-  loadedBlindTrees = true;
+
+  // std::cout << __PRETTY_FUNCTION__ << ": here 4" << std::endl;
+
 }
 
 
@@ -227,7 +233,14 @@ Int_t BlindDataset::needToOverwriteEvent(AnitaPol::AnitaPol_t pol, UInt_t eventN
 
 void BlindDataset::overwriteHeader(RawAnitaHeader* header, AnitaPol::AnitaPol_t pol, Int_t fakeTreeEntry){
 
+  // std::cerr << pol << "\t" << fBlindHeadTree[pol] << "\t" << fakeTreeEntry << std::endl;
+  // fBlindHeadTree[pol]->GetEntry(fakeTreeEntry);
+  // std::cerr << pol << "\t" << fBlindHeadTree[pol] << "\t" << fakeTreeEntry << std::endl;
+
+  // std::cout << __PRETTY_FUNCTION__ << std::endl;
+  // std::cout << header << "\t" << fBlindHeader[pol] << "\t" << fBlindHeadTree[pol] << "\t" << fakeTreeEntry << std::endl;
   fBlindHeadTree[pol]->GetEntry(fakeTreeEntry);
+  // std::cout << header << "\t" << fBlindHeader[pol] << "\t" << fBlindHeadTree[pol] << "\t" << fakeTreeEntry << std::endl;
 
   // Retain some of the header data for camouflage
   UInt_t realTime = header->realTime;
@@ -254,7 +267,11 @@ void BlindDataset::overwriteHeader(RawAnitaHeader* header, AnitaPol::AnitaPol_t 
 
 void BlindDataset::overwriteEvent(UsefulAnitaEvent* useful, AnitaPol::AnitaPol_t pol, Int_t fakeTreeEntry){
 
+  // std::cout << __PRETTY_FUNCTION__ << std::endl;
+  // std::cout << useful << "\t" << fBlindEvent[pol] << "\t" << fBlindEventTree[pol] << "\t" << fakeTreeEntry << std::endl;
   fBlindEventTree[pol]->GetEntry(fakeTreeEntry);
+  // std::cout << useful << "\t" << fBlindEvent[pol] << "\t" << fBlindEventTree[pol] << "\t" << fakeTreeEntry << std::endl;
+
 
   UInt_t eventNumber = useful->eventNumber;
   // std::cout << std::endl << std::endl;
@@ -277,6 +294,13 @@ void BlindDataset::overwriteEvent(UsefulAnitaEvent* useful, AnitaPol::AnitaPol_t
   }
 
   (*useful) = (*fBlindEvent[pol]);
+  // for(int chanIndex=0; chanIndex < NUM_CHAN*NUM_SURF; chanIndex++){
+  //   useful->fNumPoints[chanIndex] = fBlindEvent[pol]->fNumPoints[chanIndex];
+  //   for(int samp=0; samp < NUM_SAMP; samp++){
+  //     useful->fVolts[chanIndex][samp] = fBlindEvent[pol]->fVolts[chanIndex][samp];
+  //     useful->fTimes[chanIndex][samp] = fBlindEvent[pol]->fTimes[chanIndex][samp];
+  //   }
+  // }
 
 
 
