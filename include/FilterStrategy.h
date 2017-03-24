@@ -25,7 +25,10 @@ class FilterStrategy
 
   public: 
     /** Create a new empty strategy. If a pointer to a TFile is given, then trees may be written to that file if the operations define any output values */ 
-    FilterStrategy(TFile * outfile = 0); 
+    FilterStrategy(TFile * outfile = 0);
+
+    /** Allow attachment of outfile after construct if haven't called this->process() yet */
+    void attachFile(TFile* outfile);
 
     /** Destructor. Will write to output file if necessary */ 
     virtual ~FilterStrategy() {done(); } 

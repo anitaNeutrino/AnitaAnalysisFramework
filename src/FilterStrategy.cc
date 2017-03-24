@@ -7,9 +7,21 @@
 
 FilterStrategy::FilterStrategy(TFile * outfile) 
 {
-  f = outfile; 
-  started = false; 
+  started = false;
+  attachFile(outfile);
 }
+
+
+void FilterStrategy::attachFile(TFile* outfile){
+  if(!started)
+  {
+    f = outfile;
+  }
+  else{
+    std::cerr << "Warning in " << __PRETTY_FUNCTION__ << ", unable to attach file after first call to FilterStrategy::process(FilteredAnitaEvent)" << std::endl;
+  }
+}
+
 
 void FilterStrategy::done() 
 {
