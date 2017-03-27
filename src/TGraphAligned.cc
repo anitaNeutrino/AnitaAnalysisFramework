@@ -3,9 +3,12 @@
 #include <stdlib.h>
 #include "TMath.h"
 #include <stdlib.h>
-static int err = 0; // error checking for posix_memalign
+#include "TMutex.h" 
 #include "TH1.h"
 #include "TList.h"
+#include "TROOT.h" 
+
+static int err = 0; // error checking for posix_memalign
 
 
 ClassImp(TGraphAligned); 
@@ -58,7 +61,11 @@ TGraphAligned& TGraphAligned::operator=(const TGraphAligned &gr)
          delete fFunctions;
       }
 
-      if (gr.fFunctions) fFunctions = (TList*)gr.fFunctions->Clone();
+      if (gr.fFunctions) 
+      {
+        R__LOCKGUARD(gROOTMutex); //todo: check if this is needed
+        fFunctions = (TList*)gr.fFunctions->Clone();
+      }
       else fFunctions = new TList;
 
       if (fHistogram) delete fHistogram;
