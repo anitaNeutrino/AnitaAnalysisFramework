@@ -74,7 +74,7 @@ void DigitalFilterOperation::processOne(AnalysisWaveform * g)
 
 ALFAFilter::ALFAFilter(double cutoff)
 {
-  filt = new FFTtools::ButterworthFilter(FFTtools::LOWPASS, 2, cutoff/1.3); 
+  filt = new FFTtools::ButterworthFilter(FFTtools::LOWPASS, 4, cutoff/1.3); 
   pb = new DigitalFilterOperation(filt); 
 }
 
