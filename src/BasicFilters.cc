@@ -71,3 +71,28 @@ void DigitalFilterOperation::processOne(AnalysisWaveform * g)
   digi->filterGraph(g->updateEven()); 
 }
 
+
+ALFAFilter::ALFAFilter(double cutoff)
+{
+  filt = new FFTtools::ButterworthFilter(FFTtools::LOWPASS, 2, cutoff/1.3); 
+  pb = new DigitalFilterOperation(filt); 
+}
+
+void ALFAFilter::process(FilteredAnitaEvent *event)
+{
+   if (AnitaVersion::get() != 3 ) return; 
+
+   pb->processOne( getWf(event, 4, AnitaPol::kHorizontal) ); 
+   //cross talk is strong in this one 
+   pb->processOne( getWf(event, 12, AnitaPol::kHorizontal) ); 
+}
+
+
+ALFAFilter::~ALFAFilter()
+{
+  delete pb; 
+  delete filt;
+}
+
+
+

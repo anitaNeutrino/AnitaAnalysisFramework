@@ -64,32 +64,6 @@ class SimpleNotchFilter : public UniformFilterOperation
 
 /** ALFA filter */ 
 
-class ALFAFilter : public FilterOperation
-{
-  public: 
-    ALFAFilter (double cutoff = 0.7)
-      : pb(0,0.7) {descStr.Form("ALFA Filter with cutoff at %f GHz",cutoff); } 
-
-
-    virtual void process(FilteredAnitaEvent * event) 
-    {
-      pb.processOne( getWf(event, 4, AnitaPol::kHorizontal) ); 
-
-      //cross talk is strong in this one 
-      pb.processOne( getWf(event, 12, AnitaPol::kHorizontal) ); 
-    }
-
-
-    const char * tag() const { return "ALFAFilter"; } 
-    const char * description() const { return descStr.Data(); } 
-  private:
-    SimplePassBandFilter pb; 
-    double power_before; 
-    double power_after;  
-    TString descStr;
-
-}; 
-
 
 class HybridFilter : public FilterOperation
 {
@@ -123,6 +97,25 @@ class DigitalFilterOperation : public UniformFilterOperation
   private: 
     const FFTtools::DigitalFilter * digi; 
 
+
+}; 
+
+class ALFAFilter : public FilterOperation
+{
+  public: 
+    ALFAFilter (double cutoff = 0.55); /** The cutoff is scaled by 1.3, so if you oversampled, this won't be right anymore */ 
+    virtual ~ALFAFilter(); 
+
+    virtual void process(FilteredAnitaEvent * event) ; 
+
+    const char * tag() const { return "ALFAFilter"; } 
+    const char * description() const { return descStr.Data(); } 
+  private:
+    DigitalFilterOperation *pb; 
+    FFTtools::DigitalFilter * filt;
+    double power_before; 
+    double power_after;  
+    TString descStr;
 
 }; 
 
