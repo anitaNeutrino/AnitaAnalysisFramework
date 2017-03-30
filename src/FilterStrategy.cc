@@ -8,6 +8,7 @@
 FilterStrategy::FilterStrategy(TFile * outfile) 
 {
   started = false;
+  f = 0; 
   if(outfile){
     attachFile(outfile);
   }
