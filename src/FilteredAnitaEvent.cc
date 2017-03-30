@@ -60,6 +60,31 @@ FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterSt
 
   //tell the strategy to process this
   strategy->process(this);
+
+  int max_size = 260; 
+  
+  for (int pol = AnitaPol::kHorizontal; pol <= AnitaPol::kVertical; pol++)
+  {
+    for (unsigned ant = 0; ant < NUM_SEAVEYS; ant++)
+    {
+      int k = pol * NUM_SEAVEYS  + ant;
+      if (filteredGraphs[k]->Neven() > max_size) 
+      {
+        max_size = filteredGraphs[k]->Neven(); 
+      }
+    }
+  }
+
+  for (int pol = AnitaPol::kHorizontal; pol <= AnitaPol::kVertical; pol++)
+  {
+    for (unsigned ant = 0; ant < NUM_SEAVEYS; ant++)
+    {
+      int k = pol * NUM_SEAVEYS  + ant;
+      filteredGraphs[k]->forceEvenSize(max_size); // do this for correlations
+    }
+  }
+
+
 }
 
 
