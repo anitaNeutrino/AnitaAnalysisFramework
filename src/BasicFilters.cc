@@ -74,8 +74,12 @@ void DigitalFilterOperation::processOne(AnalysisWaveform * g)
 
 ALFAFilter::ALFAFilter(double cutoff)
 {
+  // cutoff is a fraction of the Nyquist frequency.
+  // (that's where the factor of 1.3 here comes from)  
+  // So this won't work properly for interpolated or padded waveforms
   filt = new FFTtools::ButterworthFilter(FFTtools::LOWPASS, 4, cutoff/1.3); 
-  pb = new DigitalFilterOperation(filt); 
+  pb = new DigitalFilterOperation(filt);
+  descStr = TString::Format("ALFA filter - Butterworth low pass at %3.0lf MHz for 5TH and 13TH (assumes f_{Nyquist} = 1300 MHz)", 1e3*cutoff);
 }
 
 void ALFAFilter::process(FilteredAnitaEvent *event)
