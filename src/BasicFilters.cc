@@ -75,7 +75,8 @@ void DigitalFilterOperation::processOne(AnalysisWaveform * g)
 ALFAFilter::ALFAFilter(double cutoff)
 {
   filt = new FFTtools::ButterworthFilter(FFTtools::LOWPASS, 4, cutoff/1.3); 
-  pb = new DigitalFilterOperation(filt); 
+  pb = new DigitalFilterOperation(filt);
+  descStr = TString::Format("ALFA filter (Low pass butterworth with cutoff 4.2%lf)", cutoff);
 }
 
 void ALFAFilter::process(FilteredAnitaEvent *event)
