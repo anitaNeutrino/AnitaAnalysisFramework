@@ -116,5 +116,31 @@ ALFAButterworthFilter::~ALFAButterworthFilter()
   delete filt;
 }
 
+ALFALanczosFilter::ALFALanczosFilter(double cutoff, int a)
+{
+  // cutoff is a fraction of the Nyquist frequency.
+  // (that's where the factor of 1.3 here comes from)  
+  filt = new FFTtools::LanczosFilter(cutoff/1.3, a); 
+  pb = new DigitalFilterOperation(filt,false); 
+  descStr = TString::Format("ALFA filter - Lanczos low pass at %3.0lf MHz for 5TH and 13TH (assumes f_{Nyquist} = 1300 MHz)", 1e3*cutoff);
+}
+
+void ALFALanczosFilter::process(FilteredAnitaEvent *event)
+{
+   if (AnitaVersion::get() != 3 ) return; 
+
+   pb->processOne( getWf(event, 4, AnitaPol::kHorizontal) ); 
+   //cross talk is strong in this one 
+   pb->processOne( getWf(event, 12, AnitaPol::kHorizontal) ); 
+}
+
+
+ALFALanczosFilter::~ALFALanczosFilter()
+{
+  delete pb; 
+  delete filt;
+}
+
+
 
 

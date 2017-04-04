@@ -73,8 +73,9 @@ class ALFASincFilter : public FilterOperation
 
     virtual void process(FilteredAnitaEvent * event) 
     {
-      pb.processOne( getWf(event, 4, AnitaPol::kHorizontal) ); 
+      if (AnitaVersion::get()!=3) return; 
 
+      pb.processOne( getWf(event, 4, AnitaPol::kHorizontal) ); 
       //cross talk is strong in this one 
       pb.processOne( getWf(event, 12, AnitaPol::kHorizontal) ); 
     }
@@ -134,6 +135,22 @@ class DigitalFilterOperation : public UniformFilterOperation
     const FFTtools::DigitalFilter * digi; 
     double delay; 
 
+
+}; 
+
+class ALFALanczosFilter : public FilterOperation
+{
+  public:
+    ALFALanczosFilter(double cutoff = 0.6, int a= 3); 
+    virtual ~ALFALanczosFilter(); 
+    const char * tag() const { return "ALFAFilter"; } 
+    const char * description() const { return descStr.Data(); } 
+    virtual void process(FilteredAnitaEvent * event) ; 
+
+  private: 
+    DigitalFilterOperation *pb; 
+    FFTtools::DigitalFilter * filt;
+    TString descStr; 
 
 }; 
 
