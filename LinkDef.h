@@ -29,5 +29,6 @@
 #pragma link C++ class HybridFilter+;
 #pragma link C++ class SumDifferenceFilter+;
 #pragma link C++ class DigitalFilterOperation+;
+#pragma link C++ class GeometricFilter+;
 #endif
 
