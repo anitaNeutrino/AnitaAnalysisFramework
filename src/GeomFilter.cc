@@ -273,7 +273,7 @@ void GeometricFilter::getClosestNAntennas(int nantennasToUse, double peakPhi, ve
                                      //cfg->saturation_threshold); 
                                      1500);   
   // TODO populate saturated channels array by iterating through bit variables
-  printf("saturation hpol: %li   vpol: %li, saturated[0], saturated[1]);
+  printf("saturation hpol: %li   vpol: %li\n", saturated[0], saturated[1]);
   // horrible temporary hack code
   //int saturatedChannels[2*NUM_SEAVEYS] = {0};  
   int polToggle = 0;  // TODO maye iterate on this?
