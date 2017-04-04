@@ -69,7 +69,7 @@ void SumDifferenceFilter::process(FilteredAnitaEvent * event)
 DigitalFilterOperation::DigitalFilterOperation(const FFTtools::DigitalFilter * digi, bool correct, double fmin, double fmax)
   : digi(digi), delay(0) 
 {
-  if (correct) delay = digi->avgDelay(201,fmin,fmax); //TODO don't hardcode number of points? 
+  if (correct) delay = digi->avgDelay(fmin,fmax,201); //TODO don't hardcode number of points? 
 
 }
 
