@@ -62,7 +62,36 @@ class SimpleNotchFilter : public UniformFilterOperation
 }; 
 
 
-/** ALFA filter */ 
+
+/** Brickwall ALFA filter */ 
+class ALFASincFilter : public FilterOperation
+{
+  public: 
+    ALFASincFilter(double cutoff = 0.7)
+      : pb(0,0.7) {descStr.Form("ALFA Filter with cutoff at %f GHz",cutoff); } 
+
+
+    virtual void process(FilteredAnitaEvent * event) 
+    {
+      pb.processOne( getWf(event, 4, AnitaPol::kHorizontal) ); 
+
+      //cross talk is strong in this one 
+      pb.processOne( getWf(event, 12, AnitaPol::kHorizontal) ); 
+    }
+
+
+    const char * tag() const { return "ALFAFilter"; } 
+    const char * description() const { return descStr.Data(); } 
+  private:
+    SimplePassBandFilter pb; 
+    double power_before; 
+    double power_after;  
+    TString descStr;
+
+}; 
+
+//backwards compatibility? 
+typedef ALFASincFilter ALFAFilter; 
 
 
 class HybridFilter : public FilterOperation
@@ -89,22 +118,30 @@ class SumDifferenceFilter : public FilterOperation
 class DigitalFilterOperation : public UniformFilterOperation 
 {
   public: 
-    DigitalFilterOperation(const FFTtools::DigitalFilter *digi) : digi(digi) {;}
+    /**Digital filter based on digi. 
+     * If correct_delay is true, the waveform will be adjusted by average group delay over the band. 
+     * The band is defined by delay_min_freq and delay_max_freq (given in terms of fnyq). If supersampled, you may need to adjust
+     * these from the values here. 
+     *
+     */
+    DigitalFilterOperation(const FFTtools::DigitalFilter *digi, bool correct_delay = true, 
+                          double delay_min_freq = 0.18/1.3, double delay_max_freq = 1); 
     const char * tag () const { return "DigitalFilter"; } 
     const char * description () const { return "DigitalFilter"; } 
     virtual void processOne(AnalysisWaveform* wf); 
 
   private: 
     const FFTtools::DigitalFilter * digi; 
+    double delay; 
 
 
 }; 
 
-class ALFAFilter : public FilterOperation
+class ALFAButterworthFilter : public FilterOperation
 {
   public: 
-    ALFAFilter (double cutoff = 0.55); /** The cutoff is scaled by 1.3, so if you oversampled, this won't be right anymore */ 
-    virtual ~ALFAFilter(); 
+    ALFAButterworthFilter(double cutoff = 0.55); /** The cutoff is scaled by 1.3, so if you oversampled, this won't be right anymore */ 
+    virtual ~ALFAButterworthFilter(); 
 
     virtual void process(FilteredAnitaEvent * event) ; 
 
@@ -113,6 +150,7 @@ class ALFAFilter : public FilterOperation
   private:
     DigitalFilterOperation *pb; 
     FFTtools::DigitalFilter * filt;
+    double delay; 
     double power_before; 
     double power_after;  
     TString descStr;

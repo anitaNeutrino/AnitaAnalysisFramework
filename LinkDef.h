@@ -23,7 +23,8 @@
 
 #pragma link C++ class SimplePassBandFilter+;
 #pragma link C++ class SimpleNotchFilter+;
-#pragma link C++ class ALFAFilter+;
+#pragma link C++ class ALFASincFilter+;
+#pragma link C++ class ALFAButterworthFilter+;
 #pragma link C++ class HybridFilter+;
 #pragma link C++ class SumDifferenceFilter+;
 #pragma link C++ class DigitalFilterOperation+;

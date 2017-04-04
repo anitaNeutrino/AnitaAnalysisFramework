@@ -66,23 +66,41 @@ void SumDifferenceFilter::process(FilteredAnitaEvent * event)
 }
 
 
-void DigitalFilterOperation::processOne(AnalysisWaveform * g) 
+DigitalFilterOperation::DigitalFilterOperation(const FFTtools::DigitalFilter * digi, bool correct, double fmin, double fmax)
+  : digi(digi), delay(0) 
 {
-  digi->filterGraph(g->updateEven()); 
+  if (correct) delay = digi->avgDelay(201,fmin,fmax); //TODO don't hardcode number of points? 
+
+}
+
+void DigitalFilterOperation::processOne(AnalysisWaveform * wf) 
+{
+  TGraphAligned * g = wf->updateEven(); 
+
+  digi->filterGraph(g); 
+
+  if (delay)
+  {
+    double dt = (g->GetX()[1]-g->GetX()[0]) * delay; 
+    for (int i = 0; i < g->GetN(); i++)
+    {
+      g->GetX()[i] -= dt; 
+    }
+  }
 }
 
 
-ALFAFilter::ALFAFilter(double cutoff)
+ALFAButterworthFilter::ALFAButterworthFilter(double cutoff)
 {
   // cutoff is a fraction of the Nyquist frequency.
   // (that's where the factor of 1.3 here comes from)  
-  // So this won't work properly for interpolated or padded waveforms
+  // So this won't work properly for interpolated or padded waveforms. (actually it should work fine for time-domain padded waveforms, just not supersampled) 
   filt = new FFTtools::ButterworthFilter(FFTtools::LOWPASS, 4, cutoff/1.3); 
-  pb = new DigitalFilterOperation(filt);
+  pb = new DigitalFilterOperation(filt,true,0.18/1.3,cutoff/1.3);
   descStr = TString::Format("ALFA filter - Butterworth low pass at %3.0lf MHz for 5TH and 13TH (assumes f_{Nyquist} = 1300 MHz)", 1e3*cutoff);
 }
 
-void ALFAFilter::process(FilteredAnitaEvent *event)
+void ALFAButterworthFilter::process(FilteredAnitaEvent *event)
 {
    if (AnitaVersion::get() != 3 ) return; 
 
@@ -92,7 +110,7 @@ void ALFAFilter::process(FilteredAnitaEvent *event)
 }
 
 
-ALFAFilter::~ALFAFilter()
+ALFAButterworthFilter::~ALFAButterworthFilter()
 {
   delete pb; 
   delete filt;
