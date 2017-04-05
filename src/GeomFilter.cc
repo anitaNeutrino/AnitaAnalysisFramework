@@ -16,12 +16,12 @@ void GeometricFilter::process(FilteredAnitaEvent* event) {
   currentEvent = event;
   getNotchandBandwidth(nFreq, dbCut, nAntsToUse, nadirFlag, meanFreqVert, meanFreqHoriz);
   for (int a=0; a<notchFreqs.size(); ++a) {
-    printf("antenna %i, %li notches \n", a, notchFreqs[a].size());
+//    printf("antenna %i, %li notches \n", a, notchFreqs[a].size());
     for (int k=0; k<notchFreqs[a].size(); ++k) {
-      printf("  notch %i: freq=%f band=%f phase=%f \n", k, notchFreqs[a][k], notchBands[a][k], notchPhase[a][k]);
+ //     printf("  notch %i: freq=%f band=%f phase=%f \n", k, notchFreqs[a][k], notchBands[a][k], notchPhase[a][k]);
     }
   }
-  //int printFlag = 0;
+  int printFlag = 0;
   std::vector<double> uniquefreqs;
   std::vector<double> uniqueBands;
   std::vector<double>  uniquePhase;
@@ -34,7 +34,7 @@ void GeometricFilter::process(FilteredAnitaEvent* event) {
     uniquePhase = notchPhase[j];
     for(int k=0;k<(int)uniquefreqs.size();k++){
       
-      if (uniquefreqs[k]!=-1 && printFlag==1) cout<<"WZ going to cut: "<<uniquefreqs[k]<<" MHz in Vert for ant == "<<j<<endl;
+//      if (uniquefreqs[k]!=-1 && printFlag==1) cout<<"WZ going to cut: "<<uniquefreqs[k]<<" MHz in Vert for ant == "<<j<<endl;
       if (uniquefreqs[k]!=-1) didIFilter++;
       if (uniquefreqs[k]!=-1 && uniquefreqs[k]>286) didIFilterAboveSatellite++;
       bandWidth = uniqueBands[k];	
@@ -53,7 +53,7 @@ void GeometricFilter::process(FilteredAnitaEvent* event) {
     uniquePhase = notchPhase_Horiz[j];
     for(int k=0;k<(int)uniquefreqs.size();k++){
       
-      if (uniquefreqs[k]!=-1 && printFlag==1) cout<<"WZ going to cut: "<<uniquefreqs[k]<<" MHz in Horiz for ant == "<<j<<endl;
+ //     if (uniquefreqs[k]!=-1 && printFlag==1) cout<<"WZ going to cut: "<<uniquefreqs[k]<<" MHz in Horiz for ant == "<<j<<endl;
       
       bandWidth = uniqueBands[k];
       
@@ -76,9 +76,9 @@ void GeometricFilter::processOne(AnalysisWaveform* wf) {
 // TODO deprecate nadirFlag?
 void GeometricFilter::getNotchandBandwidth(int nfreq,double dbCut,int nAntennasToUse, int nadirFlag, float meanFreqVert, float meanFreqHoriz)  {
   //int printFlag = 0;
-  printFlag=1;
-  printf("GeomFilter::getNotchAndBandwidth -- partially implemented \n");   
-  printf("nfreq=%i, dbCut=%f, nAnt=%i, nadirFlag=%i \n", nfreq, dbCut, nAntennasToUse, nadirFlag);     
+//  printFlag=1;
+//  printf("GeomFilter::getNotchAndBandwidth -- partially implemented \n");   
+//  printf("nfreq=%i, dbCut=%f, nAnt=%i, nadirFlag=%i \n", nfreq, dbCut, nAntennasToUse, nadirFlag);     
   
   std::vector<int> whichAntennasToUse (nAntennasToUse,0);
   std::vector< std::vector<double> >antennaFreq(NUM_SEAVEYS, std::vector<double>(50));
@@ -120,7 +120,7 @@ void GeometricFilter::getNotchandBandwidth(int nfreq,double dbCut,int nAntennasT
     getGroupsofAntennas(nAntennasToUse,nadirFlag);//get unique groups of antennas of size nAntennasToUSe
     groupFlag=1;
   }
-  printf("   %i antenna groups \n", antenna_groups_size);
+ // printf("   %i antenna groups \n", antenna_groups_size);
   for(int antenna_groups=0;antenna_groups<antenna_groups_size;antenna_groups++){//go through all groupings
     
     peakPhi = (double) unique_phis[antenna_groups];
@@ -158,6 +158,12 @@ void GeometricFilter::getNotchandBandwidth(int nfreq,double dbCut,int nAntennasT
   
  
     
+  notchFreqs.clear(); 
+  notchBands.clear(); 
+  notchPhase.clear(); 
+  notchBands_Horiz.clear(); 
+  notchFreqs_Horiz.clear(); 
+  notchPhase_Horiz.clear(); 
   for(int i =0;i<NUM_SEAVEYS;i++){//WE have all possible freqs to cut. Let go through each antenna and make sense of them
     uniquefreqs.clear();//zero stuff
      
@@ -180,9 +186,9 @@ void GeometricFilter::getNotchandBandwidth(int nfreq,double dbCut,int nAntennasT
     getFrequenciestoCut(i, antennaFreq,antennaBandwidth,PeakMag,uniquefreqs,uniquebandwidth,nfreq,uniquePhase,uniquePhase_bandwidth);//fill uniquefreq with freq to cut
     getFrequenciestoCut(i, antennaFreqHoriz,antennaBandwidthHoriz,PeakMagHoriz,uniquefreqsHoriz,uniquebandwidthHoriz,nfreq,uniquePhaseHoriz,uniquePhaseHoriz_bandwidth);
 
-    printf("frequencies to cut: antenna %i  hPol \n", i);
+//    printf("frequencies to cut: antenna %i  hPol \n", i);
     for (int k=0; k<uniquefreqs.size(); ++k) {
-      printf("frequency %f \n", uniquefreqs[k]);
+//      printf("frequency %f \n", uniquefreqs[k]);
     }
     notchFreqs.push_back(uniquefreqs);//Set up vectors that will be used for actually applying cuts
     notchBands.push_back(uniquebandwidth);
@@ -270,7 +276,7 @@ void GeometricFilter::getClosestNAntennas(int nantennasToUse, double peakPhi, ve
                                  &saturated[AnitaPol::kVertical], 
                                  1500);   
   // TODO populate saturated channels array by iterating through bit variables
-  printf("saturation hpol: %li   vpol: %li\n", saturated[0], saturated[1]);
+//  printf("saturation hpol: %li   vpol: %li\n", saturated[0], saturated[1]);
   // horrible temporary hack code
   //int saturatedChannels[2*NUM_SEAVEYS] = {0};  
   int polToggle = 0;  // TODO maye iterate on this?
@@ -298,7 +304,7 @@ void GeometricFilter::getClosestNAntennas(int nantennasToUse, double peakPhi, ve
 ///////////////////////////////////////
 void GeometricFilter::adaptiveFilterPartialPayload(int pol, double dBCut, int nfreq,double *frequencies,double *bandwidth,double *magPeak,int nantennasToUse,vector<int>& whichAntennasToUse, float &mean_freq)//identifies CW frequencies and size of notch for group of antennas
 {
-  printf("in GeometricFilter::adaptiveFilterPartialPayload \n");
+//  printf("in GeometricFilter::adaptiveFilterPartialPayload \n");
   // use class variable AnalysisWaveform array "noise" instead
   //if (readBaselineFlag!=1){ //get Baselines for comparison purposes. Only done one time
   //  readBaselineFFTs_Brian();
@@ -607,9 +613,9 @@ void GeometricFilter::adaptiveFilterPartialPayload(int pol, double dBCut, int nf
     for(int i=0;i<nfreq;i++){
       int index;
       double maxDelta=getMaximum(newLength,deltaMag,index);
-      printf("  index=%i  freq=%f, maxDelta=%f \n", index, frequencyArray[index], maxDelta);
+//      printf("  index=%i  freq=%f, maxDelta=%f \n", index, frequencyArray[index], maxDelta);
       if(maxDelta>dBCut){
-        printf("  choosing index=%i  freq=%f,  maxDelta=%f \n", index, frequencyArray[index], maxDelta);
+//        printf("  choosing index=%i  freq=%f,  maxDelta=%f \n", index, frequencyArray[index], maxDelta);
         for(int j=index;j>0;j--){
 	        if(deltaMag[j]<dBCut-1){
 	          j_index=j;
@@ -667,8 +673,8 @@ void GeometricFilter::adaptiveFilterPartialPayload(int pol, double dBCut, int nf
 //////////-----------------------------------------------------------------------------------------------------------------------------------------
 
 void GeometricFilter::getFrequenciestoCut(int antenna,vector< vector<double> > &antennaFreq,vector< vector<double> > &bandwidth, vector< vector<double> > &PeakMag, vector<double> &uniquefreqs,vector<double> &uniquebandwidth, int nfreq, vector<double> &uniquePhase, vector<double> &uniquePhase_bandwidth) {//Get rid of Duplicates and combines overlapping notches
-  printf("in GeometricFilter::getFrequenciesToCut");
-  printf(" antenna %i \n", antenna);
+//  printf("in GeometricFilter::getFrequenciesToCut");
+//  printf(" antenna %i \n", antenna);
   double max=0.;
   int maxbin=0;
   double bandWidth=0.;
@@ -680,7 +686,7 @@ void GeometricFilter::getFrequenciestoCut(int antenna,vector< vector<double> > &
   //get freqs to cut
 
   for(int n=0;n<50;n++){
-    if (antenna == 47)  printf("antenna %i  index %i   PeakMag=%f \n", antenna, n, PeakMag[antenna][n]);
+//    if (antenna == 47)  printf("antenna %i  index %i   PeakMag=%f \n", antenna, n, PeakMag[antenna][n]);
     max=0.;
     maxbin=0;
     for(int j=0;j<50;j++){
