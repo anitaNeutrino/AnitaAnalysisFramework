@@ -220,6 +220,7 @@ void AnalysisWaveform::updateEven(const TGraph * replace)
   memcpy(g_even.GetY(), replace->GetY(), replace->GetN() * sizeof(double)); 
   must_update_uneven = !uneven_equals_even; 
   must_update_freq = true; 
+  must_update_even = false; 
   just_padded = false; 
   hilbert_envelope_dirty = true; 
 }
@@ -294,6 +295,7 @@ void AnalysisWaveform::updateUneven(const TGraph * replace)
   uneven_equals_even = false; 
   just_padded = false; 
   must_update_even = true; 
+  must_update_uneven = false; 
   must_update_freq = true; 
 }
 
