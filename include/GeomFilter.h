@@ -1,5 +1,5 @@
-#ifndef ANITA_ANALYSIS_BASIC_FILTERS
-#define ANITA_ANALYSIS_BASIC_FILTERS
+#ifndef ANITA_ANALYSIS_GEOM_FILTER
+#define ANITA_ANALYSIS_GEOM_FILTER
 
 #include "FilterOperation.h"
 #include "TString.h" 
