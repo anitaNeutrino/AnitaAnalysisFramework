@@ -161,9 +161,11 @@ void GeometricFilter::getNotchandBandwidth(int nfreq,double dbCut,int nAntennasT
   notchFreqs.clear(); 
   notchBands.clear(); 
   notchPhase.clear(); 
+  notchPhaseBands.clear(); 
   notchBands_Horiz.clear(); 
   notchFreqs_Horiz.clear(); 
   notchPhase_Horiz.clear(); 
+  notchPhaseBands_Horiz.clear(); 
   for(int i =0;i<NUM_SEAVEYS;i++){//WE have all possible freqs to cut. Let go through each antenna and make sense of them
     uniquefreqs.clear();//zero stuff
      
