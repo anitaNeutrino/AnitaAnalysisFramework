@@ -24,8 +24,8 @@ class GeometricFilter : public FilterOperation
   public: 
     typedef struct {} notchPlaceholder;  //  whatever is your notch definition data structure
     GeometricFilter() {}                 // dummy ctor for development; will be deprecated
-    GeometricFilter(std::vector< vector<AnalysisWaveform*> > noise, AnitaGeomTool* geom)  
-      : noiseSamples(noise), geomTool(geom) // initialize variables here as needed;   
+    GeometricFilter(std::vector< vector<TGraphAligned*> >& noise, AnitaGeomTool* geom)  
+      : noiseSamples(noise) // initialize variables here as needed;   
       {
         descStr.Form("Geometric Filter"); 
       }
@@ -53,7 +53,7 @@ class GeometricFilter : public FilterOperation
     double solveGamma_plus(double theta, double psi, double delta);
     double solveGamma_minus(double theta, double psi, double delta);      
   private:
-    std::vector<vector<AnalysisWaveform*> > noiseSamples;         // populated in constructor
+    std::vector<vector<TGraphAligned*> > noiseSamples;         // populated in constructor
     TString descStr;
     int nFreq = 3;
     double dbCut = 2.0;
@@ -70,7 +70,6 @@ class GeometricFilter : public FilterOperation
     vector< vector<int> > antenna_group_holder;
     int antenna_groups_size;
     vector<int> unique_phis;
-    AnitaGeomTool* geomTool = 0;
     FilteredAnitaEvent* currentEvent = 0;
     double peakPhi=0.;
     int saturatedChannels[2*NUM_SEAVEYS] = {0};

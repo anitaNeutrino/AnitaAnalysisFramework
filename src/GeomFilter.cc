@@ -280,7 +280,7 @@ void GeometricFilter::getClosestNAntennas(int nantennasToUse, double peakPhi, ve
     //if (ant!=1 && saturatedChannels[ant+polToggle*NUM_SEAVEYS]==0){
     if (saturatedChannels[ant+polToggle*NUM_SEAVEYS]==0){       //TODO really check saturation
       //phi_ant[ant]=fUPGeomTool->getAntPhiPositionRelToAftFore(ant);
-      phi_ant[ant]=geomTool->getAntPhiPositionRelToAftFore(ant);
+      phi_ant[ant]=AnitaGeomTool::Instance()->getAntPhiPositionRelToAftFore(ant);
       deltaPhiThisOne=phi_ant[ant]*180.0/M_PI-peakPhi;
      
       if (deltaPhiThisOne>180.) deltaPhiThisOne-=360.;
@@ -420,8 +420,9 @@ void GeometricFilter::adaptiveFilterPartialPayload(int pol, double dBCut, int nf
 
   vector<int> index_skip (newLength,1);
   // TODO real noise by antenna / antenna group  for now just take the first one
-  const TGraphAligned* grVertCoherentBaseline = noiseSamples[0][0]->powerdB();
-  const TGraphAligned* grHorizCoherentBaseline = noiseSamples[0][0]->powerdB();
+  //
+  const TGraphAligned* grVertCoherentBaseline = noiseSamples[0][0];
+  const TGraphAligned* grHorizCoherentBaseline = noiseSamples[0][0]; 
 
   //printf("noise: \n"); for (int k=0; k<grHorizCoherentBaseline->GetN(); ++k) {printf("  %f GHz     %f \n", grHorizCoherentBaseline->GetX()[k], grHorizCoherentBaseline->GetY()[k]);}
 
