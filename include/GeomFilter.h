@@ -24,7 +24,7 @@ class GeometricFilter : public FilterOperation
   public: 
     typedef struct {} notchPlaceholder;  //  whatever is your notch definition data structure
     GeometricFilter() {}                 // dummy ctor for development; will be deprecated
-    GeometricFilter(std::vector< vector<TGraphAligned*> >& noise, AnitaGeomTool* geom)  
+    GeometricFilter(std::vector< vector<TGraphAligned*> >& noise)  
       : noiseSamples(noise) // initialize variables here as needed;   
       {
         descStr.Form("Geometric Filter"); 
