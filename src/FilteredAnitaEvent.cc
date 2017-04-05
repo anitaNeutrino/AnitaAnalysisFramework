@@ -325,3 +325,44 @@ void FilteredAnitaEvent::plotSummary(TCanvas * ch, TCanvas * cv) const
   }
 
 }
+int FilteredAnitaEvent::checkSaturation(uint64_t * save_hsat, uint64_t * save_vsat, double thresh) const
+{
+  
+  uint64_t hsat = 0; 
+  uint64_t vsat = 0; 
+
+  int totalsat = 0; 
+  for (int i = 0; i < NUM_SEAVEYS; i++) 
+  {
+      int hindex = AnitaGeomTool::getChanIndexFromAntPol(i,AnitaPol::kHorizontal); 
+      int vindex = AnitaGeomTool::getChanIndexFromAntPol(i,AnitaPol::kVertical); 
+      const double *yh = useful->fVolts[hindex]; 
+      const double *yv = useful->fVolts[vindex]; 
+
+      for (int j = 0; j < useful->fNumPoints[hindex]; j++)
+      {
+        if (fabs(yh[j]) > thresh)
+        {
+          hsat |= 1 << i; 
+          totalsat ++; 
+          break; 
+        }
+      }
+
+      for (int j = 0; j < useful->fNumPoints[vindex]; j++)
+      {
+        if (fabs(yv[j]) > thresh)
+        {
+          vsat |= 1 << i; 
+          totalsat ++; 
+          break; 
+        }
+      }
+  }
+
+
+  if (save_hsat) *save_hsat = hsat; 
+  if (save_vsat) *save_vsat = vsat; 
+
+  return totalsat; 
+}

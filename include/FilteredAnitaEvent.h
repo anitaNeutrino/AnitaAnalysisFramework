@@ -65,6 +65,7 @@ class FilteredAnitaEvent
 
    void plotSummary(TCanvas * chpol = 0, TCanvas * cvpol = 0) const;
 
+   int checkSaturation(uint64_t *save_hsat  =0, uint64_t* save_vsat = 0, double threshold=1500) const; 
 
    /** Various calculations. Don't necessarily have to be in this class. */
    void getAverageSpectrum (TGraph * target, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol ) const;

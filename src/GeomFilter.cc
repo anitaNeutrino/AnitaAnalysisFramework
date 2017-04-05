@@ -2,7 +2,6 @@
 #include "GeomFilter.h"
 #include "AnalysisWaveform.h" 
 #include "FFTWComplex.h" 
-#include "UCFlags.h"
 #include "FFTtools.h"
 
 
@@ -267,11 +266,9 @@ void GeometricFilter::getClosestNAntennas(int nantennasToUse, double peakPhi, ve
   }
   uint64_t saturated[2] = {0,0};
   //const UsefulAnitaEvent* usefulEvent = currentEvent->getUsefulAnitaEvent();
-  UCorrelator::flags::checkSaturation(currentEvent->getUsefulAnitaEvent(), 
-                                    &saturated[AnitaPol::kHorizontal], 
-                                    &saturated[AnitaPol::kVertical], 
-                                     //cfg->saturation_threshold); 
-                                     1500);   
+  currentEvent->checkSaturation( &saturated[AnitaPol::kHorizontal], 
+                                 &saturated[AnitaPol::kVertical], 
+                                 1500);   
   // TODO populate saturated channels array by iterating through bit variables
   printf("saturation hpol: %li   vpol: %li\n", saturated[0], saturated[1]);
   // horrible temporary hack code
