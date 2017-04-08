@@ -6,7 +6,6 @@
 #include "FFTWComplex.h"
 #include "AnitaGeomTool.h"
 #include "FilteredAnitaEvent.h"
-#include <vector>
 using namespace std;
 
 /** A set of basic filter operations that serve as examples and also should be quite useful */ 
@@ -23,12 +22,12 @@ class GeometricFilter : public FilterOperation
 {
   public: 
     typedef struct {} notchPlaceholder;  //  whatever is your notch definition data structure
-    GeometricFilter() {}                 // dummy ctor for development; will be deprecated
-    GeometricFilter(std::vector< vector<TGraphAligned*> >& noise)  
-      : noiseSamples(noise) // initialize variables here as needed;   
-      {
-        descStr.Form("Geometric Filter"); 
-      }
+    GeometricFilter() { init();}
+    GeometricFilter(std::vector< vector<TGraphAligned*> >& noise)
+    {
+      init();
+      descStr.Form("Geometric Filter"); 
+    }
 
     // process an event
     virtual void process(FilteredAnitaEvent * event);
@@ -36,8 +35,7 @@ class GeometricFilter : public FilterOperation
     void setDbCut(double dB) {dbCut = dB;}
     const char * tag() const { return "GeomFilter"; } 
     const char * description() const { return descStr.Data(); } 
-    int printFlag = 0;
-
+    int printFlag;// = 0;
   protected:
     void getNotchandBandwidth(int nfreq, double dBCut, int nAntennasToUse, int nadirFlag, float meanFreqVert, float meanFreqHoriz);
     void getGroupsofAntennas(int nAntennasToUse, int nadirFlag);
@@ -55,10 +53,10 @@ class GeometricFilter : public FilterOperation
   private:
     std::vector<vector<TGraphAligned*> > noiseSamples;         // populated in constructor
     TString descStr;
-    int nFreq = 3;
-    double dbCut = 2.0;
-    int nAntsToUse = 9;
-    int groupFlag = 0;
+    int nFreq;// = 3;
+    double dbCut;// = 2.0;
+    int nAntsToUse;// = 9;
+    int groupFlag;// = 0;
     std::vector<std::vector<double> > notchFreqs;        
     std::vector< std::vector<double> > notchBands;
     std::vector< std::vector<double> > notchFreqs_Horiz;
@@ -70,9 +68,22 @@ class GeometricFilter : public FilterOperation
     vector< vector<int> > antenna_group_holder;
     int antenna_groups_size;
     vector<int> unique_phis;
-    FilteredAnitaEvent* currentEvent = 0;
-    double peakPhi=0.;
-    int saturatedChannels[2*NUM_SEAVEYS] = {0};
+    FilteredAnitaEvent* currentEvent;// = 0;
+    double peakPhi;//=0.;
+    int saturatedChannels[2*NUM_SEAVEYS];// = {0};
+  
+  void init(){
+    nFreq = 3;
+    dbCut = 2.0;
+    nAntsToUse = 9;
+    groupFlag = 0;
+    printFlag = 0;
+    currentEvent = 0;
+    peakPhi = 0.;
+    for(int i=0; i < 2*NUM_SEAVEYS; i++){
+      saturatedChannels[i] = 0;
+    }
+  }
 }; 
 
 

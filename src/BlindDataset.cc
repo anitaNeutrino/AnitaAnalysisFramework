@@ -1,6 +1,7 @@
 #include "BlindDataset.h"
 
 #include <fstream>
+#include <cstdlib>
 #include "TFile.h"
 #include "TTree.h"
 

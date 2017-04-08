@@ -4,6 +4,7 @@
 #include "AnitaConventions.h"
 #include "UsefulAdu5Pat.h"
 #include "AnalysisWaveform.h"
+#include <stdint.h>
 
 class UsefulAnitaEvent;
 class Adu5Pat;

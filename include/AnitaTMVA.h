@@ -2,7 +2,6 @@
 #define _ANITA_TMVA_H
 
 
-#include <vector>
 #include <TMVA/Reader.h>
 #include <TMVA/Factory.h>
 
