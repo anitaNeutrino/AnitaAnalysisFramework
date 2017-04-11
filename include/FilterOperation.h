@@ -3,7 +3,6 @@
 
 class FilteredAnitaEvent; 
 class AnalysisWaveform; 
-#include <cstddef>
 #include "AnitaConventions.h" 
 
 /** A FilteredOperation does things to the waveforms inside a FilteredAnitaEvent 
