@@ -538,7 +538,7 @@ const TGraphAligned * AnalysisWaveform::hilbertEnvelope() const
 
   if (hilbert_envelope_dirty)
   {
-    g_hilbert_envelope = *the_even; 
+    g_hilbert_envelope.adopt(the_even); 
     const AnalysisWaveform * hilbert = hilbertTransform(); 
 
     double * y = g_hilbert_envelope.GetY(); 
