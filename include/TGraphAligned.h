@@ -44,6 +44,9 @@ class TGraphAligned : public TGraph {
     void undBize(); 
 
 
+    /* just copies the numbers from g*/ 
+    void adopt(const TGraphAligned * g); 
+
 
     void getMeanAndRMS(Double_t * mean, Double_t *  rms, Int_t istart = 0, Int_t iend = -1) const; 
     Double_t getSumV2(Int_t istart = 0, Int_t iend = -1) const; 

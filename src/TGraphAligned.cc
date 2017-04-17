@@ -32,6 +32,15 @@ TGraphAligned::TGraphAligned(Int_t n)
   SetEditable(0); 
 }
 
+
+void TGraphAligned::adopt(const TGraphAligned *g) 
+{
+  Set(g->GetN()); 
+  memcpy(fX,g->GetX(),GetN()*sizeof(double)); 
+  memcpy(fY,g->GetY(),GetN()*sizeof(double)); 
+}
+
+
 TGraphAligned& TGraphAligned::operator=(const TGraphAligned &gr)
 {
    // Equal operator for this graph
@@ -44,7 +53,7 @@ TGraphAligned& TGraphAligned::operator=(const TGraphAligned &gr)
 
       fNpoints = gr.fNpoints;
       fMaxSize = gr.fMaxSize;
-
+      {
       // delete list of functions and their contents before copying it
       if (fFunctions) {
          // delete previous lists of functions
@@ -63,10 +72,10 @@ TGraphAligned& TGraphAligned::operator=(const TGraphAligned &gr)
 
       if (gr.fFunctions) 
       {
-        R__LOCKGUARD(gROOTMutex); //todo: check if this is needed
         fFunctions = (TList*)gr.fFunctions->Clone();
       }
       else fFunctions = new TList;
+      }
 
       if (fHistogram) delete fHistogram;
       if (gr.fHistogram) fHistogram = new TH1F(*(gr.fHistogram));
