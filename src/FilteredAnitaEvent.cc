@@ -19,7 +19,6 @@ FilteredAnitaEvent::FilteredAnitaEvent()
     filteredGraphs[i] = NULL;
     rawGraphs[i] = NULL;
   }
-  eventNumber = 0;
 }
 
 FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterStrategy * strategy, const Adu5Pat * rawpat, const RawAnitaHeader * header, bool save_stages )
@@ -29,7 +28,6 @@ FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterSt
     header(header),
     keep_all_stages(save_stages)
 {
-  eventNumber = event->eventNumber;
 
 #ifdef MULTIVERSION_ANITA_ENABLED
   anitaVersion = AnitaVersion::getVersionFromUnixTime(header->realTime);
@@ -83,15 +81,6 @@ FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterSt
       filteredGraphs[k]->forceEvenSize(max_size); // do this for correlations
     }
   }
-
-
-}
-
-
-TGraph* FilteredAnitaEvent::getGraph(Int_t ant, AnitaPol::AnitaPol_t pol){
-  const AnalysisWaveform* aw = getFilteredGraph(ant, pol);
-  const TGraph* gr = aw->even();
-  return (TGraph*) gr->Clone();
 }
 
 

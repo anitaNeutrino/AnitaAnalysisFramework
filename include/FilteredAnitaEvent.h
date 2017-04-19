@@ -75,13 +75,9 @@ class FilteredAnitaEvent
    double getMedianPower(AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol,  AnitaRing::AnitaRing_t ring = AnitaRing::kNotARing, bool filtered = false) const;
    void getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_ratio, double * min_ratio, int* max_sector, int* min_sector, AnitaRing::AnitaRing_t ring1 = AnitaRing::kBottomRing, AnitaRing::AnitaRing_t ring2 = AnitaRing::kTopRing, int nth = 0) const;
 
-   int getAnitaVersion() const { return anitaVersion; }
+  int getAnitaVersion() const { return anitaVersion; }
 
-
-  // Functions that are the same as in UsefulAnitaEvent to allow for templates in CrossCorrelator
-  TGraph* getGraph(Int_t ant, AnitaPol::AnitaPol_t pol);
-  UInt_t eventNumber;
-
+  
   private:
    AnalysisWaveform *rawGraphs[NUM_SEAVEYS*AnitaPol::kNotAPol];
    AnalysisWaveform *rawGraphsByAntPol[AnitaPol::kNotAPol][NUM_SEAVEYS];
