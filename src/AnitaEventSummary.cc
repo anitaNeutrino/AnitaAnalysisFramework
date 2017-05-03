@@ -2,6 +2,7 @@
 
 #include "RawAnitaHeader.h" 
 #include "UsefulAdu5Pat.h"
+#include "TruthAnitaEvent.h" 
 
 //are these even necessary anymore? Who knows! 
 //ClassImp(AnitaEventSummary)
@@ -48,12 +49,12 @@ AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header){
  *
  * Takes care of copying the header and GPS info into the event summary
  */
-AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header, UsefulAdu5Pat* pat){
+AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header, UsefulAdu5Pat* pat, const TruthAnitaEvent * truth){
 
   zeroInternals();
 
   setTriggerInfomation(header);
-  setSourceInformation(pat);
+  setSourceInformation(pat,truth);
   eventNumber = header->eventNumber;
   run = header->run;
 }
@@ -83,6 +84,7 @@ void AnitaEventSummary::zeroInternals(){
   sun.reset();
   wais.reset(); 
   ldb.reset(); 
+  mc.reset(); 
 
 }
 
@@ -127,7 +129,7 @@ void AnitaEventSummary::setTriggerInfomation(const RawAnitaHeader* header){
 }
 
 
-void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat){
+void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat, const TruthAnitaEvent * truth){
 
 
   pat->getSunPosition(sun.phi, sun.theta);
@@ -143,5 +145,13 @@ void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat){
   ldb.theta *= 180/ TMath::Pi(); 
   ldb.phi *= 180/ TMath::Pi(); 
 
+
+
+  if (truth) 
+  {
+    pat->getThetaAndPhiWave(truth->sourceLon, truth->sourceLat, truth->sourceAlt, mc.theta,mc.phi);
+    mc.theta*=TMath::RadToDeg();
+    mc.phi*=TMath::RadToDeg();
+  }
   
 }

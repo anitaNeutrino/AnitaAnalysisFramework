@@ -5,6 +5,7 @@
 #include "AnitaConventions.h" 
 class UsefulAdu5Pat; 
 class RawAnitaHeader; 
+class TruthAnitaEvent; 
 
 /** Common analysis output format 
  *  
@@ -167,7 +168,18 @@ public:
       ClassDefNV(SourceHypothesis,1);
   };
 
- 
+  class MCTruth
+  {
+    public: 
+      MCTruth() { reset(); } 
+    double phi; 
+    double theta; 
+    //TODO: add more things here. 
+
+    void reset() { theta = -999; phi = -999; }
+
+    ClassDefNV(MCTruth,1); 
+  }; 
 
  
   Int_t run;
@@ -192,19 +204,20 @@ public:
   SourceHypothesis sun;
   SourceHypothesis wais;
   SourceHypothesis ldb;
+  MCTruth mc; 
 
-
+  
   AnitaEventSummary();
   AnitaEventSummary(const RawAnitaHeader* header);
-  AnitaEventSummary(const RawAnitaHeader* header, UsefulAdu5Pat* pat);  
+  AnitaEventSummary(const RawAnitaHeader* header, UsefulAdu5Pat* pat, const TruthAnitaEvent * truth = 0 );  
   void setTriggerInfomation(const RawAnitaHeader* header);
-  void setSourceInformation(UsefulAdu5Pat* pat);  
+  void setSourceInformation(UsefulAdu5Pat* pat, const TruthAnitaEvent * truth = 0);  
   void zeroInternals();
 
   
   private: 
 
-  ClassDefNV(AnitaEventSummary, 13); 
+  ClassDefNV(AnitaEventSummary, 14); 
 }; 
 
 
