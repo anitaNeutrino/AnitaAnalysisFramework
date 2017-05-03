@@ -10,6 +10,7 @@
 #pragma link C++ class AnitaEventSummary::WaveformInfo+;
 #pragma link C++ class AnitaEventSummary::EventFlags+;
 #pragma link C++ class AnitaEventSummary::SourceHypothesis+;
+#pragma link C++ class AnitaEventSummary::MCTruth+;
 #pragma link C++ class FilteredAnitaEvent+;
 #pragma link C++ class FilterStrategy+;
 #pragma link C++ class AnalysisWaveform+;
