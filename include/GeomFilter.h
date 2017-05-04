@@ -24,7 +24,7 @@ class GeometricFilter : public FilterOperation
     typedef struct {} notchPlaceholder;  //  whatever is your notch definition data structure
     GeometricFilter() { init();}
     GeometricFilter(std::vector< vector<TGraphAligned*> >& noise)
-      : noiseSamples(noise)
+      : noiseSamples(noise) 
     {
       init();
       descStr.Form("Geometric Filter"); 
@@ -89,3 +89,4 @@ class GeometricFilter : public FilterOperation
 
 
 #endif 
+
