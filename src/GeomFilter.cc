@@ -21,7 +21,7 @@ void GeometricFilter::process(FilteredAnitaEvent* event) {
       //printf("  notch %i: freq=%f band=%f phase=%f \n", k, notchFreqs[a][k], notchBands[a][k], notchPhase[a][k]);
     }
   }
-  int printFlag = 0;
+//  int printFlag = 0;
   std::vector<double> uniquefreqs;
   std::vector<double> uniqueBands;
   std::vector<double>  uniquePhase;
@@ -312,7 +312,7 @@ void GeometricFilter::adaptiveFilterPartialPayload(int pol, double dBCut, int nf
   //  readBaselineFFTs_Brian();
   //  if (printFlag==1) cout<<"Read in Baseline For Adaptive Filter"<<endl;
   //}  
-  int printFlag = 0;
+  //int printFlag = 0;
   const int nPoints = 129;//124
   double magFFT[2000];
   double frequencyArray[2000];
