@@ -68,7 +68,7 @@ class ALFASincFilter : public FilterOperation
 {
   public: 
     ALFASincFilter(double cutoff = 0.7)
-      : pb(0,0.7) {descStr.Form("ALFA Filter with cutoff at %f GHz",cutoff); } 
+      : pb(0,cutoff) {descStr.Form("ALFA Filter with cutoff at %f GHz",cutoff); } 
 
 
     virtual void process(FilteredAnitaEvent * event) 
