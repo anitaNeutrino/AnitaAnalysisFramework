@@ -438,17 +438,18 @@ void GeometricFilter::adaptiveFilterPartialPayload(int pol, double dBCut, int nf
     yValsH[k] = 0;
     yValsV[k] = 0;
   }
-  for (int a : whichAntennasToUse) {
-    // check size of noise sample arrays and warn
-    if (noiseSamples[0][a]->GetN() != faSize) {printf(" warning - baseline input array size mismatch (hpol)\n");}
-    if (noiseSamples[1][a]->GetN() != faSize) {printf(" warning - baseline input array size mismatch (vpol)\n");}
-    for (int k=0; k<faSize; ++k) {
-      // hacky finagle sammy: antenna 5 hpol baseline is wonky, just use #6  
-      yValsV[k] += noiseSamples[1][a]->GetY()[k];
-      if (a==4) {
-        yValsH[k] += noiseSamples[0][5]->GetY()[k];
-      } else {
-        yValsH[k] += noiseSamples[0][a]->GetY()[k];
+    for (int k = 0; k < whichAntennasToUse.size();k++){
+    	int a = whichAntennasToUse[k];
+    	// check size of noise sample arrays and warn
+    	if (noiseSamples[0][a]->GetN() != faSize) {printf(" warning - baseline input array size mismatch (hpol)\n");}
+    	if (noiseSamples[1][a]->GetN() != faSize) {printf(" warning - baseline input array size mismatch (vpol)\n");}
+    	for (int k=0; k<faSize; ++k) {
+      	// hacky finagle sammy: antenna 5 hpol baseline is wonky, just use #6  
+      	yValsV[k] += noiseSamples[1][a]->GetY()[k];
+      	if (a==4) {
+        	yValsH[k] += noiseSamples[0][5]->GetY()[k];
+      	} else {
+        	yValsH[k] += noiseSamples[0][a]->GetY()[k];
       }
     }
   }
