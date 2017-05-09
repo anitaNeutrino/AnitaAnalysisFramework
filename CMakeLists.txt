@@ -133,7 +133,7 @@ endif()
 #################################################################################
 
 option(VECTORIZE "Enable Manual SIMD Vectorization" ON) 
-set (VECTORDIR vectorclass)
+set (VECTORDIR ${UTIL_INC_DIR}/vectorclass)
 if (VECTORIZE)
   add_definitions( -DENABLE_VECTORIZE )
 
@@ -148,26 +148,8 @@ if (VECTORIZE)
     add_definitions(  -fabi-version=0 )
   endif()
 
-  if (EXISTS ${VECTORDIR}/vectorclass.zip )
-    message (" Found vectorclass already downloaded... ")
-
-  else ()
-    file(MAKE_DIRECTORY ${VECTORDIR} )
-    message (" Downloading vector class...")
-    file(DOWNLOAD http://www.agner.org/optimize/vectorclass.zip ${VECTORDIR}/vectorclass.zip)
-
-    #TODO there is probably a more cross platform way of doing this...
-    execute_process(COMMAND unzip ${VECTORDIR}/vectorclass.zip -d ${VECTORDIR} )
-    execute_process(COMMAND unzip ${VECTORDIR}/special.zip -d ${VECTORDIR} )
-
-    FILE(READ ${VECTORDIR}/vectorf128.h INFILE ) 
-    STRING(REGEX REPLACE "6020000" "1000000000" MINFILE ${INFILE} )
-    FILE (WRITE ${VECTORDIR}/vectorf128.h ${MINFILE} )
-  endif()
-
-
-  ## is this right? who knows
-  include_directories( ${CMAKE_BINARY_DIR}/${VECTORDIR} )
+  #  message(${VECTORDIR})
+  include_directories(${VECTORDIR}) 
 
 
 endif (VECTORIZE)
