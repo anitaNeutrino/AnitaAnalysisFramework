@@ -174,11 +174,10 @@ public:
       MCTruth() { reset(); } 
     double phi; 
     double theta; 
-    //TODO: add more things here. 
+    WaveformInfo wf[AnitaPol::kNotAPol]; 
+    void reset(); 
 
-    void reset() { theta = -999; phi = -999; }
-
-    ClassDefNV(MCTruth,1); 
+    ClassDefNV(MCTruth,2); 
   }; 
 
  
@@ -217,7 +216,7 @@ public:
   
   private: 
 
-  ClassDefNV(AnitaEventSummary, 14); 
+  ClassDefNV(AnitaEventSummary, 15); 
 }; 
 
 

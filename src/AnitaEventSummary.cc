@@ -155,3 +155,13 @@ void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat, const TruthAnit
   }
   
 }
+
+
+void AnitaEventSummary::MCTruth::reset()
+{
+ theta = -999;
+ phi = -999; 
+ memset(&wf[0],0,sizeof(WaveformInfo)); 
+ memset(&wf[1],0,sizeof(WaveformInfo)); 
+}
+
