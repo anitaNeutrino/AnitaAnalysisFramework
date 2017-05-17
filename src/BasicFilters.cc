@@ -1,7 +1,8 @@
 #include "BasicFilters.h"
 #include "AnalysisWaveform.h" 
 #include "DigitalFilter.h" 
-#include "FFTWComplex.h" 
+#include "FFTWComplex.h"
+#include "ResponseManager.h"
 
 void SimplePassBandFilter::processOne(AnalysisWaveform* g) 
 {
@@ -142,5 +143,22 @@ ALFALanczosFilter::~ALFALanczosFilter()
 }
 
 
+
+
+
+void AnitaResponse::DeconvolveFilter::process(FilteredAnitaEvent * ev) 
+{
+
+#ifdef UCORRELATOR_OPENMP
+#pragma omp parallel for 
+#endif
+  for (int i = 0; i < 2*NUM_SEAVEYS; i++) 
+  {
+    AnitaPol::AnitaPol_t pol = AnitaPol::AnitaPol_t( i %2); 
+    int ant = i /2; 
+    rm->response(pol,ant)->deconvolveInPlace(getWf(ev,ant,pol), dm); 
+
+  }
+}
 
 

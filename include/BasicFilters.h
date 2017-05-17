@@ -2,7 +2,8 @@
 #define ANITA_ANALYSIS_BASIC_FILTERS
 
 #include "FilterOperation.h"
-#include "TString.h" 
+#include "TString.h"
+#include "SystemResponse.h"
 
 /** A set of basic filter operations that serve as examples and also should be quite useful */ 
 
@@ -16,6 +17,13 @@
 namespace FFTtools
 {
   class DigitalFilter; 
+}
+
+// 
+namespace AnitaResponse
+{
+  class DeconvolutionMethod;
+  class ResponseManager;
 }
 
 class SimplePassBandFilter : public UniformFilterOperation 
@@ -172,7 +180,31 @@ class ALFAButterworthFilter : public FilterOperation
     double power_after;  
     TString descStr;
 
+};
+
+namespace AnitaResponse{
+class DeconvolveFilter : public FilterOperation
+{
+ public: 
+
+  DeconvolveFilter(const AnitaResponse::ResponseManager *rm, const AnitaResponse::DeconvolutionMethod * dm) 
+      : rm(rm), dm(dm)  
+  {;} 
+      
+  
+
+  virtual const char * tag() const { return "DeconvolveFilter"; } 
+  virtual const char * description() const { return "DeconvolveFilter"; } 
+
+  virtual void process(FilteredAnitaEvent * ev); 
+      
+
+ private: 
+  const AnitaResponse::ResponseManager *rm; 
+  const AnitaResponse::DeconvolutionMethod *dm; 
+
 }; 
+}
 
 
 #endif 
