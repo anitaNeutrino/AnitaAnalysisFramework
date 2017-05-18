@@ -32,10 +32,17 @@ class FilteredAnitaEvent
 
    /** Create a FilteredAnitaEvent from a useful event, a filter strategy, GPS info and the event header. If keep_all_stages is true, then  all stages of filtering are kept. Note that filtering occurs during construction, not later!*/
    FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterStrategy * strategy, const Adu5Pat * pat, const RawAnitaHeader * header, bool keep_all_stages = false);
+   /**
+      Created a FilteredAnitaEvent from another FilteredAnitaEvent.
+      !THIS IS NOT A COPY CONSTRUCTOR!
+      The output of fEv will be used as an input to create this filtered event.
+      Useful for doing things like deconvolving the output of another filter.
+      If keep_all_stages is true, then  all stages of filtering are kept. Note that filtering occurs during construction, not later!*/
+   FilteredAnitaEvent(const FilteredAnitaEvent* fEv, FilterStrategy * strategy, bool keep_all_stages = false);
+  
 
    /** Empty FilteredAnitaEvent. Not particularly useful */
    FilteredAnitaEvent();
-
 
    /** Destructor */
    virtual ~FilteredAnitaEvent();

@@ -21,6 +21,77 @@ FilteredAnitaEvent::FilteredAnitaEvent()
   }
 }
 
+
+FilteredAnitaEvent:: FilteredAnitaEvent(const FilteredAnitaEvent* fEv, FilterStrategy * strategy, bool save_stages )
+  : useful(fEv->getUsefulAnitaEvent()),
+    strategy(strategy),
+    pat(fEv->getGPS()),
+    header(fEv->getHeader()),
+    keep_all_stages(save_stages)
+{
+
+#ifdef MULTIVERSION_ANITA_ENABLED
+  anitaVersion = AnitaVersion::getVersionFromUnixTime(header->realTime);
+#else
+  anitaVersion = 0;
+#endif
+
+  if (anitaVersion <= 0) anitaVersion = AnitaVersion::get();
+
+  // AnitaGeomTool * geom = AnitaGeomTool::Instance();
+  // Initialize the filtered graphs with the raw graphs from Raw Anita Event
+
+  for (int pol = AnitaPol::kHorizontal; pol <= AnitaPol::kVertical; pol++)
+  {
+    for (unsigned ant = 0; ant < NUM_SEAVEYS; ant++)
+    {
+      int k = pol * NUM_SEAVEYS  + ant;
+      // int i = geom->getChanIndexFromAntPol(ant, (AnitaPol::AnitaPol_t) pol);
+      // filteredGraphs[k] = new AnalysisWaveform (useful->fNumPoints[i], useful->fTimes[i], useful->fVolts[i]);
+      // rawGraphs[k] = new AnalysisWaveform (useful->fNumPoints[i], useful->fTimes[i], useful->fVolts[i]);
+
+      const AnalysisWaveform* rawIn = fEv->getRawGraph(k);
+      const AnalysisWaveform* filteredIn = fEv->getFilteredGraph(k);
+      
+      rawGraphs[k] = new AnalysisWaveform (*rawIn);      
+      filteredGraphs[k] = new AnalysisWaveform(*filteredIn);
+      
+      filteredGraphs[k]->forceEvenSize(260); // do this for correlations
+//      rawGraphs[k]->forceEvenSize(260); // do this for correlations
+      filteredGraphsByAntPol[pol][ant] = filteredGraphs[k];
+      rawGraphsByAntPol[pol][ant] = rawGraphs[k];
+    }
+  }
+
+
+  //tell the strategy to process this
+  strategy->process(this);
+
+  int max_size = 260; 
+  
+  for (int pol = AnitaPol::kHorizontal; pol <= AnitaPol::kVertical; pol++)
+  {
+    for (unsigned ant = 0; ant < NUM_SEAVEYS; ant++)
+    {
+      int k = pol * NUM_SEAVEYS  + ant;
+      if (filteredGraphs[k]->Neven() > max_size) 
+      {
+        max_size = filteredGraphs[k]->Neven(); 
+      }
+    }
+  }
+
+  for (int pol = AnitaPol::kHorizontal; pol <= AnitaPol::kVertical; pol++)
+  {
+    for (unsigned ant = 0; ant < NUM_SEAVEYS; ant++)
+    {
+      int k = pol * NUM_SEAVEYS  + ant;
+      filteredGraphs[k]->forceEvenSize(max_size); // do this for correlations
+    }
+  }
+}
+
+
 FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterStrategy * strategy, const Adu5Pat * rawpat, const RawAnitaHeader * header, bool save_stages )
   : useful(event),
     strategy(strategy),
