@@ -21,7 +21,6 @@
 #pragma link C++ class FilterOperation+;
 #pragma link C++ class UniformFilterOperation+;
 #pragma link C++ class ConditionalFilterOperation+;
-
 #pragma link C++ class SimplePassBandFilter+;
 #pragma link C++ class SimpleNotchFilter+;
 #pragma link C++ class ALFASincFilter+;
@@ -31,5 +30,24 @@
 #pragma link C++ class SumDifferenceFilter+;
 #pragma link C++ class DigitalFilterOperation+;
 #pragma link C++ class GeometricFilter+;
+
+
+#pragma link C++ namespace AnitaResponse+;
+
+#pragma link C++ class AnitaResponse::DeconvolutionMethod+;
+#pragma link C++ class AnitaResponse::NaiveDeconvolution+;
+#pragma link C++ class AnitaResponse::BandLimitedDeconvolution+;
+#pragma link C++ class AnitaResponse::AbstractResponse+;
+#pragma link C++ class AnitaResponse::Response+;
+#pragma link C++ class AnitaResponse::ResponseManager+;
+#pragma link C++ class AnitaResponse::CompositeResponse+;
+
+#pragma link C++ class AnitaResponse::DeconvolveFilter+;
+#pragma link C++ class AnitaResponse::WienerDeconvolution+; 
+#pragma link C++ class AnitaResponse::AllPassDeconvolution+; 
+#pragma link C++ class AnitaResponse::DeconvolutionMethod+;
+
+
 #endif
+
 
