@@ -15,7 +15,9 @@
 #pragma link C++ class FilterStrategy+;
 #pragma link C++ class AnalysisWaveform+;
 #pragma link C++ class AnalysisWaveform::PowerCalculationOptions;
+#pragma link C++ class PrettyAnalysisWaveform+;
 #pragma link C++ class TGraphAligned+;
+#pragma link C++ class CorrelationSummaryAnita4+;
 
 
 #pragma link C++ class FilterOperation+;
