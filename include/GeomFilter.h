@@ -21,7 +21,7 @@ using namespace std;
 class GeometricFilter : public FilterOperation
 {
   public: 
-    typedef struct {} notchPlaceholder;  //  whatever is your notch definition data structure
+//    typedef struct {} notchPlaceholder;  //  whatever is your notch definition data structure
     GeometricFilter() { init();}
     GeometricFilter(std::vector< vector<TGraphAligned*> >& noise)
       : noiseSamples(noise) 
