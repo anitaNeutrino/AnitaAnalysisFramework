@@ -81,13 +81,17 @@ static void setNewSize(TGraphAligned * g, int size )
 }
 
 
-AnalysisWaveform::AnalysisWaveform(int N, const double *x, const double * y, double nominal_dt, InterpolationType interp_type, InterpolationOptions *opt)
-  : g_uneven(N,x,y),  dt(nominal_dt), fft(0), interpolation_type(interp_type), must_update_uneven(false), must_update_freq(true), must_update_even(true), uneven_equals_even(false), hilbert_transform(0), force_even_size(0)
+AnalysisWaveform::AnalysisWaveform(int N, const double *x, const double * y, double nominal_dt,
+                                   InterpolationType interp_type, InterpolationOptions *opt)
+  : g_uneven(N,x,y),  dt(nominal_dt), fft(0), theEvenAkimaInterpolator(0,ROOT::Math::Interpolation::kAKIMA),
+    interpolation_type(interp_type), must_update_uneven(false), must_update_freq(true), must_update_even(true), 
+    uneven_equals_even(false), hilbert_transform(0), force_even_size(0)
 {
 
   if (opt) interpolation_options = *opt; 
   power_dirty = true; 
   hilbert_dirty = true; 
+  even_akima_interpolator_dirty = true; 
   power_db_dirty = true; 
   hilbert_envelope_dirty = true; 
   phase_dirty = true;
@@ -96,7 +100,9 @@ AnalysisWaveform::AnalysisWaveform(int N, const double *x, const double * y, dou
 }
 
 AnalysisWaveform::AnalysisWaveform(int N, const double * y, double dt, double t0)
-  : g_even(N), dt(dt), fft(0),  interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(true), must_update_even(false), uneven_equals_even(true), hilbert_transform(0), force_even_size(0)
+  : g_even(N), dt(dt), fft(0), theEvenAkimaInterpolator(0,ROOT::Math::Interpolation::kAKIMA), 
+     interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(true), must_update_even(false),
+     uneven_equals_even(true), hilbert_transform(0), force_even_size(0)
 {
   fillEven(N,g_even.GetX(),dt,t0); 
   memcpy(g_even.GetY(), y, sizeof(double) * N); 
@@ -106,6 +112,7 @@ AnalysisWaveform::AnalysisWaveform(int N, const double * y, double dt, double t0
   hilbert_dirty = true; 
   power_db_dirty = true; 
   hilbert_envelope_dirty = true; 
+  even_akima_interpolator_dirty = true; 
   phase_dirty = true;
   just_padded = false; 
   df = 0; 
@@ -113,7 +120,9 @@ AnalysisWaveform::AnalysisWaveform(int N, const double * y, double dt, double t0
 
 
 AnalysisWaveform::AnalysisWaveform(int N, double dt, double t0)
-  : g_even(N), dt(dt), fft(0),  interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(true), must_update_even(false), uneven_equals_even(true), hilbert_transform(0), force_even_size(0)
+  : g_even(N), dt(dt), fft(0), theEvenAkimaInterpolator(0,ROOT::Math::Interpolation::kAKIMA), 
+    interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(true),
+    must_update_even(false), uneven_equals_even(true), hilbert_transform(0), force_even_size(0)
 {
   
   fillEven(N,g_even.GetX(),dt,t0); 
@@ -125,12 +134,15 @@ AnalysisWaveform::AnalysisWaveform(int N, double dt, double t0)
   power_db_dirty = true; 
   phase_dirty = true;
   hilbert_envelope_dirty = true; 
+  even_akima_interpolator_dirty = true; 
   just_padded = false; 
 
 }
 
 AnalysisWaveform::AnalysisWaveform(int N, const FFTWComplex * f, double df, double t0)
-  :  g_even(N), df(df), interpolation_type(AKIMA), must_update_uneven(false), must_update_freq(false), must_update_even(true), uneven_equals_even(true), hilbert_transform(0), force_even_size(0)
+  :  g_even(N), df(df), theEvenAkimaInterpolator(0,ROOT::Math::Interpolation::kAKIMA), interpolation_type(AKIMA), 
+     must_update_uneven(false), must_update_freq(false), must_update_even(true), uneven_equals_even(true), 
+     hilbert_transform(0), force_even_size(0)
 {
   fft_len = N/2 +1; 
   int ret = posix_memalign( (void**) &fft, ALIGNMENT, sizeof(FFTWComplex) * fft_len);
@@ -142,12 +154,14 @@ AnalysisWaveform::AnalysisWaveform(int N, const FFTWComplex * f, double df, doub
   fillEven(N,g_even.GetX(),dt,t0); 
   memset(g_even.GetY(),0, sizeof(double) * N); 
 
+  even_akima_interpolator_dirty = true; 
   power_dirty = true; 
   hilbert_dirty = true; 
   hilbert_envelope_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true; 
   just_padded = false; 
+  even_akima_interpolator_dirty = true; 
 }
 
 
@@ -221,6 +235,7 @@ void AnalysisWaveform::updateEven(const TGraph * replace)
   must_update_uneven = !uneven_equals_even; 
   must_update_freq = true; 
   must_update_even = false; 
+  even_akima_interpolator_dirty = true; 
   just_padded = false; 
   hilbert_envelope_dirty = true; 
 }
@@ -237,6 +252,7 @@ TGraphAligned * AnalysisWaveform::updateEven()
   TGraphAligned * ev = (TGraphAligned *) even(); 
   must_update_uneven = !uneven_equals_even; 
   must_update_freq = true; 
+  even_akima_interpolator_dirty = true; 
   just_padded = false; 
   hilbert_envelope_dirty = true; 
   return ev; 
@@ -253,6 +269,8 @@ TGraphAligned * AnalysisWaveform::updateUneven()
   must_update_even = true; 
   must_update_freq = true; 
   just_padded = false; 
+  even_akima_interpolator_dirty = true; 
+
   return g; 
 }
 
@@ -270,6 +288,7 @@ FFTWComplex * AnalysisWaveform::updateFreq()
   phase_dirty = true; 
   just_padded = false; 
 
+  even_akima_interpolator_dirty = true; 
   must_update_even = true; 
   must_update_uneven = !uneven_equals_even; 
 
@@ -297,6 +316,7 @@ void AnalysisWaveform::updateUneven(const TGraph * replace)
   must_update_even = true; 
   must_update_uneven = false; 
   must_update_freq = true; 
+  even_akima_interpolator_dirty = true; 
 }
 
 void AnalysisWaveform::calculateUnevenFromEven() const
@@ -305,13 +325,12 @@ void AnalysisWaveform::calculateUnevenFromEven() const
 
   if (interpolation_type == AKIMA) 
   {
-    ROOT::Math::Interpolator irp(g->GetN(), ROOT::Math::Interpolation::kAKIMA); 
-    irp.SetData(g->GetN(), g->GetX(), g->GetY()); 
      
+    const ROOT::Math::Interpolator * irp = evenAkimaInterpolator(); 
     for (int i = 0; i < g_uneven.GetN(); i++) 
     {
       if (g_uneven.GetX()[i] < g->GetX()[g->GetN()-1]) 
-        g_uneven.GetY()[i] = irp.Eval(g_uneven.GetX()[i]); 
+        g_uneven.GetY()[i] = irp->Eval(g_uneven.GetX()[i]); 
     }
   }
   else 
@@ -325,6 +344,18 @@ void AnalysisWaveform::calculateUnevenFromEven() const
   }
 
   must_update_uneven = false; 
+}
+
+const ROOT::Math::Interpolator * AnalysisWaveform::evenAkimaInterpolator() const
+{
+
+  if (even_akima_interpolator_dirty) 
+  {
+    const TGraphAligned * g = even(); 
+    theEvenAkimaInterpolator.SetData(g->GetN(),g->GetX(),g->GetY()); 
+    even_akima_interpolator_dirty= false;
+  }
+  return &theEvenAkimaInterpolator; 
 }
 
 void AnalysisWaveform::calculateEvenFromUneven()  const
@@ -620,137 +651,166 @@ void AnalysisWaveform::forceEvenSize(int size)
 
 }
 
-void AnalysisWaveform::evalEven(int N, const double * __restrict t, double * __restrict v)  const
+void AnalysisWaveform::evalEven(int N, const double * __restrict t, double * __restrict v, EvenEvaluationType type)  const
 {
-  const TGraphAligned * g = even(); 
-  int Ng = g->GetN(); 
-  if (Ng < 1) return; 
-  const double *y = g->GetY(); 
-//  __builtin_prefetch(y); 
-//  __builtin_prefetch(t); 
-//  __builtin_prefetch(v,1); 
 
-  double t0 = g->GetX()[0]; 
+  if (type == EVAL_LINEAR) 
+  {
+    const TGraphAligned * g = even(); 
+    int Ng = g->GetN(); 
+    if (Ng < 1) return; 
+    const double *y = g->GetY(); 
+  //  __builtin_prefetch(y); 
+  //  __builtin_prefetch(t); 
+  //  __builtin_prefetch(v,1); 
+
+    double t0 = g->GetX()[0]; 
 
 
 
 #ifndef ENABLE_VECTORIZE
-  for (int i = 0; i < N; i++) 
-  {
-    double xval = (t[i]-t0) / dt; 
-    int bin_low = int(xval); 
+    for (int i = 0; i < N; i++) 
+    {
+      double xval = (t[i]-t0) / dt; 
+      int bin_low = int(xval); 
 
-    int branchless_too_low = bin_low < 0; 
-    int branchless_too_high = bin_low >= Ng; 
-    int branchless_on_edge = bin_low == Ng-1; 
+      int branchless_too_low = bin_low < 0; 
+      int branchless_too_high = bin_low >= Ng; 
+      int branchless_on_edge = bin_low == Ng-1; 
 
-    int bin_high = bin_low+1; 
-    bin_low *= (1-branchless_too_high) * (1-branchless_too_low);
-    bin_high *= (1-branchless_too_high) * (1-branchless_too_low) * (1-branchless_on_edge);
-    double val_low = y[bin_low]; 
-    double val_high = y[bin_high]; 
-    double frac = xval - bin_low; 
-    double val = val_low + frac * (val_high - val_low); 
+      int bin_high = bin_low+1; 
+      bin_low *= (1-branchless_too_high) * (1-branchless_too_low);
+      bin_high *= (1-branchless_too_high) * (1-branchless_too_low) * (1-branchless_on_edge);
+      double val_low = y[bin_low]; 
+      double val_high = y[bin_high]; 
+      double frac = xval - bin_low; 
+      double val = val_low + frac * (val_high - val_low); 
 
-    v[i] = val * (1-branchless_too_low) * (1-branchless_too_high) * (1-branchless_on_edge) + branchless_on_edge * y[Ng-1]; 
-  }
+      v[i] = val * (1-branchless_too_low) * (1-branchless_too_high) * (1-branchless_on_edge) + branchless_on_edge * y[Ng-1]; 
+    }
 #else
 
-  int leftover = N % VEC_N; 
-  int nit = N / VEC_N + (leftover ? 1 : 0);  
+    int leftover = N % VEC_N; 
+    int nit = N / VEC_N + (leftover ? 1 : 0);  
 
-  VEC v_t; 
-  VEC v_t0(t0); 
-  VEC inv_dt(1./dt); 
-  IVEC dont_get_out_of_bounds; 
+    VEC v_t; 
+    VEC v_t0(t0); 
+    VEC inv_dt(1./dt); 
+    IVEC dont_get_out_of_bounds; 
 
-  for (int i = 0; i < VEC_N; i++)
-  {
-    dont_get_out_of_bounds.insert(i, i >= leftover ? 1 : 0 ); 
-  }
-
-  for (int i = 0; i < nit; i++)
-  {
-    if (i < nit -1 || !leftover)
+    for (int i = 0; i < VEC_N; i++)
     {
-        v_t.load(t + i * VEC_N); 
-    }
-    else
-    {
-      v_t.load_partial(leftover, t+i*VEC_N)  ;
+      dont_get_out_of_bounds.insert(i, i >= leftover ? 1 : 0 ); 
     }
 
-    VEC xval = (v_t - v_t0) * inv_dt; 
-    VEC truncated_xval = truncate(xval); 
-    VEC frac = xval - truncated_xval; 
-    IVEC bin_low = truncate_to_int(truncated_xval); 
-
-    IVEC branchless_too_low = bin_low < IVEC(0); 
-    IVEC branchless_too_high = bin_low >= IVEC(Ng); 
-    IVEC branchless_on_edge = bin_low== IVEC(Ng-1); 
-
-    int scalar_out_of_bounds =  int(i == nit-1 && leftover > 0); 
-    IVEC out_of_bounds = scalar_out_of_bounds * dont_get_out_of_bounds;
-
-    IVEC bin_high = bin_low+1; 
-
-    //Optimistically grab it. Hopefully it's not out of bounds. 
-    __builtin_prefetch(y+bin_low[0]); 
-
-    IVEC too_low_or_too_high = (1-branchless_too_low) * (1-branchless_too_high) * (1-out_of_bounds); 
-    IVEC kill_it = too_low_or_too_high *  ( 1- branchless_on_edge);  
-
-    bin_low  *= too_low_or_too_high; 
-    bin_high *= kill_it; 
-
-    double  lowv[VEC_N]; 
-    double  highv[VEC_N]; 
-    for (int j = 0; j < VEC_N; j++)
+    for (int i = 0; i < nit; i++)
     {
-      lowv[j] = y[bin_low[j]]; 
-      highv[j] = y[bin_high[j]]; 
-    }
+      if (i < nit -1 || !leftover)
+      {
+          v_t.load(t + i * VEC_N); 
+      }
+      else
+      {
+        v_t.load_partial(leftover, t+i*VEC_N)  ;
+      }
 
-    VEC val_low; val_low.load(lowv); 
-    VEC val_high; val_high.load(highv); 
+      VEC xval = (v_t - v_t0) * inv_dt; 
+      VEC truncated_xval = truncate(xval); 
+      VEC frac = xval - truncated_xval; 
+      IVEC bin_low = truncate_to_int(truncated_xval); 
 
-    VEC val = mul_add(frac , (val_high - val_low), val_low); 
-    
-    if (scalar_out_of_bounds)
-    {
-      val.store_partial(leftover, v + i * VEC_N); 
+      IVEC branchless_too_low = bin_low < IVEC(0); 
+      IVEC branchless_too_high = bin_low >= IVEC(Ng); 
+      IVEC branchless_on_edge = bin_low== IVEC(Ng-1); 
+
+      int scalar_out_of_bounds =  int(i == nit-1 && leftover > 0); 
+      IVEC out_of_bounds = scalar_out_of_bounds * dont_get_out_of_bounds;
+
+      IVEC bin_high = bin_low+1; 
+
+      //Optimistically grab it. Hopefully it's not out of bounds. 
+      __builtin_prefetch(y+bin_low[0]); 
+
+      IVEC too_low_or_too_high = (1-branchless_too_low) * (1-branchless_too_high) * (1-out_of_bounds); 
+      IVEC kill_it = too_low_or_too_high *  ( 1- branchless_on_edge);  
+
+      bin_low  *= too_low_or_too_high; 
+      bin_high *= kill_it; 
+
+      double  lowv[VEC_N]; 
+      double  highv[VEC_N]; 
+      for (int j = 0; j < VEC_N; j++)
+      {
+        lowv[j] = y[bin_low[j]]; 
+        highv[j] = y[bin_high[j]]; 
+      }
+
+      VEC val_low; val_low.load(lowv); 
+      VEC val_high; val_high.load(highv); 
+
+      VEC val = mul_add(frac , (val_high - val_low), val_low); 
+      
+      if (scalar_out_of_bounds)
+      {
+        val.store_partial(leftover, v + i * VEC_N); 
+      }
+      else
+      {
+        val.store(v + i * VEC_N); 
+      }
     }
-    else
-    {
-      val.store(v + i * VEC_N); 
-    }
-  }
 
 #endif
 
+  }
+
+  else if (type == EVAL_AKIMA) 
+  {
+    const ROOT::Math::Interpolator * irp = evenAkimaInterpolator(); 
+
+    /*TODO this is probably very slow */ 
+    for (int i = 0; i < N; i++) 
+    {
+      v[i] = irp->Eval(t[i]); 
+    }
+  }
+  else
+  {
+    fprintf(stderr,"Bad even evaluation type\n"); 
+  }
+
 }
 
-double AnalysisWaveform::evalEven(double t)  const
+double AnalysisWaveform::evalEven(double t, EvenEvaluationType typ)  const
 {
+  if (typ == EVAL_AKIMA) 
+  {
+    return evenAkimaInterpolator()->Eval(t); 
+  }
+  else if (typ == EVAL_LINEAR) 
+  {
+    const TGraphAligned * g = even(); 
+    double t0 = g->GetX()[0]; 
+    double xval = (t-t0) / dt; 
 
-  const TGraphAligned * g = even(); 
+    int bin_low = int (xval); 
 
-  double t0 = g->GetX()[0]; 
-  double xval = (t-t0) / dt; 
+    if ((bin_low < 0)) return 0; 
+    if ((bin_low >= g->GetN())) return 0; 
+    if ((bin_low ==  g->GetN()-1)) return g->GetY()[g->GetN()-1]; 
 
-  int bin_low = int (xval); 
+    int bin_high = bin_low + 1; 
+    double val_low = g->GetY()[bin_low]; 
+    double val_high = g->GetY()[bin_high]; 
 
-  if ((bin_low < 0)) return 0; 
-  if ((bin_low >= g->GetN())) return 0; 
-  if ((bin_low ==  g->GetN()-1)) return g->GetY()[g->GetN()-1]; 
+    double frac = xval - bin_low; 
 
-  int bin_high = bin_low + 1; 
-  double val_low = g->GetY()[bin_low]; 
-  double val_high = g->GetY()[bin_high]; 
+    return val_low + frac*(val_high-val_low); 
+  }
 
-  double frac = xval - bin_low; 
+  fprintf(stderr, "Bad EvenEvaluationType\n"); 
 
-  return val_low + frac*(val_high-val_low); 
+  return 0; 
 }
 
 AnalysisWaveform::AnalysisWaveform(const AnalysisWaveform & other) 

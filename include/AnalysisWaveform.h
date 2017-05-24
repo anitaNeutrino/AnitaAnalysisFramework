@@ -3,6 +3,7 @@
 
 class FFTWComplex; 
 #include "TGraphAligned.h" 
+#include "Math/Interpolator.h"
 #include "FFTWindow.h" 
 
 /** 
@@ -59,6 +60,13 @@ class AnalysisWaveform
       AKIMA, 
       SPARSE_YEN,    
       REGULARIZED_SPARSE_YEN    
+    }; 
+
+    /** The interpolation method used in e.g. evalEven */ 
+    enum EvenEvaluationType
+    {
+      EVAL_LINEAR, 
+      EVAL_AKIMA
     }; 
 
     /** The default type used. May be changed  by user */ 
@@ -202,11 +210,11 @@ class AnalysisWaveform
     /** Draw phase */
     void drawPhase(const char * opt = "", int color=-1) const; 
 
-    /**Evaluate the even waveform at a point. Right now just does linear interpolation */ 
-    double evalEven(double t) const; //TODO: add additional evaluation methods other than linear interpolation. indeed, would be best to eval multiple points at same time
+    /**Evaluate the even waveform at a point. */ 
+    double evalEven(double t, EvenEvaluationType = EVAL_LINEAR) const; //TODO: add additional evaluation methods other than linear interpolation. indeed, would be best to eval multiple points at same time
 
-    /** Evaluate the even waveform at the specified points. Right now just does linear interpolation */ 
-    void evalEven(int N, const double * __restrict t , double * __restrict v) const; 
+    /** Evaluate the even waveform at the specified points. */ 
+    void evalEven(int N, const double * __restrict t , double * __restrict v, EvenEvaluationType = EVAL_LINEAR) const; 
 
 
     /**  Update frequency graph by modifying return value */ 
@@ -278,6 +286,9 @@ class AnalysisWaveform
     mutable int fft_len; 
     mutable FFTWComplex * fft; 
 
+    mutable ROOT::Math::Interpolator theEvenAkimaInterpolator; 
+    const ROOT::Math::Interpolator * evenAkimaInterpolator() const; 
+
     InterpolationType interpolation_type; 
     InterpolationOptions interpolation_options; 
     PowerCalculationOptions power_options; 
@@ -293,9 +304,11 @@ class AnalysisWaveform
     mutable bool phase_dirty; 
     mutable bool hilbert_envelope_dirty; 
     mutable bool hilbert_dirty; 
+    mutable bool even_akima_interpolator_dirty; 
     mutable AnalysisWaveform * hilbert_transform;
     mutable int force_even_size; 
 }; 
+
 
 
 #endif 
