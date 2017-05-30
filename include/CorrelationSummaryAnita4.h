@@ -1,14 +1,3 @@
-///////////////////////////////////////////////////////////////////////////////
-/////  CorrelationSummaryAnita4.h        ANITA-4 Correlation Summary      /////
-/////                                                                     /////
-/////  Description:                                                       /////
-/////     A simple class for storing correlation summary info for an event/////
-/////                                                                     /////
-/////  Author: Linda Cremonesi (l.cremonesi@ucl.ac.uk)                    /////
-/////        code is a modified version of CorrelationSummary             /////
-/////        written by Ryan Nichol (rjn@hep.ucl.ac.uk)                   /////
-///////////////////////////////////////////////////////////////////////////////
-
 #ifndef CORRELATIONSUMMARYANITA4_H
 #define CORRELATIONSUMMARYANITA4_H
 

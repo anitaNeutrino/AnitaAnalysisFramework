@@ -1,32 +1,3 @@
-//////////////////////////////////////////////////////////////////////////////
-/////  PrettyAnalysisWaveform.h        Useful ANITA event class                      /////
-/////                                                                    /////
-/////  Description:                                                      /////
-/////     A simple class for plotting stuff like waveforms and correlations/////
-/////  Author: Ryan Nichol (rjn@hep.ucl.ac.uk)                           /////
-//////////////////////////////////////////////////////////////////////////////
-
-
-/*! \mainpage ANITA Event Correlator
- *
- * \section intro_sec Introduction
- *
- * This is the somewhat sketchy documentation for my poor attempt at an event correlator library. At the moment this library is in pale in comparison to the work done by Andres, Jiwoo, Stephen and just about every other ANITA collaborator I suspect. But I did it so I'm sticking it here.
- *
- * \section prereq_sec Prerequisites
- *
- *  -# <A HREF="http://root.cern.ch">ROOT</A>
- *  -# <A HREF="http://www.fftw.org/">FFTW 3 -- Fastest Fourier Transform in the West</a>
- *  -# <A HREF="http://www.hep.ucl.ac.uk/uhen/anita/libRootFftwWrapper">libRootFftwWrapper -- a ROOT wrapper for FFTW 3</a>
- *  -# <A HREF="http://www.hep.ucl.ac.uk/uhen/anita/eventReader">ANITA-II Event Reader</a>
- * 
- * \section install_sec Installation
- * -# Checkout the code from the SVN repository, eg.: <BR><PRE>svn co https://delos.mps.ohio-state.edu/anitaGround/eventCorrelator/trunk myEventCorrelatorDir</PRE>
- * -# Define the ANITA_UTIL_INSTALL_DIR to point to the location you want the library installed (the library files will end up in (ANITA_UTIL_INSTALL_DIR)/lib and the header files in (ANITA_UTIL_INSTALL_DIR)/include).
- * -# Do <PRE>make</PRE><PRE>make install</PRE>
- * \section manual_sec Manual
- * If you are averse to reading web pages (and who wouldn't be) you can download a <a href="manual/eventCorrelator.pdf">pdf copy of the reference material</a> but be warned it won't be a thrilling read.
- */
 
 
 #ifndef PRETTYANALYSISWAVEFORM_H
