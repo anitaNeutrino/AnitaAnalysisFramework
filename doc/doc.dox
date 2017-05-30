@@ -20,14 +20,13 @@ Right now it consists of three main parts:
 
 AnitaAnalysis depends on ROOT, libRootFftwWrapper, eventReaderRoot, and
 eventCorrelator. It is assumed that those are compiled and availabile in
-ANITA_UTIL_INSTALL_DIR or elsewhere within the paths searched for by your compiler. 
+ANITA_UTIL_INSTALL_DIR or elsewhere within the paths searched for by your compiler. You probably installed using the build tool so it doesn't matter. 
 
 
-Some options meant to be set by end users are available within Makefile.cfg
+Some options meant to be set by end users may be set using ccmake or cmake -D 
 
 In particular, one may:
 
- - override the compiler (perhaps for testing to see how clang and g++ might disagree) 
  - enable OpenMP support. OpenMP is a #pragma-based multithreading system, which the filter framework can use. This is useful in the case where one has more cores than ANITA runs. 
 
 
@@ -94,6 +93,40 @@ abstracting away the multiple representations, it is possible to elide
 unnecessary transforms in some cases. For example, multiple filters operating
 in the Fourier domain can avoid transforming the waveform and back and forth if
 they are applied one after another. 
+
+
+
+\section response Responses
+
+Responses are in the data directory. 
+
+Each response type will have a name, which is used in the enum allowing selection, the directory where data is stored and the name of the option in the config file. 
+
+e.g. enum value ResponseSingleBRotter -> /data/SingleBRotter  -> "SingleBRotter" in UCorrelator config file 
+
+The files will be plain text files, but of different types. The type is encoded by the suffix. Not all are implemented yet. 
+
+
+Suffix:          Meaning and Format: 
+
+  .imp           Impulse response, in mV andns, in a format that can be read in the TGraph constructor (e.g. whitespcae separated ns mV values) 
+  .freq          Frequency response, in GHz, dB and radians (whitespace separated) 
+  .iir           IIR transfer function. The b coefficients on one line and the a coefficients on the next. 
+
+
+The prefix denotes what the impulse applies to. It could be: 
+
+  all - This response will be used for everything
+  allHpol   - this response will be used for all HPol 
+  allVpol   - this response will be used for all VPol 
+  [01..16]{B,M,T}{H,V} - This response will be used for this channel e.g. 13BV 
+
+
+In addition there is in theory support for off-axis responses. These are denoted with an underscore after the prefix followed by the angle in degrees. 
+If no underscore is used, it is equivalent to _0. 
+ 
+  
+
 
 
 
