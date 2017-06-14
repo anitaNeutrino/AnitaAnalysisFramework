@@ -35,6 +35,7 @@
 
 
 #pragma link C++ namespace AnitaResponse+;
+#pragma link C++ namespace impulsivity+;
 
 #pragma link C++ class AnitaResponse::DeconvolutionMethod+;
 #pragma link C++ class AnitaResponse::NaiveDeconvolution+;

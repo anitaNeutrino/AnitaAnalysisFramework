@@ -99,9 +99,12 @@ public:
     Double_t peakMoments[5];  // moments about Peak  (1st - 5th moments) 
 
 
+    //See a number that has something to do with how impulsive it is 
+    Double_t impulsivityMeasure; 
+
     Int_t numAntennasInCoherent; // number of antennas used to make this 
 
-    ClassDefNV(WaveformInfo, 5); 
+    ClassDefNV(WaveformInfo, 6); 
   }; 
 
 
