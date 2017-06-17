@@ -2,6 +2,7 @@
 #include "AnalysisWaveform.h" 
 #include "TH2.h" 
 #include <algorithm> 
+#include <cmath>
 
 
 double impulsivity::impulsivityMeasure(const AnalysisWaveform * wf, TGraph * distance_cdf,int pt, bool hilbert) 
