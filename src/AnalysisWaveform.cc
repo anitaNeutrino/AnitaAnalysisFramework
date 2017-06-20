@@ -34,6 +34,7 @@ void AnalysisWaveform::enableDebug(bool debug) { fprintf(stderr, "enableDebug(%d
 #endif 
 
 
+static __thread bool nag_if_not_zero_padded = true; 
 
 
 static void fillEven(int N, double * x, double dt, double t0)
@@ -237,6 +238,7 @@ void AnalysisWaveform::updateEven(const TGraph * replace)
   must_update_even = false; 
   even_akima_interpolator_dirty = true; 
   just_padded = false; 
+  hilbert_dirty = true; 
   hilbert_envelope_dirty = true; 
 }
 
@@ -270,6 +272,8 @@ TGraphAligned * AnalysisWaveform::updateUneven()
   must_update_freq = true; 
   just_padded = false; 
   even_akima_interpolator_dirty = true; 
+  hilbert_dirty = true; 
+  hilbert_envelope_dirty = true; 
 
   return g; 
 }
@@ -285,6 +289,7 @@ FFTWComplex * AnalysisWaveform::updateFreq()
   power_dirty = true; 
   power_db_dirty = true; 
   hilbert_dirty = true;
+  hilbert_envelope_dirty = true;
   phase_dirty = true; 
   just_padded = false; 
 
@@ -462,6 +467,7 @@ void AnalysisWaveform::calculateFreqFromEven() const
   must_update_freq = false; 
   power_dirty = true; 
   hilbert_dirty = true; 
+  hilbert_envelope_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true; 
 }
@@ -889,8 +895,7 @@ AnalysisWaveform * AnalysisWaveform::correlation(const AnalysisWaveform *A, cons
   }
 
 
-
-  if(!A->checkIfPaddedInTime() || !B->checkIfPaddedInTime())
+  if(nag_if_not_zero_padded && (!A->checkIfPaddedInTime() || !B->checkIfPaddedInTime()))
   {
 
     fprintf(stderr,"warning: waveforms don't appear to be padded in time, will be computing circular correlation!\n"); 
@@ -1199,4 +1204,34 @@ void AnalysisWaveform::sumDifference( AnalysisWaveform * __restrict x, AnalysisW
   y->forceEvenSize(N); 
 }
 
+
+AnalysisWaveform * AnalysisWaveform::autoCorrelation(int npadtime, int npadfreq, double scale) 
+{
+
+  if (npadtime)
+  {
+    AnalysisWaveform copy(*this); 
+    copy.padEven(1); 
+    return correlation(&copy,&copy,npadfreq,scale); 
+  }
+
+  return correlation(this,this,npadfreq,scale); 
+}
+
+void AnalysisWaveform::zeroMeanEven()
+{
+  TGraphAligned * g = updateEven(); 
+
+  double mean = g->GetMean(2); 
+  for (int i = 0; i <g->GetN(); i++) 
+  {
+    g->GetY()[i]-=mean; 
+  }
+}
+
+void AnalysisWaveform::setCorrelationNag(bool nag) 
+{
+
+  nag_if_not_zero_padded = nag; 
+}
 

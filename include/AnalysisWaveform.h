@@ -133,12 +133,30 @@ class AnalysisWaveform
     AnalysisWaveform(const AnalysisWaveform & other);  
 
     /** Computes the (circular) correlation (in the frequency domain) of the two waveforms as a new waveform. Note that if you want to
-     * correlate two traces, they should be padded first. This does not pad them for you, but will complain if they are not! It is also assumed the two are of the same length.
+     * correlate two traces, they should be padded first. This does not pad them for you, but will complain if they are not! To turn off the nagging, see below function. It is also assumed the two are of the same length.
      *
      * There is no normalization done at all, the frequency values are simply multiplied appropriately
      *
      **/ 
     static AnalysisWaveform * correlation(const AnalysisWaveform * A, const AnalysisWaveform * B, int npadfreq = 0, double scale =1 ); 
+
+    /* Enables or disables (check) and nagging on attemptoin correlation
+     * without zero padding. Useful if you actually want to do a circular
+     * correlation or if the check is too expensive for your tastes.
+     *
+     * Note that this only affects the current thread. 
+     **/
+    static void setCorrelationNag(bool nag); 
+
+
+    /** Compute the (circular) autocorrelation of this waveform.
+     *
+     * If you want non-circular correlation, you can pass 1 (or more) to npadtime. 
+     * No scaling is applied, but you can set a scale by passing a scale parameter. 
+     * User responsible for deleting returned value; 
+     **/ 
+
+    AnalysisWaveform * autoCorrelation(int npadtime =1, int npadfreq = 0, double scale = 1); 
 
     /** Checks if the even waveform is zeropadded (by comparing second half to zero) */ 
     bool checkIfPaddedInTime() const; 
@@ -267,6 +285,8 @@ class AnalysisWaveform
     static void sumDifference(AnalysisWaveform * __restrict a, AnalysisWaveform * __restrict b); 
 
 
+    /** Zero mean even graph */ 
+    void zeroMeanEven(); 
 
   private: 
     void calculateEvenFromUneven() const; 
