@@ -89,6 +89,104 @@ void AnitaEventSummary::zeroInternals(){
 }
 
 
+/** 
+ * Utility function to get the polarisation of the higher map peak
+ * Useful for TTree::Draw() 
+ * 
+ * @param peakInd which highest peak. The default = 0, which is the highest (not sure how much sense it makes for peakInd > 0)
+ * 
+ * @return the polarisation which has the higher interferometric map peak (kNotAPol if peakInd required outside allowed range)
+ */
+AnitaPol::AnitaPol_t AnitaEventSummary::higherPeakPol(int peakInd){
+
+  AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol;
+  if(peakInd >= 0 && peakInd < maxDirectionsPerPol){
+    if(peak[AnitaPol::kVertical][peakInd].value >= peak[AnitaPol::kHorizontal][peakInd].value){
+      pol = AnitaPol::kVertical;
+    }
+    else{
+      pol = AnitaPol::kHorizontal;
+    }
+  }
+  return pol;
+}
+
+
+
+/** 
+ * Utility function to return a const reference to the higher map peak. 
+ * Useful for TTree::Draw() 
+ * 
+ * @param peakInd peakInd which highest peak. The default = 0, which is the highest (not sure how much sense it makes for peakInd > 0)
+ * 
+ * @return the 
+ */
+const AnitaEventSummary::PointingHypothesis& AnitaEventSummary::higherPeak(int peakInd){
+  AnitaPol::AnitaPol_t pol = higherPeakPol();
+  return peak[pol][peakInd];
+}
+
+
+/** 
+ * Utility function to return a const reference to the the unfiltered coherently summed waveform info of the polarisation of the higher map peak
+ * Useful for TTree::Draw() 
+ * 
+ * @param peakInd peakInd which highest peak. The default = 0, which is the highest (not sure how much sense it makes for peakInd > 0)
+ * 
+ * @return the unfiltered coherently summed waveform info
+ */
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::higherCoherent(int peakInd){
+  AnitaPol::AnitaPol_t pol = higherPeakPol();
+  return coherent[pol][peakInd];
+}
+
+
+/** 
+ * Utility function to return a const reference to the the unfiltered and deconvolved coherently summed waveform info of the polarisation of the higher map peak
+ * Useful for TTree::Draw() 
+ * 
+ * @param peakInd peakInd which highest peak. The default = 0, which is the highest (not sure how much sense it makes for peakInd > 0)
+ * 
+ * @return the unfiltered, deconvolved coherently summed waveform info
+ */
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::higherDeconvolved(int peakInd){
+  AnitaPol::AnitaPol_t pol = higherPeakPol();
+  return deconvolved[pol][peakInd];
+}
+
+
+
+
+/** 
+ * Utility function to return a const reference to the the filtered coherently summed waveform info of the polarisation of the higher map peak
+ * Useful for TTree::Draw() 
+ * 
+ * @param peakInd peakInd which highest peak. The default = 0, which is the highest (not sure how much sense it makes for peakInd > 0)
+ * 
+ * @return the filtered coherently summed waveform info
+ */
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::higherCoherentFiltered(int peakInd){
+  AnitaPol::AnitaPol_t pol = higherPeakPol();
+  return coherent_filtered[pol][peakInd];
+}
+
+
+/** 
+ * Utility function to return a const reference to the the filtered and deconvolved coherently summed waveform info of the polarisation of the higher map peak
+ * Useful for TTree::Draw() 
+ * 
+ * @param peakInd peakInd which highest peak. The default = 0, which is the highest (not sure how much sense it makes for peakInd > 0)
+ * 
+ * @return the filtered, deconvolved coherently summed waveform info
+ */
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::higherDeconvolvedFiltered(int peakInd){
+  AnitaPol::AnitaPol_t pol = higherPeakPol();
+  return deconvolved_filtered[pol][peakInd];
+}
+
+
+
+
 void AnitaEventSummary::setTriggerInfomation(const RawAnitaHeader* header){  
 
   // setting to zero, for testing this function.
