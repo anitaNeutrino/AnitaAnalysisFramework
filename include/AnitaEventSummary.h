@@ -244,7 +244,7 @@ public:
   
   private: 
 
-  ClassDefNV(AnitaEventSummary, 16); 
+  ClassDefNV(AnitaEventSummary, 15); 
 }; 
 
 
