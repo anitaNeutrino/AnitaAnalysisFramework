@@ -75,6 +75,13 @@ public:
 
     Double_t I,Q,U,V;  // Stokes Parameters
 
+    //some utilities for polarization info
+    double linearPolFrac();
+    double linearPolAngle();
+    double circPolFrac();
+    double totalPolFrac();
+
+
     Double_t totalPower;  ///Total power in waveform
     Double_t totalPowerXpol;  ///Total power in xPol waveform
 
@@ -103,6 +110,8 @@ public:
     Double_t impulsivityMeasure; 
 
     Int_t numAntennasInCoherent; // number of antennas used to make this 
+
+  
 
     ClassDefNV(WaveformInfo, 6); 
   }; 
@@ -229,10 +238,13 @@ public:
   const WaveformInfo& higherDeconvolved(int peakInd=0);
   const WaveformInfo& higherCoherentFiltered(int peakInd=0);
   const WaveformInfo& higherDeconvolvedFiltered(int peakInd=0);
+
+
+
   
   private: 
 
-  ClassDefNV(AnitaEventSummary, 15); 
+  ClassDefNV(AnitaEventSummary, 16); 
 }; 
 
 
