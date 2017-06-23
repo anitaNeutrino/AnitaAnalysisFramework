@@ -37,6 +37,7 @@ AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header){
   setTriggerInfomation(header);
   eventNumber = header->eventNumber;
   run = header->run;
+  realTime = header->realTime;
 }
 
 
@@ -57,6 +58,7 @@ AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header, UsefulAdu5Pat
   setSourceInformation(pat,truth);
   eventNumber = header->eventNumber;
   run = header->run;
+  realTime = header->realTime;
 }
 
 
