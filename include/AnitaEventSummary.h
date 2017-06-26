@@ -75,6 +75,13 @@ public:
 
     Double_t I,Q,U,V;  // Stokes Parameters
 
+    //some utilities for polarization info
+    double linearPolFrac();
+    double linearPolAngle();
+    double circPolFrac();
+    double totalPolFrac();
+
+
     Double_t totalPower;  ///Total power in waveform
     Double_t totalPowerXpol;  ///Total power in xPol waveform
 
@@ -103,6 +110,8 @@ public:
     Double_t impulsivityMeasure; 
 
     Int_t numAntennasInCoherent; // number of antennas used to make this 
+
+  
 
     ClassDefNV(WaveformInfo, 6); 
   }; 
@@ -215,6 +224,22 @@ public:
   void setTriggerInfomation(const RawAnitaHeader* header);
   void setSourceInformation(UsefulAdu5Pat* pat, const TruthAnitaEvent * truth = 0);  
   void zeroInternals();
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Utility functions to save precious key strokes when doing a TTree::Draw()
+  // Basically, these figure out the higher map peak and return reconstruction variables of that
+  // polarisation to you.
+  // If you don't want to decide on the primary polarisation of an event based on the higher map peak then
+  // these might not be for you...
+  //////////////////////////////////////////////////////////////// /////////////////////////////////////////
+  const PointingHypothesis& higherPeak(int peakInd=0);
+  AnitaPol::AnitaPol_t higherPeakPol(int peakInd=0); // peak[vpol][peakInd] >= peak[hpol][peakInd] ? vpol : hpol
+  const WaveformInfo& higherCoherent(int peakInd=0);
+  const WaveformInfo& higherDeconvolved(int peakInd=0);
+  const WaveformInfo& higherCoherentFiltered(int peakInd=0);
+  const WaveformInfo& higherDeconvolvedFiltered(int peakInd=0);
+
+
 
   
   private: 
