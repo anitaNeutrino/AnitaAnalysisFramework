@@ -37,6 +37,7 @@ AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header){
   setTriggerInfomation(header);
   eventNumber = header->eventNumber;
   run = header->run;
+  realTime = header->realTime;
 }
 
 
@@ -57,6 +58,7 @@ AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header, UsefulAdu5Pat
   setSourceInformation(pat,truth);
   eventNumber = header->eventNumber;
   run = header->run;
+  realTime = header->realTime;
 }
 
 
@@ -262,4 +264,75 @@ void AnitaEventSummary::MCTruth::reset()
  memset(&wf[0],0,sizeof(WaveformInfo)); 
  memset(&wf[1],0,sizeof(WaveformInfo)); 
 }
+
+
+
+
+
+/** 
+ * Utility function to return the linear polarization fraction so I can stop typing it
+ * Useful for TTree::Draw() 
+ * 
+ * 
+ * @return the linear polarization fraction
+ */
+
+double AnitaEventSummary::WaveformInfo::linearPolFrac() {
+
+  double value = TMath::Sqrt( pow(Q,2) + pow(U,2) ) / I;
+
+  return value;
+}
+
+
+/** 
+ * Utility function to return the linear polarization angle so I can stop typing it
+ * Useful for TTree::Draw() 
+ * 
+ * 
+ * @return the linear polarization angle is degrees
+ */
+
+double AnitaEventSummary::WaveformInfo::linearPolAngle() {
+  
+  double value = (TMath::ATan(U/Q)/2)*TMath::RadToDeg();
+
+  return value;
+
+}
+
+
+
+/** 
+ * Utility function to return the circular polarization fraction so I can stop typing it
+ * Useful for TTree::Draw() 
+ * 
+ * 
+ * @return the circular polarization fraction
+ */
+
+double AnitaEventSummary::WaveformInfo::circPolFrac() {
+  
+  double value = TMath::Abs(V)/I;
+
+  return value;
+
+}
+
+/** 
+ * Utility function to return the total polarization fraction so I can stop typing it
+ * Useful for TTree::Draw() 
+ * 
+ * 
+ * @return the circular polarization fraction
+ */
+
+double AnitaEventSummary::WaveformInfo::totalPolFrac() {
+  
+  double value = TMath::Sqrt(pow(Q,2) + pow(U,2) + pow(V,2))/I;
+
+  return value;
+
+}
+
 
