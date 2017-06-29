@@ -341,9 +341,9 @@ int PrettyAnalysisWaveform::getMaxAntennaVSquared(AnitaPol::AnitaPol_t pol, Doub
    int maxAnt=0;
    for(int ant=0;ant<32;ant++) {
       int chanIndex=AnitaGeomTool::getChanIndexFromAntPol(ant,pol);
-      Double_t rmsChan=TMath::RMS(fNumPoints[chanIndex],fVolts[chanIndex]);
-      for(int samp=0;samp<fNumPoints[chanIndex];samp++) {
-	 double vSquared=fVolts[chanIndex][samp]*fVolts[chanIndex][samp];
+      Double_t rmsChan=TMath::RMS(useful->fNumPoints[chanIndex],useful->fVolts[chanIndex]);
+      for(int samp=0;samp<useful->fNumPoints[chanIndex];samp++) {
+	 double vSquared=useful->fVolts[chanIndex][samp]*useful->fVolts[chanIndex][samp];
 	 vSquared/=rmsChan;
 	 if(vSquared>maxVal) {
 	    maxVal=vSquared;
@@ -375,8 +375,8 @@ int PrettyAnalysisWaveform::getMaxAntennaCorrelation(AnitaPol::AnitaPol_t pol, D
       if((peak/rms)>maxVal) {
 	 maxVal=peak/rms;
 	 maxAnt=ant;
-	 Double_t maxTop=TMath::MaxElement(fNumPoints[ciTop],fVolts[ciTop]);
-	 Double_t maxBottom=TMath::MaxElement(fNumPoints[ciBottom],fVolts[ciBottom]);
+	 Double_t maxTop=TMath::MaxElement(useful->fNumPoints[ciTop],useful->fVolts[ciTop]);
+	 Double_t maxBottom=TMath::MaxElement(useful->fNumPoints[ciBottom],useful->fVolts[ciBottom]);
 	 if(maxBottom>maxTop)
 	   maxAnt=otherAnt;
       }
@@ -446,9 +446,9 @@ int PrettyAnalysisWaveform::getMaxAntennaCorrelationRollingAvg(AnitaPol::AnitaPo
      if(newVal>maxVal) {
        maxVal=newVal;
        maxAnt=ant;
-       Double_t maxTop=TMath::MaxElement(fNumPoints[ciTop],fVolts[ciTop]);
-       Double_t maxMiddle=TMath::MaxElement(fNumPoints[ciMiddle],fVolts[ciMiddle]);
-       Double_t maxBottom=TMath::MaxElement(fNumPoints[ciBottom],fVolts[ciBottom]);
+       Double_t maxTop=TMath::MaxElement(useful->fNumPoints[ciTop],useful->fVolts[ciTop]);
+       Double_t maxMiddle=TMath::MaxElement(useful->fNumPoints[ciMiddle],useful->fVolts[ciMiddle]);
+       Double_t maxBottom=TMath::MaxElement(useful->fNumPoints[ciBottom],useful->fVolts[ciBottom]);
        if(maxTop>maxBottom && maxTop>maxMiddle) maxAnt = ant;
        else if (maxMiddle>maxBottom) maxAnt = otherAnt;
        else maxAnt=otherAnt+16;
