@@ -38,7 +38,7 @@
 
 
 
-class PrettyAnalysisWaveform: public FilteredAnitaEvent, public UsefulAnitaEvent
+class PrettyAnalysisWaveform: public FilteredAnitaEvent
 {
 
 

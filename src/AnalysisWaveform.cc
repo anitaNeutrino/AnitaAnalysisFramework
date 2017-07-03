@@ -1157,6 +1157,8 @@ void AnalysisWaveform::basisChange(AnalysisWaveform * __restrict x,
 
   //is this right? who knows
   const TGraphAligned * g_yh = y->hilbertTransform()->even(); 
+  const TGraphAligned * g_y = y->even();
+  const TGraphAligned * g_xh = x->hilbertTransform()->even();
   const TGraphAligned * g_x = x->even();
 
   const double one_over_sqrt2 = 1./sqrt(2); 
@@ -1166,7 +1168,7 @@ void AnalysisWaveform::basisChange(AnalysisWaveform * __restrict x,
 
   for (int i = 0; i < N; i++) 
   {
-    new_x[i] = one_over_sqrt2 * ( g_x->GetY()[i] - g_yh->GetY()[i]); 
+    new_x[i] = one_over_sqrt2 * ( g_xh->GetY()[i] + g_y->GetY()[i]); 
     new_y[i] = one_over_sqrt2 * ( g_x->GetY()[i] + g_yh->GetY()[i]); 
   }
 

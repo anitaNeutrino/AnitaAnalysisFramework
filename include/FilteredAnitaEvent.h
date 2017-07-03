@@ -88,7 +88,7 @@ class FilteredAnitaEvent
   int getAnitaVersion() const { return anitaVersion; }
 
   
-  private:
+  protected:
    AnalysisWaveform *rawGraphs[NUM_SEAVEYS*AnitaPol::kNotAPol];
    AnalysisWaveform *rawGraphsByAntPol[AnitaPol::kNotAPol][NUM_SEAVEYS];
    AnalysisWaveform *filteredGraphs[NUM_SEAVEYS*AnitaPol::kNotAPol];
