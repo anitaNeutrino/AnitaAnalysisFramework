@@ -40,7 +40,7 @@ class AnitaNoiseSummary
   //data
   double avgRMSNoise[NUM_PHI][NUM_ANTENNA_RINGS][NUM_POLS];
 
-  TProfile2D *avgMapProf[NUM_POLS] = {NULL}; //this ends up taking a HUGE amount of space
+  TProfile2D *avgMapProf[NUM_POLS] = { 0 }; //this ends up taking a HUGE amount of space
   double avgMaps[NUM_POLS][nPhi][nTheta]; //where the array is stored.  should be nPhi*nTheta*NUM_POLS long
 
 
@@ -62,8 +62,9 @@ class AnitaNoiseMachine
 
   static const int fifoLength = 60; //one minute of noise averaging
 
-  //do you want to do the interferometric map?  It might be resource intensive
-  bool fillMap = false;
+  //do you want to save the interferometric maps?  They are very large.
+  bool fillMap = false; //save it as TProfiles (~18kB per event)
+  bool fillArray = false; //save it as a double array (25% smaller, ~14kB per event)
 
   /* Constructor */
   AnitaNoiseMachine();
