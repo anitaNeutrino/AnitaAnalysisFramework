@@ -100,7 +100,7 @@ class AnitaNoiseMachine
   bool rmsFifoFillFlag = false; //whether you've completely filled the fifo once
 
   //internals for interferometric map fifo (probably enormous in memory so maybe make a flag)
-  TH2D *mapFifo[NUM_POLS][fifoLength] = {NULL}; //where the info is saved
+  TH2D *mapFifo[NUM_POLS][fifoLength] = { { 0 } }; //where the info is saved
   int mapFifoPos;  //where in the fifo the NEXT write will be 
   bool mapFifoFillFlag = false; //whether you've completely filled the fifo once.
 
