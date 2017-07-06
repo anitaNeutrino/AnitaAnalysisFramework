@@ -9,20 +9,25 @@
  * Default constructor for ROOT
  */
 AnitaNoiseSummary::AnitaNoiseSummary() {
-  zeroInternals();
+    zeroInternals();
 }
 
+AnitaNoiseSummary::~AnitaNoiseSummary() {
+
+  deleteHists();
+}
 
 void AnitaNoiseSummary::zeroInternals() {
 
   fifoLength=0;
 
   memset(avgRMSNoise,0,NUM_PHI*NUM_ANTENNA_RINGS*NUM_POLS*sizeof(double));
+  memset(avgMaps,0,sizeof(double)*nPhi*nTheta*NUM_POLS);
 
   for (int poli=0; poli<NUM_POLS; poli++) {
-    if (avgMap[poli] != NULL) {
-      delete avgMap[poli];
-      avgMap[poli] = NULL;
+    if (avgMapProf[poli] != NULL) {
+      delete avgMapProf[poli];
+      avgMapProf[poli] = NULL;
     }
   }
 
@@ -34,9 +39,9 @@ void AnitaNoiseSummary::zeroInternals() {
 void AnitaNoiseSummary::deleteHists() {
   
   for (int poli=0; poli<NUM_POLS; poli++) {
-    if (avgMap[poli] != NULL) {
-      delete avgMap[poli];
-      avgMap[poli] = NULL;
+    if (avgMapProf[poli] != NULL) {
+      delete avgMapProf[poli];
+      avgMapProf[poli] = NULL;
     }
   }
   return;
@@ -104,10 +109,6 @@ double AnitaNoiseMachine::getAvgRMSNoise(int phi, AnitaRing::AnitaRing_t ring, A
   double value2 = 0;
 
   int endPoint = fifoLength;
-  if (!rmsFifoFillFlag && phi==0 && ring == 0 && pol == 0) {
-    std::cout << "WARNING in AnitaNoiseMachine::getAvgRMSNoise(): Fifo hasn't been filled entirely yet, ";
-    std::cout << " only gotten " << rmsFifoPos << " out of " << fifoLength << " values" << std::endl;
-  }
 
   for (int pos=0; pos<endPoint; pos++) {
     value2 += pow(rmsFifo[phi][(int)ring][(int)pol][pos],2)/endPoint;
@@ -130,7 +131,6 @@ void AnitaNoiseMachine::fillAvgMapNoise(UCorrelator::Analyzer *analyzer) {
     //syntactically weirdly copy it out of UCorrelator
     mapFifo[poli][mapFifoPos] = (TH2D*)analyzer->getCorrelator()->getHist()->Clone();
   }
-    
   
   mapFifoPos++;
 
@@ -138,13 +138,14 @@ void AnitaNoiseMachine::fillAvgMapNoise(UCorrelator::Analyzer *analyzer) {
     mapFifoPos = 0;
     mapFifoFillFlag = true;
   }
+  updateAvgMapNoise();
 
   return;
 
 }
 
 
-TProfile2D* AnitaNoiseMachine::getAvgMapNoise(AnitaPol::AnitaPol_t pol) {
+TProfile2D* AnitaNoiseMachine::getAvgMapNoiseProfile(AnitaPol::AnitaPol_t pol) {
 
   int nBinX = mapFifo[(int)pol][0]->GetNbinsX();
   int nBinY = mapFifo[(int)pol][0]->GetNbinsY();
@@ -177,11 +178,42 @@ TProfile2D* AnitaNoiseMachine::getAvgMapNoise(AnitaPol::AnitaPol_t pol) {
 }
 
 
+
+void AnitaNoiseMachine::updateAvgMapNoise() {
+
+  //stolen from Rene
+  for (int poli=0; poli<NUM_POLS; poli++) {
+    for (Int_t iPhi = 0; iPhi < nPhi; iPhi++) {
+      for (Int_t iTheta = 0; iTheta < nTheta; iTheta++) {     
+	//subtract fifo position that is expiring (if there is one)
+	if (mapFifoFillFlag) {
+	  avgMaps[poli][iPhi][iTheta] -= mapFifo[poli][mapFifoPos]->GetBinContent(iPhi,iTheta);
+	}
+	
+	//and add the new addition to the fifo
+	if (mapFifoPos == 0) 
+	  { avgMaps[poli][iPhi][iTheta] += mapFifo[poli][fifoLength-1]->GetBinContent(iPhi,iTheta); }
+	else
+	  { avgMaps[poli][iPhi][iTheta] += mapFifo[poli][mapFifoPos-1]->GetBinContent(iPhi,iTheta); }
+      }
+    }
+  }
+  
+  
+  return;
+
+}
+
 void AnitaNoiseMachine::fillNoiseSummary(AnitaNoiseSummary *noiseSummary) {
+  if (!rmsFifoFillFlag) {
+    std::cout << "WARNING in AnitaNoiseMachine::fillNoiseSummary(): Fifo hasn't been filled entirely yet, ";
+    std::cout << " only gotten " << rmsFifoPos << " out of " << fifoLength << " values" << std::endl;
+  }
   
   noiseSummary->fifoLength = fifoLength;
   noiseSummary->mapFifoFillFlag = mapFifoFillFlag;
   noiseSummary->rmsFifoFillFlag = rmsFifoFillFlag;
+
 
 
   for (int phi=0; phi<NUM_PHI; phi++) {
@@ -199,14 +231,23 @@ void AnitaNoiseMachine::fillNoiseSummary(AnitaNoiseSummary *noiseSummary) {
   if (fillMap) {
     for (int poli=0; (AnitaPol::AnitaPol_t)poli != AnitaPol::kNotAPol; poli++) {
       AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t)poli;
-      if (noiseSummary->avgMap[poli] != NULL) {
-	delete noiseSummary->avgMap[poli];
-	noiseSummary->avgMap[poli] = NULL;
+      if (noiseSummary->avgMapProf[poli] != NULL) {
+	delete noiseSummary->avgMapProf[poli];
+	noiseSummary->avgMapProf[poli] = NULL;
       }
-      noiseSummary->avgMap[poli] = getAvgMapNoise(pol);
+      noiseSummary->avgMapProf[poli] = getAvgMapNoiseProfile(pol);
     }
   }
 
+
+  for (int poli=0; poli<NUM_POLS; poli++) {
+    for (int iPhi=0; iPhi<nPhi; iPhi++) {
+      for (int iTheta=0; iTheta<nTheta; iTheta++) {
+	noiseSummary->avgMaps[poli][iPhi][iTheta] = avgMaps[poli][iPhi][iTheta];
+      }
+    }
+  }
+ 
   return;
 
 }
