@@ -1,10 +1,14 @@
 #include "NoiseMonitor.h"
 #include "FilteredAnitaEvent.h"
 #include "RawAnitaHeader.h"
+#include "FilterStrategy.h"
+#include "FilterOperation.h"
 #include <numeric>
 
 #include "TTree.h"
 #include "TFile.h"
+
+ClassImp(NoiseMonitor::FilteredMinBiasEventNoise); // For ROOT IO
 
 /** 
  * Default constructor. Chose the time scale to monitor the noise over, exactly which waveform to check.
@@ -15,18 +19,53 @@
  * @param waveOption is the internal state of the AnalysisWaveform you want to query for the waveform RMS.
  */
 NoiseMonitor::NoiseMonitor(double timeScaleSeconds, WaveOption waveOption, TFile* outFile)
-    : fTimeScaleSeconds(timeScaleSeconds), fWaveOption(waveOption), fWriteIndex(-1), fOutFile(outFile),
-      fNoiseTree(NULL), fRun(0), fEventNumber(0) {
+    : fWriteIndex(-1), fEventNoise(NULL), 
+      fReadMode(0), fOutFile(outFile), fNoiseTree(NULL) {
 
-  // fill noise array will zeros
-  for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
-    for(int ant=0; ant < NUM_SEAVEYS; ant++){
-      fNoise[polInd][ant] = 0;
-    }
-  }
-  
+  fEventNoise = new FilteredMinBiasEventNoise(timeScaleSeconds, waveOption);  
   prepareOutputNoiseTree();
+}
+
+
+
+
+/** 
+ * Default constructor. Chose the time scale to monitor the noise over, exactly which waveform to check.
+ * 
+ * This class is intended to give you the noise value for an SNR like number.
+ *
+ * @param timeScaleSeconds is the number of seconds to track minimum bias events over
+ * @param waveOption is the internal state of the AnalysisWaveform you want to query for the waveform RMS.
+ */
+NoiseMonitor::NoiseMonitor(const char* inFileName)
+    : fWriteIndex(-1), fEventNoise(NULL), 
+      fReadMode(1), fOutFile(NULL), fNoiseTree(NULL) {
   
+  getPrecalculatedNoiseTree(inFileName);
+  
+}
+
+
+
+
+/** 
+ * Destructor.
+ * Tidies up input/output trees.
+ */
+NoiseMonitor::~NoiseMonitor(){
+  if(fOutFile){
+    fOutFile->Write();
+    fOutFile->Close();
+    fOutFile = NULL;
+  }
+  if(fInFile){
+    fInFile->Close();
+    fInFile = NULL;
+  }
+  if(fEventNoise){
+    delete fEventNoise;
+    fEventNoise = NULL;
+  }
 }
 
 
@@ -41,45 +80,79 @@ void NoiseMonitor::update(const FilteredAnitaEvent* fEv){
 
   const RawAnitaHeader* header = fEv->getHeader();
 
-  Bool_t isRfTrigger = header->getTriggerBitRF();
-  
-  if(!isRfTrigger){
-    // figure out a sub-second trigger time from header info
-    double tt = header->triggerTime;
-    double ttNs = header->triggerTimeNs;
-    tt += 1e-9*ttNs;
-
-    // this function does a lot of work to remove old events
-    // and updates the fWriteIndex, making it safe to use below
-    removeOldEvents(tt);
-    
-    for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
-      AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
-      for(int ant=0; ant < NUM_SEAVEYS; ant++){
-        const AnalysisWaveform* wf = fEv->getFilteredGraph(ant, pol);
-
-        // pick exact channel configuration based on waveform option even/uneven
-        const TGraphAligned* gr = fWaveOption == kEven ? wf->even() : wf->uneven();
-
-        int n = gr->GetN();
-        double thisRMS = TMath::RMS(n,  gr->GetY());
-        double sumVSquared = thisRMS*n;
-        fEventSumVSquared[polInd][ant][fWriteIndex] = sumVSquared;
-        fEventNumPoints[polInd][ant][fWriteIndex] = n;
-
-        // sum over (zero meaned) v squared and nun points, to get RMS over recent min bias events
-        double newSumVSquared = std::accumulate(fEventSumVSquared[pol][ant].begin(), fEventSumVSquared[pol][ant].end(), 0);
-        double newNumPoints = std::accumulate(fEventNumPoints[pol][ant].begin(), fEventNumPoints[pol][ant].end(), 0);
-        fNoise[pol][ant] = newNumPoints > 0 ? newSumVSquared / newNumPoints : 0;
+  if(fReadMode){
+    UInt_t eventNumber = header->eventNumber;
+    Int_t numBytes = fNoiseTree->GetEntryWithIndex(eventNumber);
+    if(numBytes==0){
+      static int numReadErrors = 0;
+      if(numReadErrors < 10){
+        std::cerr << "Error in " << __PRETTY_FUNCTION__ << " could not read anything from pre-calculcated noise tree!" << std::endl;
+        numReadErrors++;
       }
     }
+    // else{
+    //   std::cout << fEventNoise->run << "\t" << fEventNoise->eventNumber << "\t" << fEventNoise->fNoise[0][0] << std::endl;
+    // }
   }
+  else{
+    Bool_t isRfTrigger = header->getTriggerBitRF();
+  
+    if(!isRfTrigger){
+      // figure out a sub-second trigger time from header info
+      double tt = header->triggerTime;
+      double ttNs = header->triggerTimeNs;
+      tt += 1e-9*ttNs;
 
-  // if we have an output tree, fill it
-  if(fNoiseTree){
-    fRun = header->run;
-    fEventNumber= header->eventNumber;
-    fNoiseTree->Fill();
+      if(fNoiseTree){
+        fEventNoise->fFilterDesc = "";
+        const FilterStrategy* fs = fEv->getStrategy();
+        const unsigned int nOp = fs->nOperations();
+        if(nOp > 0){
+          for(unsigned opInd = 0; opInd < nOp; opInd++){
+            const FilterOperation* op = fs->getOperation(opInd);
+            fEventNoise->fFilterDesc += TString::Format("%u. %s", opInd+1, op->description());
+            if(opInd < nOp - 1){
+              fEventNoise->fFilterDesc += "\n";
+            }
+          }    
+        }
+        else{
+          fEventNoise->fFilterDesc = "No filter";
+        }
+      }
+    
+      // this function does a lot of work to remove old events
+      // and updates the fWriteIndex, making it safe to use below
+      removeOldEvents(tt);
+    
+      for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
+        AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
+        for(int ant=0; ant < NUM_SEAVEYS; ant++){
+          const AnalysisWaveform* wf = fEv->getFilteredGraph(ant, pol);
+
+          // pick exact channel configuration based on waveform option even/uneven
+          const TGraphAligned* gr = fEventNoise->fWaveOption == kEven ? wf->even() : wf->uneven();
+
+          int n = gr->GetN();
+          double thisRMS = TMath::RMS(n,  gr->GetY());
+          double sumVSquared = thisRMS*n;
+          fEventSumVSquared[polInd][ant][fWriteIndex] = sumVSquared;
+          fEventNumPoints[polInd][ant][fWriteIndex] = n;
+
+          // sum over (zero meaned) v squared and nun points, to get RMS over recent min bias events
+          double newSumVSquared = std::accumulate(fEventSumVSquared[pol][ant].begin(), fEventSumVSquared[pol][ant].end(), 0);
+          double newNumPoints = std::accumulate(fEventNumPoints[pol][ant].begin(), fEventNumPoints[pol][ant].end(), 0);
+          fEventNoise->fNoise[pol][ant] = newNumPoints > 0 ? newSumVSquared / newNumPoints : 0;
+        }
+      }
+    }
+
+    // if we have an output tree, fill it  
+    if(fNoiseTree){
+      fEventNoise->run = header->run;
+      fEventNoise->eventNumber = header->eventNumber;
+      fNoiseTree->Fill();
+    }
   }
 }
 
@@ -96,7 +169,7 @@ void NoiseMonitor::update(const FilteredAnitaEvent* fEv){
 int NoiseMonitor::removeOldEvents(double currentTime){
 
   int numRemoved = 0; 
-  double oldestAllowed = currentTime - fTimeScaleSeconds;
+  double oldestAllowed = currentTime - fEventNoise->fTimeScaleSeconds;
 
   fWriteIndex = -1; // we're going to update the vector index below
 
@@ -142,23 +215,47 @@ int NoiseMonitor::removeOldEvents(double currentTime){
 
 /** 
  * Try to create the output noise TTree.
- * TODO, be clever and do some checking about whether file was opened in write mode.
  */
-void NoiseMonitor::prepareOutputNoiseTree(){
+void NoiseMonitor::prepareOutputNoiseTree(const char* treeName, const char* branchName){
 
   if(fOutFile && !fNoiseTree){
     
     fOutFile->cd();
 
     // use the TTree title to provide a short description of the constructor parameters
-    TString treeTitle = TString::Format("Tree of channel RMS values averaged over %lf seconds of min bias events using the ", fTimeScaleSeconds);
-    treeTitle += fWaveOption == kEven ? "even" : "uneven";
+    TString treeTitle = TString::Format("Tree of channel RMS values averaged over %lf seconds of min bias events using the ", fEventNoise->fTimeScaleSeconds);
+    treeTitle += fEventNoise->fWaveOption == kEven ? "even" : "uneven";
     treeTitle += " waveforms.";
-
-    fNoiseTree = new TTree("minBiasNoiseTree", treeTitle);
-    fNoiseTree->Branch("run", &fRun);
-    fNoiseTree->Branch("eventNumber", &fEventNumber);
-    TString noiseBranchName = TString::Format("noise[%d][%d]", AnitaPol::kNotAPol, NUM_SEAVEYS);
-    fNoiseTree->Branch(noiseBranchName, fNoise, noiseBranchName+"/D");
+    
+    fNoiseTree = new TTree(treeName, treeTitle);
+    fNoiseTree->Branch(branchName, &fEventNoise);
   }
+}
+
+
+
+/** 
+ * Try to read the noise from a pre-calculated tree.
+ * 
+ * @param inFileName is the input file name
+ * 
+ * @return 0 on success, 1 on error
+ */
+Int_t NoiseMonitor::getPrecalculatedNoiseTree(const char* inFileName, const char* treeName, const char* branchName){
+
+  fInFile = TFile::Open(inFileName);
+
+  if(!fInFile){
+    return 1;
+  }
+  fNoiseTree = (TTree*) fInFile->Get(treeName);
+
+  if(!fNoiseTree){
+    return 1;
+  }
+  fNoiseTree->SetBranchAddress(branchName, &fEventNoise);
+  fNoiseTree->BuildIndex("eventNumber");
+  
+  return 0;
+  
 }
