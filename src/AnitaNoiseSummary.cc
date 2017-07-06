@@ -44,6 +44,18 @@ void AnitaNoiseSummary::deleteHists() {
       avgMapProf[poli] = NULL;
     }
   }
+
+
+  //maybe it will be better for file size if I keep all zeros in here for compression?
+  for (int poli=0; poli<NUM_POLS; poli++) {
+    for (int iPhi=0; iPhi<nPhi; iPhi++) {
+      for (int iTheta=0; iTheta<nTheta; iTheta++) {
+	avgMaps[poli][iPhi][iTheta] = 0;
+      }
+    }
+  }
+  
+
   return;
 }
  
