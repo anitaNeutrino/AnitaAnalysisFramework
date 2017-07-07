@@ -37,7 +37,7 @@ class AnitaNoiseSummary
 
   //data
   double avgRMSNoise[NUM_PHI][NUM_ANTENNA_RINGS][NUM_POLS]; //averaged rms of min bias waveforms
-  TH2D *avgMapProf[NUM_POLS] = { 0 }; //Sveraged histograms over fifoLength minBias samples
+  TH2D *avgMapProf[NUM_POLS]; //Sveraged histograms over fifoLength minBias samples
 
 
  private:
