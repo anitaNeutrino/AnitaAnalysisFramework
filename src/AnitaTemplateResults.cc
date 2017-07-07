@@ -23,5 +23,6 @@ void AnitaTemplateResults::zeroInternals(){
       memset(&deconvolvedH[dir],0,sizeof(SingleTemplateResult)); 
     }
   
+  return;
 }
 
