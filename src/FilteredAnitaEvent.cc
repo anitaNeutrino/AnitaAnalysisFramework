@@ -426,3 +426,26 @@ int FilteredAnitaEvent::checkSaturation(uint64_t * save_hsat, uint64_t * save_vs
 
   return totalsat; 
 }
+
+
+
+const AnalysisWaveform *FilteredAnitaEvent::getRawGraph(UInt_t phi,
+							AnitaRing::AnitaRing_t ring,
+							AnitaPol::AnitaPol_t pol) const {
+
+  Int_t chanIndex = AnitaGeomTool::getChanIndexFromRingPhiPol(ring,phi,pol);
+  return rawGraphs[chanIndex];
+  
+}
+
+
+
+
+const AnalysisWaveform * FilteredAnitaEvent::getFilteredGraph(UInt_t phi, 
+							      AnitaRing::AnitaRing_t ring, 
+							      AnitaPol::AnitaPol_t pol) const {
+
+  Int_t chanIndex = AnitaGeomTool::getChanIndexFromRingPhiPol(ring,phi,pol);
+  return filteredGraphs[chanIndex];
+  
+}

@@ -53,11 +53,17 @@ class FilteredAnitaEvent
    /** Accessor for raw waveform based on antenna number and polarization. */
    const AnalysisWaveform * getRawGraph(UInt_t ant, AnitaPol::AnitaPol_t pol) const { return rawGraphsByAntPol[pol][ant]; }
 
+   /** Accessor for raw waveform based on phi, ring, and pol */
+   const AnalysisWaveform * getRawGraph(UInt_t phi, AnitaRing::AnitaRing_t ring, AnitaPol::AnitaPol_t pol) const;
+
    /** Accessor for filtered waveform based on index. Mostly useful if you want to iterate over everything */
    const AnalysisWaveform * getFilteredGraph(UInt_t i) const { return filteredGraphs[i]; }
 
    /** Accessor for filtered waveform based on antenna number and polarization. */
    const AnalysisWaveform * getFilteredGraph(UInt_t ant, AnitaPol::AnitaPol_t pol) const { return filteredGraphsByAntPol[pol][ant]; }
+
+   /** Accessor for raw waveform based on phi, ring, and pol */
+   const AnalysisWaveform * getFilteredGraph(UInt_t phi, AnitaRing::AnitaRing_t ring, AnitaPol::AnitaPol_t pol) const;
 
 
    /* If the FilteredAnitaEvent was told to keep_all_stages, you can get the waveform at each stage. Stage 0 is after the first filter operation. */
