@@ -9,7 +9,10 @@
  * Default constructor for ROOT
  */
 AnitaNoiseSummary::AnitaNoiseSummary() {
-    zeroInternals();
+  for (int poli=0; poli<NUM_POLS; poli++) {
+    avgMapProf[poli] = NULL;
+  }
+  zeroInternals();
 }
 
 AnitaNoiseSummary::~AnitaNoiseSummary() {
