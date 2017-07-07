@@ -31,6 +31,8 @@ public:
     Double_t theta; /// peak theta, degrees
     Double_t value; /// peak value
     Double_t snr; /// snr of peak
+    Double_t mapRMS; /// rms of interferometric map
+    Double_t peakPastRMS; /// rms of the peak location over the past 60 min-bias events
     Double_t hwAngle; /// angle with respect to triggering phi sector
 
     Double_t latitude;/// on continent, or -9999 if doesn't intersect
@@ -56,7 +58,7 @@ public:
     Bool_t masked; /// was this in a masked phi sector? 
     Bool_t masked_xpol; /// was this in a masked phi xpol sector? 
 
-    ClassDefNV(PointingHypothesis,12); 
+    ClassDefNV(PointingHypothesis,13); 
   }; 
 
 
@@ -244,7 +246,7 @@ public:
   
   private: 
 
-  ClassDefNV(AnitaEventSummary, 15); 
+  ClassDefNV(AnitaEventSummary, 16); 
 }; 
 
 

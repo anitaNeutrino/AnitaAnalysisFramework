@@ -23,7 +23,6 @@
 #pragma link C++ class AnitaTemplateResults::SingleTemplateResult+;
 
 #pragma link C++ class AnitaNoiseSummary+;
-#pragma link C++ class AnitaNoiseMachine+;
 
 #pragma link C++ class FilterOperation+;
 #pragma link C++ class UniformFilterOperation+;
