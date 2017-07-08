@@ -32,7 +32,7 @@ public:
     Double_t value; /// peak value
     Double_t snr; /// snr of peak
     Double_t mapRMS; /// rms of interferometric map
-    Double_t peakPastRMS; /// rms of the peak location over the past 60 min-bias events
+    Double_t mapHistoryVal; /// value of average of the peak location over the past 60 min-bias events
     Double_t hwAngle; /// angle with respect to triggering phi sector
 
     Double_t latitude;/// on continent, or -9999 if doesn't intersect
