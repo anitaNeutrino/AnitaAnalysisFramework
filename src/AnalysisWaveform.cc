@@ -351,9 +351,16 @@ const ROOT::Math::Interpolator * AnalysisWaveform::evenAkimaInterpolator() const
 
   if (even_akima_interpolator_dirty) 
   {
-    const TGraphAligned * g = even(); 
-    theEvenAkimaInterpolator.SetData(g->GetN(),g->GetX(),g->GetY()); 
-    even_akima_interpolator_dirty= false;
+    const TGraphAligned * g = even();
+    const int minPointsForGslInterp = 5;
+    if(g->GetN() >= minPointsForGslInterp){
+      theEvenAkimaInterpolator.SetData(g->GetN(),g->GetX(),g->GetY());
+      even_akima_interpolator_dirty= false;
+    }
+    else{
+      // perhaps this needs better handling, but for now...
+      std::cerr << "Error in " << __PRETTY_FUNCTION__ << ": Insufficient points for Akima interpolation." << std::endl;
+    }
   }
   return &theEvenAkimaInterpolator; 
 }
