@@ -357,7 +357,7 @@ const ROOT::Math::Interpolator * AnalysisWaveform::evenAkimaInterpolator() const
   if (even_akima_interpolator_dirty) 
   {
     const TGraphAligned * g = even();
-    const int minPointsForGslInterp = 5;
+    const int minPointsForGslInterp = 6;
     if(g->GetN() >= minPointsForGslInterp){
       theEvenAkimaInterpolator.SetData(g->GetN(),g->GetX(),g->GetY());
       even_akima_interpolator_dirty= false;
@@ -388,10 +388,17 @@ void AnalysisWaveform::calculateEvenFromUneven()  const
    
   if (interpolation_type == AKIMA) 
   {
-    ROOT::Math::Interpolator irp(g->GetN(), ROOT::Math::Interpolation::kAKIMA); 
-    irp.SetData(g->GetN(), g->GetX(), g->GetY()); 
-     
+    ROOT::Math::Interpolator irp(g->GetN(), ROOT::Math::Interpolation::kAKIMA);
+    const int minPointsForGslInterp = 6;
+    if(g_even.GetN() >= minPointsForGslInterp){
+      irp.SetData(g_even.GetN(),g_even.GetX(),g_even.GetY());
+    }
+    else{
+      // perhaps this needs better handling, but for now...
+      std::cerr << "Error in " << __PRETTY_FUNCTION__ << ": Insufficient points for Akima interpolation." << std::endl;
+    }
 
+    // irp.SetData(g->GetN(), g->GetX(), g->GetY());
 
     for (int i = 0; i < g_even.GetN(); i++) 
     {
