@@ -4,7 +4,13 @@
 #include "AnitaConventions.h"
 #include "UsefulAdu5Pat.h"
 #include "AnalysisWaveform.h"
+
+#ifdef __APPLE__
+#include  "types/uint64_t.h"
+#else
 #include <stdint.h>
+#endif
+
 
 class UsefulAnitaEvent;
 class Adu5Pat;
