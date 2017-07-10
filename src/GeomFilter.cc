@@ -272,7 +272,7 @@ void GeometricFilter::getClosestNAntennas(int nantennasToUse, double peakPhi, ve
   for (int i=0;i<nantennasToUse;i++){
     deltaPhiArray[i]=360;//set array full of large values
   }
-  uint64_t saturated[2] = {0,0};
+  ULong64_t saturated[2] = {0,0};
   //const UsefulAnitaEvent* usefulEvent = currentEvent->getUsefulAnitaEvent();
   currentEvent->checkSaturation( &saturated[AnitaPol::kHorizontal], 
                                  &saturated[AnitaPol::kVertical], 
