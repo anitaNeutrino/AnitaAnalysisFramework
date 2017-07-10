@@ -385,8 +385,8 @@ void AnalysisWaveform::calculateEvenFromUneven()  const
   {
     ROOT::Math::Interpolator irp(g->GetN(), ROOT::Math::Interpolation::kAKIMA);
     const int minPointsForGslInterp = 6;
-    if(g_even.GetN() >= minPointsForGslInterp){
-      irp.SetData(g_even.GetN(),g_even.GetX(),g_even.GetY());
+    if(g->GetN() >= minPointsForGslInterp){
+      irp.SetData(g->GetN(),g->GetX(),g->GetY());
     }
     else{
       // perhaps this needs better handling, but for now...
