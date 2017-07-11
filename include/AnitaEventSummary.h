@@ -176,7 +176,9 @@ public:
       Double_t phi;
       Double_t distance;
 
-      void reset() { theta = -999; phi = -999; distance = -999; } 
+      Double_t mapHistoryVal[NUM_POLS]; /// a history of the interferometric map value for the source location
+
+      void reset(); /// sets all the values to nonsense.  Sorry, mapHistoryVal means this is in source now 
       
 
       ClassDefNV(SourceHypothesis,1);
@@ -246,7 +248,7 @@ public:
   
   private: 
 
-  ClassDefNV(AnitaEventSummary, 16); 
+  ClassDefNV(AnitaEventSummary, 17); 
 }; 
 
 
