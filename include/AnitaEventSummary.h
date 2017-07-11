@@ -181,7 +181,7 @@ public:
       void reset(); /// sets all the values to nonsense.  Sorry, mapHistoryVal means this is in source now 
       
 
-      ClassDefNV(SourceHypothesis,1);
+      ClassDefNV(SourceHypothesis,2);
   };
 
   class MCTruth
