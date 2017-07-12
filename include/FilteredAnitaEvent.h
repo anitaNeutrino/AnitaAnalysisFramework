@@ -5,13 +5,6 @@
 #include "UsefulAdu5Pat.h"
 #include "AnalysisWaveform.h"
 
-#ifdef __APPLE__
-#include  "types/uint64_t.h"
-#else
-#include <stdint.h>
-#endif
-
-
 class UsefulAnitaEvent;
 class Adu5Pat;
 class TGraph;
@@ -88,7 +81,7 @@ class FilteredAnitaEvent
 
    void plotSummary(TCanvas * chpol = 0, TCanvas * cvpol = 0) const;
 
-   int checkSaturation(uint64_t *save_hsat  =0, uint64_t* save_vsat = 0, double threshold=1500) const; 
+   int checkSaturation(ULong64_t *save_hsat  =0, ULong64_t* save_vsat = 0, double threshold=1500) const; 
 
    /** Various calculations. Don't necessarily have to be in this class. */
    void getAverageSpectrum (TGraph * target, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol ) const;

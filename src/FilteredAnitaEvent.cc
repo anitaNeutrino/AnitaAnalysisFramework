@@ -385,11 +385,11 @@ void FilteredAnitaEvent::plotSummary(TCanvas * ch, TCanvas * cv) const
   }
 
 }
-int FilteredAnitaEvent::checkSaturation(uint64_t * save_hsat, uint64_t * save_vsat, double thresh) const
+int FilteredAnitaEvent::checkSaturation(ULong64_t * save_hsat, ULong64_t * save_vsat, double thresh) const
 {
   
-  uint64_t hsat = 0; 
-  uint64_t vsat = 0; 
+  ULong64_t hsat = 0; 
+  ULong64_t vsat = 0; 
 
   int totalsat = 0; 
   for (int i = 0; i < NUM_SEAVEYS; i++) 

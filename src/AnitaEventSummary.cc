@@ -38,6 +38,7 @@ AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header){
   eventNumber = header->eventNumber;
   run = header->run;
   realTime = header->realTime;
+
 }
 
 
@@ -336,3 +337,19 @@ double AnitaEventSummary::WaveformInfo::totalPolFrac() {
 }
 
 
+/** 
+ * Make the source hypothesis go back to nonsense thats easy to recognize
+ * 
+ * 
+ * 
+ */
+
+void AnitaEventSummary::SourceHypothesis::reset() {
+
+  theta = -999;
+  phi = -999;
+  distance = -999;
+
+  memset(mapHistoryVal,0,NUM_POLS*sizeof(double));
+}
+  
