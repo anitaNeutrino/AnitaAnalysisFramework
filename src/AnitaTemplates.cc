@@ -33,12 +33,12 @@ void AnitaTemplateSummary::zeroInternals(){
 
 
 //---------------------------------------------------------------------------------------------------------
-/** AnitaTemplateManager
+/** AnitaTemplateMachine
  * @brief Default Constructor
  *
  * Default constructor for ROOT
  */
-AnitaTemplateManager::AnitaTemplateManager(int inLength)
+AnitaTemplateMachine::AnitaTemplateMachine(int inLength)
   : length(inLength)
 {
 
@@ -54,12 +54,12 @@ AnitaTemplateManager::AnitaTemplateManager(int inLength)
   zeroInternals();
 }
 
-AnitaTemplateManager::~AnitaTemplateManager() {
+AnitaTemplateMachine::~AnitaTemplateMachine() {
   zeroInternals();
 }
 
 
-void AnitaTemplateManager::zeroInternals() {
+void AnitaTemplateMachine::zeroInternals() {
   /* in case you want to delete everything */
 
   if (theImpTemplate != NULL) { delete theImpTemplate; theImpTemplate = NULL; }
@@ -83,7 +83,7 @@ void AnitaTemplateManager::zeroInternals() {
   return;
 }
 
-void AnitaTemplateManager::getImpulseResponseTemplate() {
+void AnitaTemplateMachine::getImpulseResponseTemplate() {
   
   //and get the "averaged" impulse response as the template"
   char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
@@ -115,7 +115,7 @@ void AnitaTemplateManager::getImpulseResponseTemplate() {
 
 
 
-void AnitaTemplateManager::getCRTemplates() {
+void AnitaTemplateMachine::getCRTemplates() {
 
   char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
   std::stringstream name;
@@ -158,7 +158,7 @@ void AnitaTemplateManager::getCRTemplates() {
 
 
     
-void AnitaTemplateManager::getWaisTemplate() {
+void AnitaTemplateMachine::getWaisTemplate() {
   
   //and get the "averaged" impulse response as the template"
   char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
@@ -189,7 +189,7 @@ void AnitaTemplateManager::getWaisTemplate() {
   return;
 }
 
-void AnitaTemplateManager::loadTemplates() {
+void AnitaTemplateMachine::loadTemplates() {
 
   if (kTmpltsLoaded) zeroInternals();
 
@@ -202,54 +202,43 @@ void AnitaTemplateManager::loadTemplates() {
   return;
 }
  
- 
- 
- 
-//---------------------------------------------------------------------------------------------------------
-/** AnitaTemplateAnalyzer
- * @brief Default Constructor
- *
- * Default constructor for ROOT
- */
-AnitaTemplateAnalyzer::AnitaTemplateAnalyzer() {
-
-  return;
-}
 
 
 
-void AnitaTemplateAnalyzer::doTemplateAnalysis(const AnalysisWaveform *waveform, AnitaTemplateManager *manager, int poli,
-					       AnitaTemplateSummary *templateSummary) {
+void AnitaTemplateMachine::doTemplateAnalysis(const AnalysisWaveform *waveform, int poli, AnitaTemplateSummary *templateSummary) {
   /* copied out of templateSearch.cc */
 
 
-  if (!manager->isTmpltsLoaded()) {
-    std::cout << "Error in AnitaTemplateAnalyzer::doTemplateAnalysis(): AnitaTemplateManager says it has no templates!" << std::endl;
-    std::cout << "      Try doing AnitaTemplateManager::loadTemplates() at some point maybe? " << std::endl;
+  if (!isTmpltsLoaded()) {
+    std::cout << "Error in AnitaTemplateAnalyzer::doTemplateAnalysis(): AnitaTemplateMachine says it has no templates!" << std::endl;
+    std::cout << "      Try doing AnitaTemplateMachine::loadTemplates() at some point maybe? " << std::endl;
     return;
   }
+
+  //null out the inside just in case
+  templateSummary->zeroInternals(); 
 
   //I actually want to do SOME filtering though... so sine subtract a single one?
   //      sineSub->processOne(coherentAnalysis,data->header(),);
   const TGraphAligned *coherentAligned = waveform->even();
   TGraph *coherent = new TGraph(coherentAligned->GetN(),coherentAligned->GetX(),coherentAligned->GetY());
   //make sure it is the same length as the template
-  TGraph *coherentPad = FFTtools::padWaveToLength(coherent,manager->length);
+  TGraph *coherentPad = FFTtools::padWaveToLength(coherent,length);
   delete coherent;
 
   //normalize coherently summed waveform
   TGraph *normCoherent = FFTtools::normalizeWaveform(coherentPad);
   delete coherentPad;
-  FFTWComplex *coherentFFT=FFTtools::doFFT(manager->length,normCoherent->GetY());
+  FFTWComplex *coherentFFT=FFTtools::doFFT(length,normCoherent->GetY());
   delete normCoherent; 
 
-  double *dCorr = FFTtools::getCorrelationFromFFT(manager->length,manager->theImpTemplateFFT,coherentFFT);
-  double max = TMath::MaxElement(manager->length,dCorr);
-  double min = TMath::Abs(TMath::MinElement(manager->length,dCorr));
+  double *dCorr = FFTtools::getCorrelationFromFFT(length,theImpTemplateFFT,coherentFFT);
+  double max = TMath::MaxElement(length,dCorr);
+  double min = TMath::Abs(TMath::MinElement(length,dCorr));
 
-  double *dCorrWais = FFTtools::getCorrelationFromFFT(manager->length,manager->theWaisTemplateFFT,coherentFFT);
-  double maxWais = TMath::MaxElement(manager->length,dCorrWais);
-  double minWais = TMath::Abs(TMath::MinElement(manager->length,dCorrWais));
+  double *dCorrWais = FFTtools::getCorrelationFromFFT(length,theWaisTemplateFFT,coherentFFT);
+  double maxWais = TMath::MaxElement(length,dCorrWais);
+  double minWais = TMath::Abs(TMath::MinElement(length,dCorrWais));
 
 
   if ( (AnitaPol::AnitaPol_t)poli == AnitaPol::kHorizontal ) {
@@ -261,12 +250,12 @@ void AnitaTemplateAnalyzer::doTemplateAnalysis(const AnalysisWaveform *waveform,
     templateSummary->coherentV->templateWais = TMath::Max(maxWais,minWais);
   }
 
-  double maxCR[manager->numCRTemplates];
-  double minCR[manager->numCRTemplates];
-  for (int i=0; i<manager->numCRTemplates; i++) {
-    double *dCorrCR = FFTtools::getCorrelationFromFFT(manager->length,manager->theCRTemplateFFTs[i],coherentFFT);
-    maxCR[i] = TMath::MaxElement(manager->length,dCorrCR);
-    minCR[i] = TMath::Abs(TMath::MinElement(manager->length,dCorrCR));
+  double maxCR[numCRTemplates];
+  double minCR[numCRTemplates];
+  for (int i=0; i<numCRTemplates; i++) {
+    double *dCorrCR = FFTtools::getCorrelationFromFFT(length,theCRTemplateFFTs[i],coherentFFT);
+    maxCR[i] = TMath::MaxElement(length,dCorrCR);
+    minCR[i] = TMath::Abs(TMath::MinElement(length,dCorrCR));
     delete[] dCorrCR;
     if ( (AnitaPol::AnitaPol_t)poli == AnitaPol::kVertical ) {
       templateSummary->coherentV->templateCRay[i] = TMath::Max(maxCR[i],minCR[i]);

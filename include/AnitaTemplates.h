@@ -19,25 +19,26 @@
  * * * * * * * * * */
 
 
-
-
 /**
 
-   _AnitaTemplateManager_
+   _AnitaTemplateMachine_
 
     Class to import and hold onto the different templates
     
     Saveable to a ROOT file I think if you want to do that sort of thing!
 */
 
-class AnitaTemplateManager : public TObject {
+//they rely on each other so you gotta define it here
+class AnitaTemplateSummary;
+
+class AnitaTemplateMachine : public TObject {
 
  public:
   /** Default Constructor **/
-  AnitaTemplateManager(const int inLength=2048);
+  AnitaTemplateMachine(const int inLength=2048);
 
   /** Default Destructor **/
-  ~AnitaTemplateManager();
+  ~AnitaTemplateMachine();
   
   /** in case you want to reset for some reason **/
   void zeroInternals();
@@ -63,6 +64,10 @@ class AnitaTemplateManager : public TObject {
   /** Check to see if the templates are loaded in bad english */
   bool isTmpltsLoaded() { return kTmpltsLoaded; };
   
+
+  /** use the templates, and a supplied AnalysisWaveform, to fill up the summary */
+  void doTemplateAnalysis(const AnalysisWaveform *waveform, int poli, AnitaTemplateSummary *summary);
+
   
  private:
   /* check if you loaded stuff already */
@@ -75,7 +80,7 @@ class AnitaTemplateManager : public TObject {
   void getCRTemplates();
   
   
-  ClassDefNV(AnitaTemplateManager, 1);
+  ClassDefNV(AnitaTemplateMachine, 1);
   
 };
 
@@ -102,7 +107,7 @@ class AnitaTemplateSummary
   static const Int_t maxDirectionsPerPol = AnitaEventSummary::maxDirectionsPerPol; 
 
   /* Number of points on the cone */
-  static const int numCRTemplates = AnitaTemplateManager::numCRTemplates;
+  static const int numCRTemplates = AnitaTemplateMachine::numCRTemplates;
 
   /*The template correlatin values for a single coherent waveform comparison*/
   class SingleTemplateResult 
@@ -135,29 +140,6 @@ class AnitaTemplateSummary
   ClassDefNV(AnitaTemplateSummary, 1); 
 };
 
-
-/**
-
-   _AnitaTemplateAnalyzer_
-   
-   Another class for actually doing the template analysis.  In hindsight it doesn't need to be it's own class
-   
-   Uses AnitaTemplateManager and coherently summed waveforms from your favorite analysis package
-   to fill up an AnitaTemplateSummary
-   
-*/
-class AnitaTemplateAnalyzer
-{
- public:
-  
-  /** Constructor **/
-  AnitaTemplateAnalyzer();
-
-  /** Do the analysis! **/
-  void doTemplateAnalysis(const AnalysisWaveform *waveform, AnitaTemplateManager *manager, int poli, AnitaTemplateSummary *summary);
-
-  
-};
 
 
 

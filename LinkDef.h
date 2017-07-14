@@ -21,7 +21,7 @@
 
 #pragma link C++ class AnitaTemplateSummary+;
 #pragma link C++ class AnitaTemplateSummary::SingleTemplateResult+;
-#pragma link C++ class AnitaTemplateManager+;
+#pragma link C++ class AnitaTemplateMachine+;
 
 #pragma link C++ class AnitaNoiseSummary+;
 
