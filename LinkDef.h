@@ -19,8 +19,9 @@
 #pragma link C++ class TGraphAligned+;
 #pragma link C++ class CorrelationSummaryAnita4+;
 
-#pragma link C++ class AnitaTemplateResults+;
-#pragma link C++ class AnitaTemplateResults::SingleTemplateResult+;
+#pragma link C++ class AnitaTemplateSummary+;
+#pragma link C++ class AnitaTemplateSummary::SingleTemplateResult+;
+#pragma link C++ class AnitaTemplateManager+;
 
 #pragma link C++ class AnitaNoiseSummary+;
 
