@@ -205,7 +205,7 @@ void AnitaTemplateMachine::loadTemplates() {
 
 
 
-void AnitaTemplateMachine::doTemplateAnalysis(const AnalysisWaveform *waveform, int poli, AnitaTemplateSummary *templateSummary) {
+void AnitaTemplateMachine::doTemplateAnalysis(const AnalysisWaveform *waveform, int poli, int dir, AnitaTemplateSummary *templateSummary) {
   /* copied out of templateSearch.cc */
 
 
@@ -242,12 +242,12 @@ void AnitaTemplateMachine::doTemplateAnalysis(const AnalysisWaveform *waveform, 
 
 
   if ( (AnitaPol::AnitaPol_t)poli == AnitaPol::kHorizontal ) {
-    templateSummary->coherentH->templateImp  = TMath::Max(max,min);
-    templateSummary->coherentH->templateWais = TMath::Max(maxWais,minWais);
+    templateSummary->coherentH[dir].templateImp  = TMath::Max(max,min);
+    templateSummary->coherentH[dir].templateWais = TMath::Max(maxWais,minWais);
   }
   if ( (AnitaPol::AnitaPol_t)poli == AnitaPol::kVertical ) {
-    templateSummary->coherentV->templateImp  = TMath::Max(max,min);
-    templateSummary->coherentV->templateWais = TMath::Max(maxWais,minWais);
+    templateSummary->coherentV[dir].templateImp  = TMath::Max(max,min);
+    templateSummary->coherentV[dir].templateWais = TMath::Max(maxWais,minWais);
   }
 
   double maxCR[numCRTemplates];
@@ -258,10 +258,10 @@ void AnitaTemplateMachine::doTemplateAnalysis(const AnalysisWaveform *waveform, 
     minCR[i] = TMath::Abs(TMath::MinElement(length,dCorrCR));
     delete[] dCorrCR;
     if ( (AnitaPol::AnitaPol_t)poli == AnitaPol::kVertical ) {
-      templateSummary->coherentV->templateCRay[i] = TMath::Max(maxCR[i],minCR[i]);
+      templateSummary->coherentV[dir].templateCRay[i] = TMath::Max(maxCR[i],minCR[i]);
     }
     else if ( (AnitaPol::AnitaPol_t)poli == AnitaPol::kHorizontal )  {
-      templateSummary->coherentH->templateCRay[i] = TMath::Max(maxCR[i],minCR[i]);
+      templateSummary->coherentH[dir].templateCRay[i] = TMath::Max(maxCR[i],minCR[i]);
     }
     else {
       std::cout << "Something is horrible wrong!  I don't know which polarization are the templates results! ";

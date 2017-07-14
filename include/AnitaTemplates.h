@@ -66,7 +66,7 @@ class AnitaTemplateMachine : public TObject {
   
 
   /** use the templates, and a supplied AnalysisWaveform, to fill up the summary */
-  void doTemplateAnalysis(const AnalysisWaveform *waveform, int poli, AnitaTemplateSummary *summary);
+  void doTemplateAnalysis(const AnalysisWaveform *waveform, int poli, int dir, AnitaTemplateSummary *summary);
 
   
  private:
