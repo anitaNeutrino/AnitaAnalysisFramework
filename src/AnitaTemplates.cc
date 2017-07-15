@@ -215,8 +215,6 @@ void AnitaTemplateMachine::doTemplateAnalysis(const AnalysisWaveform *waveform, 
     return;
   }
 
-  //null out the inside just in case
-  templateSummary->zeroInternals(); 
 
   //I actually want to do SOME filtering though... so sine subtract a single one?
   //      sineSub->processOne(coherentAnalysis,data->header(),);
