@@ -6,6 +6,8 @@
 #include "FFTtools.h"
 #include "TFile.h"
 #include "AnalysisWaveform.h"
+#include "SystemResponse.h"
+
 
 /* * * * * * * * *
    
@@ -43,8 +45,9 @@ class AnitaTemplateMachine : public TObject {
   /** in case you want to reset for some reason **/
   void zeroInternals();
 
-  /** template length **/
+  /** template waveform defaults **/
   const int length;
+  const double dT = 0.1; //in ns
   
   /** Template Storage **/
   //impulse response
@@ -57,22 +60,43 @@ class AnitaTemplateMachine : public TObject {
   static const int numCRTemplates = 10; //this is the place it is defined for everything
   FFTWComplex *theCRTemplateFFTs[numCRTemplates];
   TGraph *theCRTemplates[numCRTemplates];
+
+  //deconvolved versions for all those
+  //impulse response
+  FFTWComplex *theImpTemplateFFT_deconv;
+  TGraph *theImpTemplate_deconv;
+  //ANITA3 averaged wais pulses
+  FFTWComplex *theWaisTemplateFFT_deconv;
+  TGraph *theWaisTemplate_deconv;
+  //ZHAires simulated CRs at various angles
+  FFTWComplex *theCRTemplateFFTs_deconv[numCRTemplates];
+  TGraph *theCRTemplates_deconv[numCRTemplates];
   
+
   /** Filling the stored templates **/
   void loadTemplates();
+  void deconvolveTemplates(AnitaResponse::DeconvolutionMethod *deconv);
   
-  /** Check to see if the templates are loaded in bad english */
+
+  /** Flags */
+  //Check to see if the templates are loaded in bad english
   bool isTmpltsLoaded() { return kTmpltsLoaded; };
-  
+  //Check to see if you filled the deconvolved templates too
+  bool isTmpltsDeconv() { return kTmpltsDeconv; };
 
   /** use the templates, and a supplied AnalysisWaveform, to fill up the summary */
   void doTemplateAnalysis(const AnalysisWaveform *waveform, int poli, int dir, AnitaTemplateSummary *summary);
+  void doDeconvolvedTemplateAnalysis(const AnalysisWaveform *waveform, const AnitaResponse::DeconvolutionMethod *deconv,
+				     int poli, int dir, AnitaTemplateSummary *summary);
 
+
+  /** Write templates to file **/
+  void writeTemplatesToFile(TFile *outFile);
   
  private:
-  /* check if you loaded stuff already */
+  /* flags to see what you still might need to do */
   bool kTmpltsLoaded;
-  
+  bool kTmpltsDeconv;
   
   /* hidden functions for filling the templates one at a time */
   void getImpulseResponseTemplate();
@@ -115,29 +139,30 @@ class AnitaTemplateSummary
   public:
     SingleTemplateResult() {; }
     //impulse response
-    Double_t templateImp;
+    Double_t impulse;
+    Double_t impulse_loc;
     
     //one for the WAIS template too
-    Double_t templateWais;
+    Double_t wais;
+    Double_t wais_loc;
     
     //and for the bigger multi-coherence-angle one
-    Double_t templateCRay[numCRTemplates];
+    Double_t cRay[numCRTemplates];
+    Double_t cRay_loc[numCRTemplates];
     
-    ClassDefNV(SingleTemplateResult,1);
+    ClassDefNV(SingleTemplateResult,2);
   };
 
   
-  SingleTemplateResult coherentV[maxDirectionsPerPol];
-  SingleTemplateResult coherentH[maxDirectionsPerPol];
+  SingleTemplateResult coherent[NUM_POLS][maxDirectionsPerPol];
   
-  SingleTemplateResult deconvolvedV[maxDirectionsPerPol];
-  SingleTemplateResult deconvolvedH[maxDirectionsPerPol];
+  SingleTemplateResult deconvolved[NUM_POLS][maxDirectionsPerPol];
 
 
   void zeroInternals();
     
  private:
-  ClassDefNV(AnitaTemplateSummary, 1); 
+  ClassDefNV(AnitaTemplateSummary, 2); 
 };
 
 
