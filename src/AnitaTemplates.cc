@@ -17,15 +17,15 @@ AnitaTemplateSummary::~AnitaTemplateSummary() {
 
 void AnitaTemplateSummary::zeroInternals(){
 
-  for(Int_t dir=0; dir < maxDirectionsPerPol; dir++)
-    {
-      memset(&coherentV[dir],0,sizeof(SingleTemplateResult)); 
-      memset(&coherentH[dir],0,sizeof(SingleTemplateResult)); 
-      
-      memset(&deconvolvedV[dir],0,sizeof(SingleTemplateResult)); 
-      memset(&deconvolvedH[dir],0,sizeof(SingleTemplateResult)); 
-    }
-  
+  for (Int_t poli=0; poli<NUM_POLS; poli++) {
+    for (Int_t dir=0; dir < maxDirectionsPerPol; dir++)
+      {
+	memset(&coherent[poli][dir],0,sizeof(SingleTemplateResult)); 
+	
+	memset(&deconvolved[poli][dir],0,sizeof(SingleTemplateResult)); 
+      }
+  }
+
   return;
 }
 
@@ -43,6 +43,7 @@ AnitaTemplateMachine::AnitaTemplateMachine(int inLength)
 {
 
   kTmpltsLoaded = false;
+  kTmpltsDeconv = false;
 
   //initialize the TGraphs to NULL at least, the FFTs are allocated in the "get" stuff.
   theImpTemplate = NULL;
@@ -143,7 +144,7 @@ void AnitaTemplateMachine::getCRTemplates() {
     //give it a name
     grTemplate->SetName(name.str().c_str());
     
-    std::cout << "CR Template " << i << " Length: " << grTemplate->GetN() << std::endl;
+    //    std::cout << "CR Template " << i << " Length: " << grTemplate->GetN() << std::endl;
     
     //and get the FFT of it as well, since we don't want to do this every single event
     FFTWComplex *theTemplateFFT=FFTtools::doFFT(grTemplate->GetN(),grTemplate->GetY());
@@ -180,7 +181,7 @@ void AnitaTemplateMachine::getWaisTemplate() {
   //give it a name
   grTemplate->SetName("templateWais");
 
-  std::cout << "Wais Template Length: " << grTemplate->GetN() << std::endl;
+  //  std::cout << "Wais Template Length: " << grTemplate->GetN() << std::endl;
 
   //and get the FFT of it as well, since we don't want to do this every single event
   theWaisTemplateFFT = FFTtools::doFFT(grTemplate->GetN(),grTemplate->GetY());
@@ -193,6 +194,8 @@ void AnitaTemplateMachine::loadTemplates() {
 
   if (kTmpltsLoaded) zeroInternals();
 
+
+  std::cout << "Loading templates, length=" << length << std::endl;
   getImpulseResponseTemplate();
   getWaisTemplate();
   getCRTemplates();
@@ -202,6 +205,69 @@ void AnitaTemplateMachine::loadTemplates() {
   return;
 }
  
+
+
+void AnitaTemplateMachine::deconvolveTemplates(AnitaResponse::DeconvolutionMethod *deconv) {
+
+  std::cout << "Deconvolving templates" << std::endl;
+  
+  std::stringstream name;
+  
+  if (!isTmpltsLoaded()) {
+    std::cout << "Error in AnitaTemplateAnalyzer::deconvolveTemplates(): AnitaTemplateMachine says it has no templates!" << std::endl;
+    std::cout << "      Try doing AnitaTemplateMachine::loadTemplates() at some point maybe? " << std::endl;
+    return;
+  }
+  
+  double dF = 1./(dT*length);
+
+  int lengthFFT = (length/2 + 1);
+
+  /** Impulse Response */
+  std::cout << "0" << std::endl;
+  theImpTemplateFFT_deconv = (FFTWComplex*)malloc(lengthFFT*sizeof(FFTWComplex));
+  for (int i=0; i<lengthFFT; i++) {
+    theImpTemplateFFT_deconv[i] = theImpTemplateFFT[i];
+  }				    
+  std::cout << "1" << std::endl;
+  deconv->deconvolve(lengthFFT,dF,theImpTemplateFFT_deconv,theImpTemplateFFT);
+  double* theImpTemplate_deconv_y = FFTtools::doInvFFT(length,theImpTemplateFFT_deconv);
+  std::cout << "2" << std::endl;
+  theImpTemplate_deconv = new TGraph(length,theImpTemplate->GetX(),theImpTemplate_deconv_y);
+  theImpTemplate_deconv->SetName("deconvImp");
+
+  /** Wais */
+  theWaisTemplateFFT_deconv = (FFTWComplex*)malloc(lengthFFT*sizeof(FFTWComplex));
+  for (int i=0; i<(length/2 + 1); i++) {
+    theWaisTemplateFFT_deconv[i] = theWaisTemplateFFT[i];
+  }				    
+  deconv->deconvolve(lengthFFT,dF,theWaisTemplateFFT_deconv,theImpTemplateFFT);
+  double* theWaisTemplate_deconv_y = FFTtools::doInvFFT(length,theWaisTemplateFFT_deconv);
+  theWaisTemplate_deconv = new TGraph(length,theWaisTemplate->GetX(),theWaisTemplate_deconv_y);
+  theWaisTemplate_deconv->SetName("deconvWais");
+
+
+  /**CR templates */
+  for (int cr = 0; cr<numCRTemplates; cr++ ) {
+    theCRTemplateFFTs_deconv[cr] = (FFTWComplex*)malloc(lengthFFT*sizeof(FFTWComplex));
+    for (int i=0; i<(length/2 + 1); i++) {
+      theCRTemplateFFTs_deconv[cr][i] = theCRTemplateFFTs[cr][i];
+    }				    
+    deconv->deconvolve(lengthFFT,dF,theCRTemplateFFTs_deconv[cr],theImpTemplateFFT);
+    double* theCRTemplate_deconv_y = FFTtools::doInvFFT(length,theCRTemplateFFTs_deconv[cr]);
+    theCRTemplates_deconv[cr] = new TGraph(length,theCRTemplates[cr]->GetX(),theCRTemplate_deconv_y);
+    name.str("");
+    name << "deconvCR" << cr;
+    theCRTemplates_deconv[cr]->SetName(name.str().c_str());
+  }
+  
+
+  kTmpltsDeconv = true;
+
+  return;
+
+}
+
 
 
 
@@ -220,9 +286,12 @@ void AnitaTemplateMachine::doTemplateAnalysis(const AnalysisWaveform *waveform, 
   //      sineSub->processOne(coherentAnalysis,data->header(),);
   const TGraphAligned *coherentAligned = waveform->even();
   TGraph *coherent = new TGraph(coherentAligned->GetN(),coherentAligned->GetX(),coherentAligned->GetY());
-  //make sure it is the same length as the template
-  TGraph *coherentPad = FFTtools::padWaveToLength(coherent,length);
+  //make sure it is the same sampling rate as the templates and default
+  TGraph *coherentResamp = FFTtools::getInterpolatedGraph(coherent,dT);
   delete coherent;
+  //make sure it is the same length as the template
+  TGraph *coherentPad = FFTtools::padWaveToLength(coherentResamp,length);
+  delete coherentResamp;
 
   //normalize coherently summed waveform
   TGraph *normCoherent = FFTtools::normalizeWaveform(coherentPad);
@@ -230,52 +299,189 @@ void AnitaTemplateMachine::doTemplateAnalysis(const AnalysisWaveform *waveform, 
   FFTWComplex *coherentFFT=FFTtools::doFFT(length,normCoherent->GetY());
   delete normCoherent; 
 
-  double *dCorr = FFTtools::getCorrelationFromFFT(length,theImpTemplateFFT,coherentFFT);
-  double max = TMath::MaxElement(length,dCorr);
-  double min = TMath::Abs(TMath::MinElement(length,dCorr));
 
-  double *dCorrWais = FFTtools::getCorrelationFromFFT(length,theWaisTemplateFFT,coherentFFT);
-  double maxWais = TMath::MaxElement(length,dCorrWais);
-  double minWais = TMath::Abs(TMath::MinElement(length,dCorrWais));
-
-
-  if ( (AnitaPol::AnitaPol_t)poli == AnitaPol::kHorizontal ) {
-    templateSummary->coherentH[dir].templateImp  = TMath::Max(max,min);
-    templateSummary->coherentH[dir].templateWais = TMath::Max(maxWais,minWais);
+  //set up variables for calculating
+  double maxValue,minValue,value,value_loc;
+  double *dCorr;
+    
+  //Impulse Response
+  dCorr = FFTtools::getCorrelationFromFFT(length,theImpTemplateFFT,coherentFFT);
+  maxValue = TMath::MaxElement(length,dCorr);
+  minValue = TMath::Abs(TMath::MinElement(length,dCorr));
+  if (TMath::Max(maxValue,minValue) == maxValue) {
+    value = maxValue;
+    value_loc = TMath::LocMax(length,dCorr);
   }
-  if ( (AnitaPol::AnitaPol_t)poli == AnitaPol::kVertical ) {
-    templateSummary->coherentV[dir].templateImp  = TMath::Max(max,min);
-    templateSummary->coherentV[dir].templateWais = TMath::Max(maxWais,minWais);
+  else {
+    value = minValue;
+    value_loc = TMath::LocMin(length,dCorr);
   }
+  templateSummary->coherent[poli][dir].impulse  = value;
+  templateSummary->coherent[poli][dir].impulse_loc = value_loc;
 
-  double maxCR[numCRTemplates];
-  double minCR[numCRTemplates];
+  delete[] dCorr;
+
+  //Wais
+  dCorr = FFTtools::getCorrelationFromFFT(length,theWaisTemplateFFT,coherentFFT);
+  maxValue = TMath::MaxElement(length,dCorr);
+  minValue = TMath::Abs(TMath::MinElement(length,dCorr));
+  if (TMath::Max(maxValue,minValue) == maxValue) {
+    value = maxValue;
+    value_loc = TMath::LocMax(length,dCorr);
+  }
+  else {
+    value = minValue;
+    value_loc = TMath::LocMin(length,dCorr);
+  }
+  templateSummary->coherent[poli][dir].wais  = value;
+  templateSummary->coherent[poli][dir].wais_loc = value_loc;
+
+  delete[] dCorr;
+
+
+  //Cosmic Ray Templates
   for (int i=0; i<numCRTemplates; i++) {
-    double *dCorrCR = FFTtools::getCorrelationFromFFT(length,theCRTemplateFFTs[i],coherentFFT);
-    maxCR[i] = TMath::MaxElement(length,dCorrCR);
-    minCR[i] = TMath::Abs(TMath::MinElement(length,dCorrCR));
-    delete[] dCorrCR;
-    if ( (AnitaPol::AnitaPol_t)poli == AnitaPol::kVertical ) {
-      templateSummary->coherentV[dir].templateCRay[i] = TMath::Max(maxCR[i],minCR[i]);
-    }
-    else if ( (AnitaPol::AnitaPol_t)poli == AnitaPol::kHorizontal )  {
-      templateSummary->coherentH[dir].templateCRay[i] = TMath::Max(maxCR[i],minCR[i]);
+    dCorr = FFTtools::getCorrelationFromFFT(length,theCRTemplateFFTs[i],coherentFFT);
+    maxValue = TMath::MaxElement(length,dCorr);
+    minValue = TMath::Abs(TMath::MinElement(length,dCorr));
+    if (TMath::Max(maxValue,minValue) == maxValue) {
+      value = maxValue;
+      value_loc = TMath::LocMax(length,dCorr);
     }
     else {
-      std::cout << "Something is horrible wrong!  I don't know which polarization are the templates results! ";
-      std::cout << "poli=" << poli << std::endl;
+      value = minValue;
+      value_loc = TMath::LocMin(length,dCorr);
     }
-    
+    templateSummary->coherent[poli][dir].cRay[i]  = value;
+    templateSummary->coherent[poli][dir].cRay[i] = value_loc;
+
+    delete[] dCorr;
   }
+
   
   delete[] coherentFFT;
-  delete[] dCorr;
-  delete[] dCorrWais;
- 
+
   return;
   
 }
 
+void AnitaTemplateMachine::doDeconvolvedTemplateAnalysis(const AnalysisWaveform *waveform, 
+							 const AnitaResponse::DeconvolutionMethod *deconv,
+							 int poli, int dir, AnitaTemplateSummary *templateSummary) {
+  /* copied out of templateSearch.cc */
+
+
+  if (!isTmpltsLoaded()) {
+    std::cout << "Error in AnitaTemplateAnalyzer::doTemplateAnalysis(): AnitaTemplateMachine says it has no templates!" << std::endl;
+    std::cout << "      Try doing AnitaTemplateMachine::loadTemplates() at some point maybe? " << std::endl;
+    return;
+  }
+
+  //I actually want to do SOME filtering though... so sine subtract a single one?
+  //      sineSub->processOne(deconvolvedAnalysis,data->header(),);
+  const TGraphAligned *deconvolvedAligned = waveform->even();
+  if (!deconvolvedAligned || deconvolvedAligned->GetN() == 0) {
+    return; //apparently sometimes the deconvolved waveform doesn't get filled?
+  }
+  TGraph *deconvolved = new TGraph(deconvolvedAligned->GetN(),deconvolvedAligned->GetX(),deconvolvedAligned->GetY());
+  //make sure it is the same length as the template
+  TGraph *deconvolvedPad = FFTtools::padWaveToLength(deconvolved,length);
+  delete deconvolved;
+
+  //normalize deconvolvedly summed waveform
+  TGraph *normDeconvolved = FFTtools::normalizeWaveform(deconvolvedPad);
+  delete deconvolvedPad;
+  FFTWComplex *deconvolvedFFT=FFTtools::doFFT(length,normDeconvolved->GetY());
+  delete normDeconvolved; 
+
+
+
+  //set up variables for calculating
+  double maxValue,minValue,value,value_loc;
+  double *dCorr;
+    
+  //Impulse Response
+  dCorr = FFTtools::getCorrelationFromFFT(length,theImpTemplateFFT_deconv,deconvolvedFFT);
+  maxValue = TMath::MaxElement(length,dCorr);
+  minValue = TMath::Abs(TMath::MinElement(length,dCorr));
+  if (TMath::Max(maxValue,minValue) == maxValue) {
+    value = maxValue;
+    value_loc = TMath::LocMax(length,dCorr);
+  }
+  else {
+    value = minValue;
+    value_loc = TMath::LocMin(length,dCorr);
+  }
+  templateSummary->deconvolved[poli][dir].impulse  = value;
+  templateSummary->deconvolved[poli][dir].impulse_loc = value_loc;
+
+  delete[] dCorr;
+
+  //Wais
+  dCorr = FFTtools::getCorrelationFromFFT(length,theWaisTemplateFFT_deconv,deconvolvedFFT);
+  maxValue = TMath::MaxElement(length,dCorr);
+  minValue = TMath::Abs(TMath::MinElement(length,dCorr));
+  if (TMath::Max(maxValue,minValue) == maxValue) {
+    value = maxValue;
+    value_loc = TMath::LocMax(length,dCorr);
+  }
+  else {
+    value = minValue;
+    value_loc = TMath::LocMin(length,dCorr);
+  }
+  templateSummary->deconvolved[poli][dir].wais  = value;
+  templateSummary->deconvolved[poli][dir].wais_loc = value_loc;
+
+  delete[] dCorr;
+
+  //Cosmic Ray Templates
+  for (int i=0; i<numCRTemplates; i++) {
+    dCorr = FFTtools::getCorrelationFromFFT(length,theCRTemplateFFTs_deconv[i],deconvolvedFFT);
+    maxValue = TMath::MaxElement(length,dCorr);
+    minValue = TMath::Abs(TMath::MinElement(length,dCorr));
+    if (TMath::Max(maxValue,minValue) == maxValue) {
+      value = maxValue;
+      value_loc = TMath::LocMax(length,dCorr);
+    }
+    else {
+      value = minValue;
+      value_loc = TMath::LocMin(length,dCorr);
+    }
+    templateSummary->deconvolved[poli][dir].cRay[i]  = value;
+    templateSummary->deconvolved[poli][dir].cRay[i] = value_loc;
+
+    delete[] dCorr;
+  }
+  
+  delete[] deconvolvedFFT;
+  
+  return;
+  
+}
+
+
+
+void AnitaTemplateMachine::writeTemplatesToFile(TFile *outFile) {
+
+  if (!isTmpltsLoaded() || !isTmpltsDeconv()) {
+    std::cout << "Error in AnitaTemplateAnalyzer::writeTemplatesToFile(): AnitaTemplateMachine says it is missing templates!" << std::endl;
+    std::cout << "      Try doing AnitaTemplateMachine::loadTemplates() and deconvolveTempaltes() at some point maybe? " << std::endl;
+    return;
+  }
+  
+  outFile->cd();
+  theImpTemplate->Write();
+  theImpTemplate_deconv->Write();
+  theWaisTemplate->Write();
+  theWaisTemplate_deconv->Write();
+  for (int i=0; i<numCRTemplates; i++) {
+    theCRTemplates[i]->Write();
+    theCRTemplates_deconv[i]->Write();
+  }
+
+
+  return;
+}
 
 
 
