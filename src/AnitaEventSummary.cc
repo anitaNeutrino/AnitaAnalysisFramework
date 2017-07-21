@@ -350,6 +350,7 @@ void AnitaEventSummary::SourceHypothesis::reset() {
   phi = -999;
   distance = -999;
 
-  memset(mapHistoryVal,0,NUM_POLS*sizeof(double));
+  memset(mapHistoryVal,0,NUM_POLS*sizeof(Double_t));
+  memset(mapValue,0,NUM_POLS*sizeof(Double_t));
 }
   
