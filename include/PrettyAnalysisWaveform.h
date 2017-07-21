@@ -96,6 +96,7 @@ class PrettyAnalysisWaveform: public FilteredAnitaEvent
 
   void fillNineAntArrays(int ant, int nineAnts[9]); ///< Utility to get neighbouring antenna numbers ( Top 0-2, Middle 3-5, Bottom 6-8)
   void fillNextSixAntArrays(int ant, int nextFourAnts[4]);///< Utility to get next to neighbouring antenna numbers
+	double getHighestSnr(int centreAntenna);
 
 
 #ifndef PLEASE_IGNORE_ME_DOXYGEN
