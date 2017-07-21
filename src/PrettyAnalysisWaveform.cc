@@ -459,6 +459,31 @@ int PrettyAnalysisWaveform::getMaxAntennaCorrelationRollingAvg(AnitaPol::AnitaPo
    return maxAnt;
 }
 
+double PrettyAnalysisWaveform::getHighestSnr(int centreAntenna)
+{
+	while(centreAntenna>16) centreAntenna -= 16;
+	double vpptop=TMath::MaxElement(useful->fNumPoints[centreAntenna], useful->fVolts[centreAntenna]) - TMath::MinElement(useful->fNumPoints[centreAntenna], useful->fVolts[centreAntenna]);
+	double vppmid=TMath::MaxElement(useful->fNumPoints[centreAntenna+16], useful->fVolts[centreAntenna+16]) - TMath::MinElement(useful->fNumPoints[centreAntenna+16], useful->fVolts[centreAntenna+16]);
+	double vppbot=TMath::MaxElement(useful->fNumPoints[centreAntenna+32], useful->fVolts[centreAntenna+32]) - TMath::MinElement(useful->fNumPoints[centreAntenna+32], useful->fVolts[centreAntenna+32]);
+	int nPointsRms = useful->fNumPoints[centreAntenna]/5;
+	double snrtop=0;
+	double snrmid=0;
+	double snrbot=0;
+	for(int i = 0; i < nPointsRms; i++)
+	{
+		snrtop += useful->fVolts[centreAntenna][i]*useful->fVolts[centreAntenna][i]/double(nPointsRms);
+		snrmid += useful->fVolts[centreAntenna+16][i]*useful->fVolts[centreAntenna+16][i]/double(nPointsRms);
+		snrbot += useful->fVolts[centreAntenna+32][i]*useful->fVolts[centreAntenna+32][i]/double(nPointsRms);
+	}
+	snrtop = vpptop/sqrt(snrtop);
+	snrmid = vppmid/sqrt(snrmid);
+	snrbot = vppbot/sqrt(snrbot);
+	snrtop = (snrtop>snrbot) ? snrtop:snrbot;
+	snrtop = (snrtop>snrmid) ? snrtop:snrmid;
+	return snrtop;
+}
+	
+
 
 CorrelationSummaryAnita4 *PrettyAnalysisWaveform::getCorrelationSummaryAnita4(Int_t centreAnt,AnitaPol::AnitaPol_t pol, Int_t deltaT, Int_t eventNumber)
 {
@@ -477,6 +502,8 @@ CorrelationSummaryAnita4 *PrettyAnalysisWaveform::getCorrelationSummaryAnita4(In
   fillNextSixAntArrays(centreAnt,nextSixAnts);
 
    CorrelationSummaryAnita4 *theSum = new CorrelationSummaryAnita4(eventNumber, centreAnt, nineAnts,deltaT);
+	 theSum->setSnr(getHighestSnr(centreAnt));
+
    for(int i=0;i<6;i++)
       theSum->nextSixAnts[i]=nextSixAnts[i];
 

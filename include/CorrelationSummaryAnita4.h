@@ -50,6 +50,8 @@ class CorrelationSummaryAnita4: public TObject
   Double_t getDeltaTExpected(Double_t tPhiWave, Double_t tThetaWave, Int_t pairInd);
   
   void setFitResults(Double_t tPhi, Double_t tTheta, Double_t tPhiErr, Double_t tThetaErr, Double_t tChiSq); ///< Sets the result of an external fit.
+
+	void setSnr(Double_t s) {snr = s; }
  
 
   //Simple Event Characteristics
@@ -58,6 +60,7 @@ class CorrelationSummaryAnita4: public TObject
   int nineAnts[9]; ///< The numbers of the nine central antennas.
   int nextSixAnts[6]; ///< The numbers of the six outside antennas.
   int deltaT; ///< The sampling period used.
+	double snr;
 
 
   //Correlation Thingies
