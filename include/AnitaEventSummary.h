@@ -179,12 +179,13 @@ public:
       Double_t phi;
       Double_t distance;
 
+      Double_t mapValue[NUM_POLS];  ///what the instantaneous map value is at this source hypothesis
       Double_t mapHistoryVal[NUM_POLS]; /// a history of the interferometric map value for the source location
 
       void reset(); /// sets all the values to nonsense.  Sorry, mapHistoryVal means this is in source now 
       
 
-      ClassDefNV(SourceHypothesis,2);
+      ClassDefNV(SourceHypothesis,3);
   };
 
   class MCTruth
@@ -198,6 +199,26 @@ public:
 
     ClassDefNV(MCTruth,2); 
   }; 
+
+  
+  /** Adu5Pat has 16 ints stored with it, but really only 4 are ever important. They are SUPER IMPORTANT, so they should be here */
+  class PayloadLocation
+  {
+  public:
+    PayloadLocation() { reset(); }
+
+    Float_t latitude;
+    Float_t longitude;
+    Float_t altitude;
+    Float_t heading;
+
+    void reset() { latitude = -999; longitude = -999; altitude = -999; heading = -999; };
+
+
+    ClassDefNV(PayloadLocation,1);
+  };  
+  
+  PayloadLocation anitaLocation;
 
  
   Int_t run;
@@ -251,7 +272,7 @@ public:
   
   private: 
 
-  ClassDefNV(AnitaEventSummary, 17); 
+  ClassDefNV(AnitaEventSummary, 18); 
 }; 
 
 

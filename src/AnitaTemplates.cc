@@ -95,11 +95,20 @@ void AnitaTemplateMachine::getImpulseResponseTemplate() {
   //waveforms are normally a little over 1024 so lets pad to 2048 (defined in length above)
   TGraph *grTemplatePadded = FFTtools::padWaveToLength(grTemplateRaw,length);
   delete grTemplateRaw;
-  //then cut it back down with a window function
+
+
+  //Make it start at zero
+  double xStart = grTemplatePadded->GetX()[0];
+  for (int pt=0; pt<grTemplatePadded->GetN(); pt++) grTemplatePadded->GetX()[pt] -= xStart;
+    
+
+  //then cut it back down with a window function (or not)
   //  int peakHilb = -1;
   //  TGraph *grTemplateCut = windowDispersed(grTemplatePadded,peakHilb);
   //  delete grTemplatePadded;
   //and finally normalize it (last step!)
+
+
   TGraph *grTemplate = FFTtools::normalizeWaveform(grTemplatePadded);
   delete grTemplatePadded;
 
@@ -135,12 +144,16 @@ void AnitaTemplateMachine::getCRTemplates() {
     int peakHilb = -1;
     TGraph *grTemplateCut = WindowingTools::windowCut(grTemplateRaw,length);
     delete grTemplateRaw;
+
+    //Make them start at zero
+    double xStart = grTemplateCut->GetX()[0];
+    for (int pt=0; pt<grTemplateCut->GetN(); pt++) grTemplateCut->GetX()[pt] -= xStart;
     
     
     //and finally normalize it (last step!)
     TGraph *grTemplate = FFTtools::normalizeWaveform(grTemplateCut);
     delete grTemplateCut;
-    
+
     //give it a name
     grTemplate->SetName(name.str().c_str());
     
@@ -173,6 +186,12 @@ void AnitaTemplateMachine::getWaisTemplate() {
   int peakHilb = -1;
   TGraph *grTemplateCut = WindowingTools::windowCut(grTemplateRaw,length);
   delete grTemplateRaw;
+
+
+  //Make it start at zero
+  double xStart = grTemplateCut->GetX()[0];
+  for (int pt=0; pt<grTemplateCut->GetN(); pt++) grTemplateCut->GetX()[pt] -= xStart;
+    
 
   //and then normalize it
   TGraph *grTemplate = FFTtools::normalizeWaveform(grTemplateCut);
@@ -352,8 +371,8 @@ void AnitaTemplateMachine::doTemplateAnalysis(const AnalysisWaveform *waveform, 
       value = minValue;
       value_loc = TMath::LocMin(length,dCorr);
     }
-    templateSummary->coherent[poli][dir].cRay[i]  = value;
-    templateSummary->coherent[poli][dir].cRay[i] = value_loc;
+    templateSummary->coherent[poli][dir].cRay[i] = value;
+    templateSummary->coherent[poli][dir].cRay_loc[i] = value_loc;
 
     delete[] dCorr;
   }
