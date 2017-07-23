@@ -39,7 +39,7 @@ void AnitaTemplateSummary::zeroInternals(){
  * Default constructor for ROOT
  */
 AnitaTemplateMachine::AnitaTemplateMachine(int inLength)
-  : length(inLength)
+    : length(inLength), dT(0.1)
 {
 
   kTmpltsLoaded = false;
