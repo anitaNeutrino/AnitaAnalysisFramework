@@ -354,3 +354,33 @@ void AnitaEventSummary::SourceHypothesis::reset() {
   memset(mapValue,0,NUM_POLS*sizeof(Double_t));
 }
   
+
+
+
+/** 
+ * Let the constructor do the hard work.
+ * 
+ * @param pat is ANITA's gps data
+ * 
+ */
+AnitaEventSummary::PayloadLocation::PayloadLocation(const Adu5Pat* pat){
+  update(pat);
+}
+
+
+/** 
+ * Copy all the values of interest from the Adu5Pat
+ * 
+ * @param pat is ANITA's gps data
+ */
+void AnitaEventSummary::PayloadLocation::update(const Adu5Pat* pat){
+  if(pat){
+    latitude = pat->latitude;
+    longitude = pat->longitude;
+    altitude = pat->altitude;
+    heading = pat->heading;
+  }
+  else{
+    reset();
+  }
+}

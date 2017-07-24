@@ -3,7 +3,8 @@
 
 #include "TObject.h" 
 #include "AnitaConventions.h" 
-class UsefulAdu5Pat; 
+class Adu5Pat;
+class UsefulAdu5Pat;
 class RawAnitaHeader; 
 class TruthAnitaEvent; 
 
@@ -118,7 +119,7 @@ public:
     Double_t globalMaxToMin; //!< Difference between maximum and minimum voltage
     Double_t globalMaxToMinTime; //!< Time between maximum and minimum volts, +ve means max is before min, -ve means min is before max 
 
-    ClassDefNV(WaveformInfo, 7);
+    ClassDefNV(WaveformInfo, 8);
   }; 
 
 
@@ -206,6 +207,7 @@ public:
   {
   public:
     PayloadLocation() { reset(); }
+    PayloadLocation(const Adu5Pat* pat); //!< Slightly more useful constructor
 
     Float_t latitude;
     Float_t longitude;
@@ -213,7 +215,7 @@ public:
     Float_t heading;
 
     void reset() { latitude = -999; longitude = -999; altitude = -999; heading = -999; };
-
+    void update(const Adu5Pat* pat); //!< Copy the data from the pat into the object
 
     ClassDefNV(PayloadLocation,1);
   };  
@@ -272,7 +274,7 @@ public:
   
   private: 
 
-  ClassDefNV(AnitaEventSummary, 18); 
+  ClassDefNV(AnitaEventSummary, 19);
 }; 
 
 
