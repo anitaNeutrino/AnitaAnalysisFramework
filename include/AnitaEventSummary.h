@@ -247,7 +247,6 @@ public:
   SourceHypothesis ldb;
   MCTruth mc; 
 
-  
   AnitaEventSummary();
   AnitaEventSummary(const RawAnitaHeader* header);
   AnitaEventSummary(const RawAnitaHeader* header, UsefulAdu5Pat* pat, const TruthAnitaEvent * truth = 0 );  
@@ -269,6 +268,28 @@ public:
   const WaveformInfo& higherCoherentFiltered(int peakInd=0);
   const WaveformInfo& higherDeconvolvedFiltered(int peakInd=0);
 
+  // Resolution utility functions, for more keystoke saving
+  double dPhiSource(const SourceHypothesis& source, int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol); 
+  double dThetaSource(const SourceHypothesis& source, int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol);
+
+  double dPhiWais(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol){
+    return dPhiSource(wais, peakInd, pol);
+  }
+  double dThetaWais(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol){
+    return dThetaSource(wais, peakInd, pol);
+  }
+  double dPhiLDB(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol){
+    return dPhiSource(ldb, peakInd, pol);
+  }
+  double dThetaLDB(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol){
+    return dThetaSource(ldb, peakInd, pol);
+  }
+  double dPhiSun(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol){
+    return dPhiSource(sun, peakInd, pol);
+  }
+  double dThetaSun(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol){
+    return dThetaSource(sun, peakInd, pol);
+  }
 
 
   

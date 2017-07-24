@@ -2,7 +2,7 @@
 
 #include "RawAnitaHeader.h" 
 #include "UsefulAdu5Pat.h"
-#include "TruthAnitaEvent.h" 
+#include "TruthAnitaEvent.h"
 
 //are these even necessary anymore? Who knows! 
 //ClassImp(AnitaEventSummary)
@@ -386,4 +386,56 @@ void AnitaEventSummary::PayloadLocation::update(const Adu5Pat* pat){
   else{
     reset();
   }
+}
+
+
+
+/** 
+ * Use the summary information to get the source resolution peak.phi - source.phi.
+ * 
+ * @param peakInd (default=0) the index of the peak
+ * @param pol (default AnitaPol::kNotAPol) the polarisation (uses higherPeakPol() if passed AnitaPol::kNotAPol)
+ * 
+ * @return the phi angle between the selected peak and source
+ */
+double AnitaEventSummary::dPhiSource(const SourceHypothesis& source, int peakInd, AnitaPol::AnitaPol_t pol){
+
+  // select pol if default value AnitaPol::kNotAPol passed
+  pol = pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
+
+  double dPhi = peak[pol][peakInd].phi - source.phi;
+  if(dPhi < -180){
+    dPhi += 360;
+  }
+  else if(dPhi >= 180){
+    dPhi -= 360;
+  }
+
+  if(dPhi < -180 || dPhi >= 180){
+    std::cerr << "Warning in " << __PRETTY_FUNCTION__ << " for run "
+              << run << ", eventNumber " << eventNumber
+              << ". dPhi = " << dPhi << std::endl;
+  }
+
+  return dPhi;
+}
+
+
+
+/** 
+ * Use the summary information to get the wais resolution peak.theta - source.theta.
+ * 
+ * Note:
+ * Accounts for the silly sign convention difference, UsefulAdu5Pat has +ve theta is down, the UCorrelator/anitaAnalysisTools have +ve theta is up
+ * 
+ * @param peakInd (default=0) the index of the peak
+ * @param pol (default AnitaPol::kNotAPol) the polarisation (uses higherPeakPol() if passed AnitaPol::kNotAPol)
+ * 
+ * @return the theta angle between the selected peak and WAIS divide
+ */
+double AnitaEventSummary::dThetaSource(const SourceHypothesis& source, int peakInd, AnitaPol::AnitaPol_t pol){
+  // select pol if default value AnitaPol::kNotAPol passed
+  pol = pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
+  double dTheta = peak[pol][peakInd].theta + source.theta; // + instead of - due to sign convention difference
+  return dTheta;
 }
