@@ -30,7 +30,8 @@ AnitaEventSummary::AnitaEventSummary(){
  *
  * Takes care of copying the header info into the event summary
  */
-AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header){
+AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header)
+    : anitaLocation() {
 
   zeroInternals();
 
@@ -51,7 +52,9 @@ AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header){
  *
  * Takes care of copying the header and GPS info into the event summary
  */
-AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header, UsefulAdu5Pat* pat, const TruthAnitaEvent * truth){
+AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header, UsefulAdu5Pat* pat, const TruthAnitaEvent * truth) :
+    anitaLocation(dynamic_cast<Adu5Pat*>(pat))
+{
 
   zeroInternals();
 
