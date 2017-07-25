@@ -47,7 +47,7 @@ class AnitaTemplateMachine : public TObject {
 
   /** template waveform defaults **/
   const int length;
-  const double dT = 0.1; //in ns
+  const double dT;// = 0.1; //in ns
   
   /** Template Storage **/
   //impulse response

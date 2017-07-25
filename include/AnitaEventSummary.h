@@ -3,7 +3,8 @@
 
 #include "TObject.h" 
 #include "AnitaConventions.h" 
-class UsefulAdu5Pat; 
+class Adu5Pat;
+class UsefulAdu5Pat;
 class RawAnitaHeader; 
 class TruthAnitaEvent; 
 
@@ -113,9 +114,12 @@ public:
 
     Int_t numAntennasInCoherent; // number of antennas used to make this 
 
-  
+    Double_t localMaxToMin; //!< Largest value of local max to neighbouring local min (see Acclaim::RootTools::getLocalMaxToMin)
+    Double_t localMaxToMinTime; //!< Time between local maxima and minima +ve means max is before min, -ve means min is before max
+    Double_t globalMaxToMin; //!< Difference between maximum and minimum voltage
+    Double_t globalMaxToMinTime; //!< Time between maximum and minimum volts, +ve means max is before min, -ve means min is before max 
 
-    ClassDefNV(WaveformInfo, 6); 
+    ClassDefNV(WaveformInfo, 8);
   }; 
 
 
@@ -176,12 +180,13 @@ public:
       Double_t phi;
       Double_t distance;
 
+      Double_t mapValue[NUM_POLS];  ///what the instantaneous map value is at this source hypothesis
       Double_t mapHistoryVal[NUM_POLS]; /// a history of the interferometric map value for the source location
 
       void reset(); /// sets all the values to nonsense.  Sorry, mapHistoryVal means this is in source now 
       
 
-      ClassDefNV(SourceHypothesis,2);
+      ClassDefNV(SourceHypothesis,3);
   };
 
   class MCTruth
@@ -195,6 +200,27 @@ public:
 
     ClassDefNV(MCTruth,2); 
   }; 
+
+  
+  /** Adu5Pat has 16 ints stored with it, but really only 4 are ever important. They are SUPER IMPORTANT, so they should be here */
+  class PayloadLocation
+  {
+  public:
+    PayloadLocation() { reset(); }
+    PayloadLocation(const Adu5Pat* pat); //!< Slightly more useful constructor
+
+    Float_t latitude;
+    Float_t longitude;
+    Float_t altitude;
+    Float_t heading;
+
+    void reset() { latitude = -999; longitude = -999; altitude = -999; heading = -999; };
+    void update(const Adu5Pat* pat); //!< Copy the data from the pat into the object
+
+    ClassDefNV(PayloadLocation,1);
+  };  
+  
+  PayloadLocation anitaLocation;
 
  
   Int_t run;
@@ -221,7 +247,6 @@ public:
   SourceHypothesis ldb;
   MCTruth mc; 
 
-  
   AnitaEventSummary();
   AnitaEventSummary(const RawAnitaHeader* header);
   AnitaEventSummary(const RawAnitaHeader* header, UsefulAdu5Pat* pat, const TruthAnitaEvent * truth = 0 );  
@@ -243,12 +268,34 @@ public:
   const WaveformInfo& higherCoherentFiltered(int peakInd=0);
   const WaveformInfo& higherDeconvolvedFiltered(int peakInd=0);
 
+  // Resolution utility functions, for more keystoke saving
+  double dPhiSource(const SourceHypothesis& source, int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol); 
+  double dThetaSource(const SourceHypothesis& source, int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol);
+
+  double dPhiWais(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol){
+    return dPhiSource(wais, peakInd, pol);
+  }
+  double dThetaWais(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol){
+    return dThetaSource(wais, peakInd, pol);
+  }
+  double dPhiLDB(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol){
+    return dPhiSource(ldb, peakInd, pol);
+  }
+  double dThetaLDB(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol){
+    return dThetaSource(ldb, peakInd, pol);
+  }
+  double dPhiSun(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol){
+    return dPhiSource(sun, peakInd, pol);
+  }
+  double dThetaSun(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol){
+    return dThetaSource(sun, peakInd, pol);
+  }
 
 
   
   private: 
 
-  ClassDefNV(AnitaEventSummary, 17); 
+  ClassDefNV(AnitaEventSummary, 19);
 }; 
 
 

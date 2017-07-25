@@ -22,7 +22,7 @@ NoiseMonitor::NoiseMonitor(double timeScaleSeconds, WaveOption waveOption, TFile
     : fWriteIndex(-1), fEventNoise(NULL), 
       fReadMode(0), fOutFile(outFile), fNoiseTree(NULL) {
 
-  fEventNoise = new FilteredMinBiasEventNoise(timeScaleSeconds, waveOption);  
+  fEventNoise = new FilteredMinBiasEventNoise(timeScaleSeconds, waveOption);
   prepareOutputNoiseTree();
 }
 
@@ -50,22 +50,13 @@ NoiseMonitor::NoiseMonitor(const char* inFileName)
 
 /** 
  * Destructor.
- * Tidies up input/output trees.
  */
 NoiseMonitor::~NoiseMonitor(){
-  if(fOutFile){
-    fOutFile->Write();
-    fOutFile->Close();
-    fOutFile = NULL;
-  }
-  if(fInFile){
-    fInFile->Close();
-    fInFile = NULL;
-  }
-  if(fEventNoise){
-    delete fEventNoise;
-    fEventNoise = NULL;
-  }
+
+  // if(fEventNoise){
+  //   delete fEventNoise;
+  //   fEventNoise = NULL;
+  // }
 }
 
 
