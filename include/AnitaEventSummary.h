@@ -114,12 +114,12 @@ public:
 
     Int_t numAntennasInCoherent; // number of antennas used to make this 
 
-    Double_t localMaxToMin; //!< Largest value of local max to neighbouring local min (see Acclaim::RootTools::getLocalMaxToMin)
-    Double_t localMaxToMinTime; //!< Time between local maxima and minima +ve means max is before min, -ve means min is before max
-    Double_t globalMaxToMin; //!< Difference between maximum and minimum voltage
-    Double_t globalMaxToMinTime; //!< Time between maximum and minimum volts, +ve means max is before min, -ve means min is before max 
+    Double_t localMaxToMin; /// Largest value of local max to neighbouring local min (see Acclaim::RootTools::getLocalMaxToMin)
+    Double_t localMaxToMinTime; /// Time between local maxima and minima +ve means max is before min, -ve means min is before max
+    Double_t globalMaxToMin; /// Difference between maximum and minimum voltage
+    Double_t globalMaxToMinTime; /// Time between maximum and minimum volts, +ve means max is before min, -ve means min is before max 
 
-    ClassDefNV(WaveformInfo, 8);
+    ClassDefNV(WaveformInfo, 9);
   }; 
 
 
@@ -295,7 +295,7 @@ public:
   
   private: 
 
-  ClassDefNV(AnitaEventSummary, 19);
+  ClassDefNV(AnitaEventSummary, 20);
 }; 
 
 
