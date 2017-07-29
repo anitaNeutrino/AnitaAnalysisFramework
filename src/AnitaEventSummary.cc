@@ -256,6 +256,7 @@ void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat, const TruthAnit
     pat->getThetaAndPhiWave(truth->sourceLon, truth->sourceLat, truth->sourceAlt, mc.theta,mc.phi);
     mc.theta*=TMath::RadToDeg();
     mc.phi*=TMath::RadToDeg();
+    mc.weight = truth->weight; 
   }
   
 }
@@ -267,6 +268,7 @@ void AnitaEventSummary::MCTruth::reset()
  phi = -999; 
  memset(&wf[0],0,sizeof(WaveformInfo)); 
  memset(&wf[1],0,sizeof(WaveformInfo)); 
+ weight = 0; 
 }
 
 

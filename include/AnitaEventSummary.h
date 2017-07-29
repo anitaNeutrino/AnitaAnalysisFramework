@@ -196,9 +196,10 @@ public:
     double phi; 
     double theta; 
     WaveformInfo wf[AnitaPol::kNotAPol]; 
+    double weight; 
     void reset(); 
 
-    ClassDefNV(MCTruth,2); 
+    ClassDefNV(MCTruth,3); 
   }; 
 
   
@@ -297,7 +298,7 @@ public:
   
   private: 
 
-  ClassDefNV(AnitaEventSummary, 20);
+  ClassDefNV(AnitaEventSummary, 21);
 }; 
 
 
