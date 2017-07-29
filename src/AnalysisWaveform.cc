@@ -328,15 +328,15 @@ void AnalysisWaveform::calculateUnevenFromEven() const
 {
   const TGraphAligned * g = even(); 
 
-  //should prevent interpolation error from too few points
-  while (g_uneven.GetN() < 5) {  
-    g_uneven.SetPoint(g_uneven.GetN(), g_uneven.GetX()[g_uneven.GetN()-1] + 1, 0); 
-  }
-
 
   if (interpolation_type == AKIMA) 
   {
-     
+
+    //should prevent interpolation error from too few points
+    while (g_uneven.GetN() < 5) {  
+      g_uneven.SetPoint(g_uneven.GetN(), g_uneven.GetX()[g_uneven.GetN()-1] + 1, 0); 
+    }
+    
     const ROOT::Math::Interpolator * irp = evenAkimaInterpolator(); 
     for (int i = 0; i < g_uneven.GetN(); i++) 
     {
