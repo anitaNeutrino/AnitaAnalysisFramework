@@ -328,6 +328,12 @@ void AnalysisWaveform::calculateUnevenFromEven() const
 {
   const TGraphAligned * g = even(); 
 
+  //should prevent interpolation error from too few points
+  while (g_uneven.GetN() < 5) {  
+    g_uneven.SetPoint(g_uneven.GetN(), g_uneven.GetX()[g_uneven.GetN()-1] + 1, 0); 
+  }
+
+
   if (interpolation_type == AKIMA) 
   {
      
@@ -815,9 +821,9 @@ double AnalysisWaveform::evalEven(double t, EvenEvaluationType typ)  const
 
     int bin_low = int (xval); 
 
-    if ((bin_low < 0)) return 0; 
-    if ((bin_low >= g->GetN())) return 0; 
-    if ((bin_low ==  g->GetN()-1)) return g->GetY()[g->GetN()-1]; 
+    if (bin_low < 0) return 0; 
+    if (bin_low >= g->GetN()) return 0; 
+    if (bin_low ==  g->GetN()-1) return g->GetY()[g->GetN()-1]; 
 
     int bin_high = bin_low + 1; 
     double val_low = g->GetY()[bin_low]; 
