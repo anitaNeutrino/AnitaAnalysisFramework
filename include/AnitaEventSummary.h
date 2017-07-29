@@ -214,10 +214,12 @@ public:
     Float_t altitude;
     Float_t heading;
 
-    void reset() { latitude = -999; longitude = -999; altitude = -999; heading = -999; };
+    Float_t prevHeading; //useful for determining rotation rate
+
+    void reset() { latitude = -999; longitude = -999; altitude = -999; heading = -999; prevHeading = -999;};
     void update(const Adu5Pat* pat); //!< Copy the data from the pat into the object
 
-    ClassDefNV(PayloadLocation,1);
+    ClassDefNV(PayloadLocation,2);
   };  
   
   PayloadLocation anitaLocation;

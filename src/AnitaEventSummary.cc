@@ -381,7 +381,10 @@ void AnitaEventSummary::PayloadLocation::update(const Adu5Pat* pat){
     latitude = pat->latitude;
     longitude = pat->longitude;
     altitude = pat->altitude;
+    
+    prevHeading = heading;
     heading = pat->heading;
+    
   }
   else{
     reset();
