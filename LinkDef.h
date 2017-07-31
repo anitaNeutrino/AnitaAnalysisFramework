@@ -55,6 +55,7 @@
 #pragma link C++ class AnitaResponse::DeconvolveFilter+;
 #pragma link C++ class AnitaResponse::WienerDeconvolution+; 
 #pragma link C++ class AnitaResponse::AllPassDeconvolution+; 
+#pragma link C++ class AnitaResponse::ImpulseResponseXCorr+; 
 #pragma link C++ class AnitaResponse::DeconvolutionMethod+;
 
 

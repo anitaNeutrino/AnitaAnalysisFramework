@@ -109,6 +109,17 @@ namespace AnitaResponse{
 
   }; 
 
+  class ImpulseResponseXCorr : public DeconvolutionMethod
+  {
+
+    public: 
+      ImpulseResponseXCorr() { ; } 
+      virtual void deconvolve(size_t N, double df, FFTWComplex * Y, 
+                              const FFTWComplex * response) const; 
+      virtual ~ImpulseResponseXCorr() { ; } 
+
+  }; 
+
   extern DeconvolutionMethod & kDefaultDeconvolution; 
 
   class AbstractResponse

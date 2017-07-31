@@ -81,6 +81,17 @@ void AnitaResponse::AllPassDeconvolution::deconvolve(size_t N, double df, FFTWCo
   }
 }
 
+void AnitaResponse::ImpulseResponseXCorr::deconvolve(size_t N, double df, FFTWComplex * Y, const FFTWComplex * response) const 
+{
+
+  (void) df; 
+  for (unsigned i = 0; i < N; i++) 
+  {
+    FFTWComplex r = response[i].conj(); 
+    Y[i]*=r; 
+  }
+}
+
 
 
 void AnitaResponse::NaiveDeconvolution::deconvolve(size_t N, double df, FFTWComplex * Y, const FFTWComplex * response) const 
