@@ -38,7 +38,7 @@
 #pragma link C++ class SumDifferenceFilter+;
 #pragma link C++ class DigitalFilterOperation+;
 #pragma link C++ class GeometricFilter+;
-#pragma link C++ class TaperFilter; 
+#pragma link C++ class GaussianTaper; 
 
 #pragma link C++ class NoiseMonitor::FilteredMinBiasEventNoise+;
 
