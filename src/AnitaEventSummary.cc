@@ -103,7 +103,7 @@ void AnitaEventSummary::zeroInternals(){
  * 
  * @return the polarisation which has the higher interferometric map peak (kNotAPol if peakInd required outside allowed range)
  */
-AnitaPol::AnitaPol_t AnitaEventSummary::higherPeakPol(int peakInd){
+AnitaPol::AnitaPol_t AnitaEventSummary::higherPeakPol(int peakInd) const{
 
   AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol;
   if(peakInd >= 0 && peakInd < maxDirectionsPerPol){
@@ -127,7 +127,7 @@ AnitaPol::AnitaPol_t AnitaEventSummary::higherPeakPol(int peakInd){
  * 
  * @return the 
  */
-const AnitaEventSummary::PointingHypothesis& AnitaEventSummary::higherPeak(int peakInd){
+const AnitaEventSummary::PointingHypothesis& AnitaEventSummary::higherPeak(int peakInd) const{
   AnitaPol::AnitaPol_t pol = higherPeakPol();
   return peak[pol][peakInd];
 }
@@ -141,7 +141,7 @@ const AnitaEventSummary::PointingHypothesis& AnitaEventSummary::higherPeak(int p
  * 
  * @return the unfiltered coherently summed waveform info
  */
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::higherCoherent(int peakInd){
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::higherCoherent(int peakInd) const{
   AnitaPol::AnitaPol_t pol = higherPeakPol();
   return coherent[pol][peakInd];
 }
@@ -155,7 +155,7 @@ const AnitaEventSummary::WaveformInfo& AnitaEventSummary::higherCoherent(int pea
  * 
  * @return the unfiltered, deconvolved coherently summed waveform info
  */
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::higherDeconvolved(int peakInd){
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::higherDeconvolved(int peakInd) const{
   AnitaPol::AnitaPol_t pol = higherPeakPol();
   return deconvolved[pol][peakInd];
 }
@@ -171,7 +171,7 @@ const AnitaEventSummary::WaveformInfo& AnitaEventSummary::higherDeconvolved(int 
  * 
  * @return the filtered coherently summed waveform info
  */
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::higherCoherentFiltered(int peakInd){
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::higherCoherentFiltered(int peakInd) const{
   AnitaPol::AnitaPol_t pol = higherPeakPol();
   return coherent_filtered[pol][peakInd];
 }
@@ -185,7 +185,7 @@ const AnitaEventSummary::WaveformInfo& AnitaEventSummary::higherCoherentFiltered
  * 
  * @return the filtered, deconvolved coherently summed waveform info
  */
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::higherDeconvolvedFiltered(int peakInd){
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::higherDeconvolvedFiltered(int peakInd) const{
   AnitaPol::AnitaPol_t pol = higherPeakPol();
   return deconvolved_filtered[pol][peakInd];
 }
@@ -283,7 +283,7 @@ void AnitaEventSummary::MCTruth::reset()
  * @return the linear polarization fraction
  */
 
-double AnitaEventSummary::WaveformInfo::linearPolFrac() {
+double AnitaEventSummary::WaveformInfo::linearPolFrac() const {
 
   double value = TMath::Sqrt( pow(Q,2) + pow(U,2) ) / I;
 
@@ -299,7 +299,7 @@ double AnitaEventSummary::WaveformInfo::linearPolFrac() {
  * @return the linear polarization angle is degrees
  */
 
-double AnitaEventSummary::WaveformInfo::linearPolAngle() {
+double AnitaEventSummary::WaveformInfo::linearPolAngle() const {
   
   double value = (TMath::ATan(U/Q)/2)*TMath::RadToDeg();
 
@@ -317,7 +317,7 @@ double AnitaEventSummary::WaveformInfo::linearPolAngle() {
  * @return the circular polarization fraction
  */
 
-double AnitaEventSummary::WaveformInfo::circPolFrac() {
+double AnitaEventSummary::WaveformInfo::circPolFrac() const {
   
   double value = TMath::Abs(V)/I;
 
@@ -333,7 +333,7 @@ double AnitaEventSummary::WaveformInfo::circPolFrac() {
  * @return the circular polarization fraction
  */
 
-double AnitaEventSummary::WaveformInfo::totalPolFrac() {
+double AnitaEventSummary::WaveformInfo::totalPolFrac() const {
   
   double value = TMath::Sqrt(pow(Q,2) + pow(U,2) + pow(V,2))/I;
 
@@ -403,7 +403,7 @@ void AnitaEventSummary::PayloadLocation::update(const Adu5Pat* pat){
  * 
  * @return the phi angle between the selected peak and source
  */
-double AnitaEventSummary::dPhiSource(const SourceHypothesis& source, int peakInd, AnitaPol::AnitaPol_t pol){
+double AnitaEventSummary::dPhiSource(const SourceHypothesis& source, int peakInd, AnitaPol::AnitaPol_t pol) const{
 
   // select pol if default value AnitaPol::kNotAPol passed
   pol = pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
@@ -438,7 +438,7 @@ double AnitaEventSummary::dPhiSource(const SourceHypothesis& source, int peakInd
  * 
  * @return the theta angle between the selected peak and WAIS divide
  */
-double AnitaEventSummary::dThetaSource(const SourceHypothesis& source, int peakInd, AnitaPol::AnitaPol_t pol){
+double AnitaEventSummary::dThetaSource(const SourceHypothesis& source, int peakInd, AnitaPol::AnitaPol_t pol) const{
   // select pol if default value AnitaPol::kNotAPol passed
   pol = pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
   double dTheta = peak[pol][peakInd].theta + source.theta; // + instead of - due to sign convention difference

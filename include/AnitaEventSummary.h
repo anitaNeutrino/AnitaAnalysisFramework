@@ -79,10 +79,10 @@ public:
     Double_t I,Q,U,V;  // Stokes Parameters
 
     //some utilities for polarization info
-    double linearPolFrac();
-    double linearPolAngle();
-    double circPolFrac();
-    double totalPolFrac();
+    double linearPolFrac() const;
+    double linearPolAngle() const;
+    double circPolFrac() const;
+    double totalPolFrac() const;
 
 
     Double_t totalPower;  ///Total power in waveform
@@ -264,33 +264,33 @@ public:
   // If you don't want to decide on the primary polarisation of an event based on the higher map peak then
   // these might not be for you...
   //////////////////////////////////////////////////////////////// /////////////////////////////////////////
-  const PointingHypothesis& higherPeak(int peakInd=0);
-  AnitaPol::AnitaPol_t higherPeakPol(int peakInd=0); // peak[vpol][peakInd] >= peak[hpol][peakInd] ? vpol : hpol
-  const WaveformInfo& higherCoherent(int peakInd=0);
-  const WaveformInfo& higherDeconvolved(int peakInd=0);
-  const WaveformInfo& higherCoherentFiltered(int peakInd=0);
-  const WaveformInfo& higherDeconvolvedFiltered(int peakInd=0);
+  const PointingHypothesis& higherPeak(int peakInd=0) const;
+  AnitaPol::AnitaPol_t higherPeakPol(int peakInd=0) const; // peak[vpol][peakInd] >= peak[hpol][peakInd] ? vpol : hpol
+  const WaveformInfo& higherCoherent(int peakInd=0) const;
+  const WaveformInfo& higherDeconvolved(int peakInd=0) const;
+  const WaveformInfo& higherCoherentFiltered(int peakInd=0) const;
+  const WaveformInfo& higherDeconvolvedFiltered(int peakInd=0) const;
 
   // Resolution utility functions, for more keystoke saving
-  double dPhiSource(const SourceHypothesis& source, int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol); 
-  double dThetaSource(const SourceHypothesis& source, int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol);
+  double dPhiSource(const SourceHypothesis& source, int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const; 
+  double dThetaSource(const SourceHypothesis& source, int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const;
 
-  double dPhiWais(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol){
+  double dPhiWais(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const{
     return dPhiSource(wais, peakInd, pol);
   }
-  double dThetaWais(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol){
+  double dThetaWais(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const{
     return dThetaSource(wais, peakInd, pol);
   }
-  double dPhiLDB(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol){
+  double dPhiLDB(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const{
     return dPhiSource(ldb, peakInd, pol);
   }
-  double dThetaLDB(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol){
+  double dThetaLDB(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const{
     return dThetaSource(ldb, peakInd, pol);
   }
-  double dPhiSun(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol){
+  double dPhiSun(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const{
     return dPhiSource(sun, peakInd, pol);
   }
-  double dThetaSun(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol){
+  double dThetaSun(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const{
     return dThetaSource(sun, peakInd, pol);
   }
 
