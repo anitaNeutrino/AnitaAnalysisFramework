@@ -293,7 +293,7 @@ public:
   double dThetaSun(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const{
     return dThetaSource(sun, peakInd, pol);
   }
-
+  double peakBearing(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const;
 
   
   private: 

@@ -419,7 +419,8 @@ double AnitaEventSummary::dPhiSource(const SourceHypothesis& source, int peakInd
   if(dPhi < -180 || dPhi >= 180){
     std::cerr << "Warning in " << __PRETTY_FUNCTION__ << " for run "
               << run << ", eventNumber " << eventNumber
-              << ". dPhi = " << dPhi << std::endl;
+              << " dPhi = " << dPhi << ". peak["<< pol << "]["<< peakInd << "].phi = "
+              << peak[pol][peakInd].phi << " and the source is at " << source.phi << std::endl;
   }
 
   return dPhi;
@@ -443,4 +444,25 @@ double AnitaEventSummary::dThetaSource(const SourceHypothesis& source, int peakI
   pol = pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
   double dTheta = peak[pol][peakInd].theta + source.theta; // + instead of - due to sign convention difference
   return dTheta;
+}
+
+
+double AnitaEventSummary::peakBearing(int peakInd, AnitaPol::AnitaPol_t pol) const{
+  pol = pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
+  double heading = double(anitaLocation.heading);
+
+  // heading increases clockwise, payload phi increases anti-clockwise so we subtract it from heading.
+  double bearing = heading - peak[pol][peakInd].phi;
+
+  bearing = bearing < 0 ? bearing + 360 : bearing;
+  bearing = bearing >= 360 ? bearing - 360 : bearing;
+  
+  if(bearing < 0 || bearing >= 360){
+    std::cerr << "Warning in " << __PRETTY_FUNCTION__ << " for run "
+              << run << ", eventNumber " << eventNumber
+              << ". the bearing of peak[" << pol << "][" << peakInd << "] = "
+              << bearing << ". The phi is " << peak[pol][peakInd].phi << " with heading "
+              << heading << std::endl;
+  }
+  return bearing;
 }
