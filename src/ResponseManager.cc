@@ -1,6 +1,7 @@
 #include "ResponseManager.h" 
 #include "SystemResponse.h" 
 #include <stdio.h>
+#include <fstream>
 #include "AnalysisWaveform.h" 
 #include <sys/types.h>
 #include <dirent.h>
@@ -15,7 +16,7 @@
 
 
 
-int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, int npad)
+int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, int npad, unsigned int evTime)
 {
   DIR *dp; 
   struct dirent *ep; 
@@ -25,21 +26,75 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
   // Then try ${ANITA_UTIL_INSTALL_DIR}/share/UCorrelator/responses
   
   TString dir ; 
-
+	hasIndex = false;
   dir.Form(raw_dir); 
   dp = opendir(dir.Data()); 
+	TString indexF;
+	std::string str;
+	std::string tempStr;
+	long tempTime;
+	if(dp)
+	{
+		indexF.Form("%s/index.txt", dir.Data());
+		std::ifstream inf(indexF.Data());
+		if(inf)
+		{
+			hasIndex = true;
+			while(inf >> tempStr >> tempTime)
+			{
+				if(evTime <= tempTime) str = tempStr;
+			}
+			indexF.Form(dir.Data());
+			dir.Form("%s/%s", indexF.Data(), str.c_str());
+			dp = opendir(dir.Data()); 
+		}
+	}
+
   if (!dp)
   {
     dir.Form("./data/responses/%s",raw_dir); 
     dp = opendir(dir.Data()); 
+		if(dp)
+		{
+			indexF.Form("%s/index.txt", dir.Data());
+			std::ifstream inf2(indexF.Data());
+			if(inf2)
+			{
+				hasIndex = true;
+				while(inf2 >> tempStr >> tempTime)
+				{
+					if(evTime <= tempTime) str = tempStr;
+				}
+				indexF.Form(dir.Data());
+				dir.Form("%s/%s", indexF.Data(), str.c_str());
+				dp = opendir(dir.Data()); 
+			}
+		}
     if (!dp)
     {
       dir.Form("%s/share/AnitaAnalysisFramework/responses/%s", getenv("ANITA_UTIL_INSTALL_DIR"), raw_dir); 
       dp = opendir(dir.Data()); 
+			if(dp)
+			{
+				indexF.Form("%s/index.txt", dir.Data());
+				std::ifstream inf3(indexF.Data());
+				if(inf3)
+				{
+					hasIndex = true;
+					while(inf3 >> tempStr >> tempTime)
+					{
+						if(evTime <= tempTime) str = tempStr;
+					}
+					indexF.Form(dir.Data());
+					dir.Form("%s/%s", indexF.Data(), str.c_str());
+					dp = opendir(dir.Data()); 
+				}
+			}
 
       if (!dp)
       {
           fprintf(stderr,"Could not open response dir %s\n",raw_dir);
+          fprintf(stderr,"Last directory checked: %s\n", dir.Data());
           return 1; 
       }
     }
@@ -251,11 +306,90 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
 
 // }
 
-AnitaResponse::ResponseManager::ResponseManager(const char * dir, int npad, const AnitaResponse::DeconvolutionMethod* methodPtr)
+void AnitaResponse::ResponseManager::checkTime(unsigned int evTime)
+{
+	if(!hasIndex) return;
+  DIR *dp; 
+  struct dirent *ep; 
+
+  TString dir ; 
+
+  dir.Form(whichDir); 
+  dp = opendir(dir.Data()); 
+	TString indexF;
+	std::string str;
+	std::string tempStr;
+	long tempTime;
+
+	bool diffResponses = false;
+
+	if(dp)
+	{
+		indexF.Form("%s/index.txt", dir.Data());
+		std::ifstream inf(indexF.Data());
+		if(inf)
+		{
+			while(inf >> tempStr >> tempTime)
+			{
+				if(lastTime <= tempTime && evTime > tempTime) diffResponses = true;
+			}
+		}
+	}
+
+  if (!dp)
+  {
+    dir.Form("./data/responses/%s",whichDir); 
+    dp = opendir(dir.Data()); 
+		if(dp)
+		{
+			indexF.Form("%s/index.txt", dir.Data());
+			std::ifstream inf2(indexF.Data());
+			if(inf2)
+			{
+				while(inf2 >> tempStr >> tempTime)
+				{
+					if(lastTime <= tempTime && evTime > tempTime) diffResponses = true;
+				}
+			}
+		}
+    if (!dp)
+    {
+      dir.Form("%s/share/AnitaAnalysisFramework/responses/%s", getenv("ANITA_UTIL_INSTALL_DIR"), whichDir); 
+      dp = opendir(dir.Data()); 
+			if(dp)
+			{
+				indexF.Form("%s/index.txt", dir.Data());
+				std::ifstream inf3(indexF.Data());
+				if(inf3)
+				{
+					while(inf3 >> tempStr >> tempTime)
+					{
+						if(lastTime <= tempTime && evTime > tempTime) diffResponses = true;
+					}
+				}
+			}
+    }
+  }
+
+	lastTime = evTime;
+	if(diffResponses) 
+	{
+		memset(responses,0,sizeof(responses)); 
+		loadResponsesFromDir(whichDir, savePad, evTime);
+		fprintf(stderr, "changed responses\n");
+	}
+}
+
+
+
+AnitaResponse::ResponseManager::ResponseManager(const char * dir, int npad, const AnitaResponse::DeconvolutionMethod* methodPtr, unsigned int evTime)
 {
   memset(responses,0,sizeof(responses)); 
-  loadResponsesFromDir(dir,npad);
+  loadResponsesFromDir(dir,npad, evTime);
   method = methodPtr == NULL ? &AnitaResponse::kDefaultDeconvolution : methodPtr;
+	lastTime = evTime;
+	whichDir = dir;
+	savePad = npad;
   // method = &kDefaultDeconvolution;
 }
 
