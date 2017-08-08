@@ -31,6 +31,7 @@ class ResponseManager
   const AbstractResponse * response(int pol, int iant) const { return responses[iant][pol]; } 
   const DeconvolutionMethod * getDeconvolutionMethod() const  { return method; }
 	
+	// check time is used to change which response you are using for time dependent responses (such as the TUFF ones)
 	void checkTime(unsigned int evTime);
 
   virtual ~ResponseManager(); 
