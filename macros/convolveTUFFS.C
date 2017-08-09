@@ -18,15 +18,15 @@ void convolveTUFF(int ant=1, char tmb='B', char config='B', const char* outdir="
 	{
 		impnameH = Form("%s/share/AnitaAnalysisFramework/responses/IndividualBRotter/0%d%cH.imp", getenv("ANITA_UTIL_INSTALL_DIR"), ant, tmb);
 		impnameV = Form("%s/share/AnitaAnalysisFramework/responses/IndividualBRotter/0%d%cV.imp", getenv("ANITA_UTIL_INSTALL_DIR"), ant, tmb);
-		outNameH = Form("/home/abl/anita_new/anitaBuildTool/components/AnitaAnalysisFramework/data/responses/TUFFs/%s/0%d%cH.imp", outdir, ant, tmb);
-		outNameV = Form("/home/abl/anita_new/anitaBuildTool/components/AnitaAnalysisFramework/data/responses/TUFFs/%s/0%d%cV.imp", outdir, ant, tmb);
+		outNameH = Form("data/responses/TUFFs/%s/0%d%cH.imp", outdir, ant, tmb);
+		outNameV = Form("data/responses/TUFFs/%s/0%d%cV.imp", outdir, ant, tmb);
 	} 
 	else
 	{
 		impnameH = Form("%s/share/AnitaAnalysisFramework/responses/IndividualBRotter/%d%cH.imp", getenv("ANITA_UTIL_INSTALL_DIR"), ant, tmb);
 		impnameV = Form("%s/share/AnitaAnalysisFramework/responses/IndividualBRotter/%d%cV.imp", getenv("ANITA_UTIL_INSTALL_DIR"), ant, tmb);
-		outNameH = Form("/home/abl/anita_new/anitaBuildTool/components/AnitaAnalysisFramework/data/responses/TUFFs/%s/%d%cH.imp", outdir, ant, tmb);
-		outNameV = Form("/home/abl/anita_new/anitaBuildTool/components/AnitaAnalysisFramework/data/responses/TUFFs/%s/%d%cV.imp", outdir, ant, tmb);
+		outNameH = Form("data/responses/TUFFs/%s/%d%cH.imp", outdir, ant, tmb);
+		outNameV = Form("data/responses/TUFFs/%s/%d%cV.imp", outdir, ant, tmb);
 	}
 
 	TGraph tdH(impnameH);
