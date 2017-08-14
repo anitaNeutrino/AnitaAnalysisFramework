@@ -42,7 +42,7 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
 			hasIndex = true;
 			while(inf >> tempStr >> tempTime)
 			{
-				if(evTime <= tempTime) str = tempStr;
+				if(evTime < tempTime) str = tempStr;
 			}
 			indexF.Form(dir.Data());
 			dir.Form("%s/%s", indexF.Data(), str.c_str());
@@ -63,7 +63,7 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
 				hasIndex = true;
 				while(inf2 >> tempStr >> tempTime)
 				{
-					if(evTime <= tempTime) str = tempStr;
+					if(evTime < tempTime) str = tempStr;
 				}
 				indexF.Form(dir.Data());
 				dir.Form("%s/%s", indexF.Data(), str.c_str());
@@ -83,7 +83,7 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
 					hasIndex = true;
 					while(inf3 >> tempStr >> tempTime)
 					{
-						if(evTime <= tempTime) str = tempStr;
+						if(evTime < tempTime) str = tempStr;
 					}
 					indexF.Form(dir.Data());
 					dir.Form("%s/%s", indexF.Data(), str.c_str());
@@ -317,7 +317,6 @@ void AnitaResponse::ResponseManager::checkTime(unsigned int evTime)
   dir.Form(whichDir); 
   dp = opendir(dir.Data()); 
 	TString indexF;
-	std::string str;
 	std::string tempStr;
 	long tempTime;
 
@@ -331,7 +330,11 @@ void AnitaResponse::ResponseManager::checkTime(unsigned int evTime)
 		{
 			while(inf >> tempStr >> tempTime)
 			{
-				if(lastTime <= tempTime && evTime > tempTime) diffResponses = true;
+				if(lastTime < tempTime && evTime >= tempTime)
+				{
+					diffResponses = true;
+					indexF.Form("%s", dir.Data());
+				}
 			}
 		}
 	}
@@ -348,7 +351,11 @@ void AnitaResponse::ResponseManager::checkTime(unsigned int evTime)
 			{
 				while(inf2 >> tempStr >> tempTime)
 				{
-					if(lastTime <= tempTime && evTime > tempTime) diffResponses = true;
+					if(lastTime < tempTime && evTime >= tempTime)
+					{
+						diffResponses = true;
+						indexF.Form("%s", dir.Data());
+					}
 				}
 			}
 		}
@@ -364,7 +371,11 @@ void AnitaResponse::ResponseManager::checkTime(unsigned int evTime)
 				{
 					while(inf3 >> tempStr >> tempTime)
 					{
-						if(lastTime <= tempTime && evTime > tempTime) diffResponses = true;
+						if(lastTime < tempTime && evTime >= tempTime)
+						{
+							diffResponses = true;
+							indexF.Form("%s", dir.Data());
+						}
 					}
 				}
 			}
@@ -374,8 +385,9 @@ void AnitaResponse::ResponseManager::checkTime(unsigned int evTime)
 	lastTime = evTime;
 	if(diffResponses) 
 	{
+		dir.Form("%s/%s", indexF.Data(), tempStr.c_str());
 		memset(responses,0,sizeof(responses)); 
-		loadResponsesFromDir(whichDir, savePad, evTime);
+		loadResponsesFromDir(dir, savePad, evTime);
 		fprintf(stderr, "changed responses\n");
 	}
 }
