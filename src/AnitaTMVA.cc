@@ -21,8 +21,57 @@ AnitaTMVA::MVAVarSet::MVAVarSet(int n, const char * names[], const char * expr[]
   }
 }
 
+AnitaTMVA::MVAVarSet::MVAVarSet(const char * ifile) 
+{
+
+  FILE * f = fopen(ifile,"w"); 
+
+  if (!f) 
+  {
+    fprintf(stderr,"Could not load %s\n",ifile); 
+    return;
+  }
+
+  TString line; 
+
+  int lineno = 0;
+  while(line.Gets(f))
+  {
+    lineno++;
+    TString tok; 
+
+    Ssiz_t loc = line.First('#');
+    if (loc!=TString::kNPOS) 
+      line.Resize(loc); 
+
+
+    std::vector<TString> toks; 
+    while (line.Tokenize(tok,loc,"@"))
+    {
+      toks.push_back(tok.Strip(TString::kBoth,' ')); 
+    }
+
+    if (toks.size() < 2) 
+    {
+      fprintf(stderr,"Not enough tokens in line %d: %s\n", lineno, line.Data()); 
+    }
+    
+    add(MVAVar(toks[0].Data(), toks[1].Data(), toks.size() > 2 ? toks[2].Data()[0] : 'F' , toks.size() > 3 ? atoi(toks[3].Data()) : false)); 
+  }
+
+
+  fclose(f); 
+
+}
+
+
 
 TTree* AnitaTMVA::makeTMVATree(TTree * in, TFile * outf, const char * tree_name, const AnitaTMVA::MVAVarSet & vars , const char * cut) 
+{
+  return makeTMVATree(1,&in,outf,tree_name,vars,cut); 
+}
+
+TTree* AnitaTMVA::makeTMVATree(int ntrees, TTree ** in, TFile * outf, const char * tree_name, const AnitaTMVA::MVAVarSet & vars , const char * cut) 
 {
 
   std::stringstream drawstr; 
@@ -52,30 +101,41 @@ TTree* AnitaTMVA::makeTMVATree(TTree * in, TFile * outf, const char * tree_name,
   out->Branch("iteration", &mem[vars.N()+1].i); 
   drawstr << "Entry$:Iteration$"; 
 
+  std::vector<int> Nout(ntrees); 
 //  printf("%s\n",drawstr.str().c_str()); 
 
-  //now the real work happens... 
-  int Nout = in->Draw(drawstr.str().c_str(), cut,"goff"); 
+  //now the real work happens... which we can parallelize! 
+#ifdef ENABLE_OPENMP
+#pragma omp parallel for 
+#endif
+  for (int t = 0; t < ntrees; t++) 
+  {
+    Nout[t] = in[t]->Draw(drawstr.str().c_str(), cut,"goff"); 
+  }
  
+  outf->cd(); 
 
   //This is madness. I should just use a custom selector but I'm too lazy for that right now. 
-  for (int j =0; j < Nout; j++) 
+  for (int t = 0; t < ntrees; t++)
   {
-
-    for (int i = 0; i < vars.N()+2; i++)
+    for (int j =0; j < Nout[t]; j++) 
     {
-      char type = i < vars.N() ? vars.at(i).type : 'I'; 
-      switch(type) 
-      {
-        case 'I':
-          mem[i].i = in->GetVal(i)[j]; break;
-        case 'F': 
-        default: 
-          mem[i].f = in->GetVal(i)[j]; 
-      }
-    }
 
-    out->Fill(); 
+      for (int i = 0; i < vars.N()+2; i++)
+      {
+        char type = i < vars.N() ? vars.at(i).type : 'I'; 
+        switch(type) 
+        {
+          case 'I':
+            mem[i].i = in[t]->GetVal(i)[j]; break;
+          case 'F': 
+          default: 
+            mem[i].f = in[t]->GetVal(i)[j]; 
+        }
+      }
+
+      out->Fill(); 
+    }
   }
 
   return out; 
@@ -126,6 +186,22 @@ int AnitaTMVA::evaluateTMVA(TTree * tree, const AnitaTMVA::MVAVarSet & vars, con
 
   return 0; 
 
+}
+
+
+
+int AnitaTMVA::MVAVarSet::toFile(const char * ofile) 
+{
+
+  FILE * f = fopen(ofile,"w"); 
+  if (!f) return 1; 
+
+  for (int i = 0; i < N(); i++)
+  {
+    fprintf(f,"%s @ %s @ %c @ %d\n", at(i).name, at(i).expression, at(i).type, at(i).spectator); 
+  }
+  fclose(f); 
+  return 0; 
 }
 
 
