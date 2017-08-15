@@ -43,7 +43,7 @@ AnitaTMVA::MVAVarSet::MVAVarSet(const char * ifile)
     TString tok; 
 
     Ssiz_t loc = line.First('#');
-    if (loc!=TString::kNPOS) 
+    if (loc!=kNPOS) 
       line.Resize(loc); 
 
 
