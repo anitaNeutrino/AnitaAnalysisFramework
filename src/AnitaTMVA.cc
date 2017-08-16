@@ -26,7 +26,7 @@ AnitaTMVA::MVAVarSet::MVAVarSet(int n, const char * names[], const char * expr[]
 AnitaTMVA::MVAVarSet::MVAVarSet(const char * ifile) 
 {
 
-  FILE * f = fopen(ifile,"w"); 
+  FILE * f = fopen(ifile,"r"); 
 
   if (!f) 
   {
@@ -34,31 +34,38 @@ AnitaTMVA::MVAVarSet::MVAVarSet(const char * ifile)
     return;
   }
 
-  TString line; 
 
+  char buf[1024]; 
   int lineno = 0;
-  while(line.Gets(f))
+  while(!feof(f))
   {
+    fgets(buf,sizeof(buf), f); 
+    buf[strlen(buf)-1]=0; //truncate \n 
     lineno++;
-    TString tok; 
 
-    Ssiz_t loc = line.First('#');
-    if (loc!=kNPOS) 
-      line.Resize(loc); 
+    char * comment = strchr(buf,'#'); 
+    if (comment) *comment = 0; 
 
+
+
+    if(!strchr(buf,'@'))
+      continue; 
 
     std::vector<TString> toks; 
-    while (line.Tokenize(tok,loc,"@"))
+    char * tok = strtok(buf,"@"); 
+    while (tok)
     {
-      toks.push_back(tok.Strip(TString::kBoth,' ')); 
+      toks.push_back(TString(tok).Strip(TString::kBoth,' ')); 
+      tok = strtok(0,"@"); 
     }
 
     if (toks.size() < 2) 
     {
-      fprintf(stderr,"Not enough tokens in line %d: %s\n", lineno, line.Data()); 
+      fprintf(stderr,"Not enough tokens in line %d: %s\n", lineno, buf); 
     }
     
-    add(MVAVar(toks[0].Data(), toks[1].Data(), toks.size() > 2 ? toks[2].Data()[0] : 'F' , toks.size() > 3 ? atoi(toks[3].Data()) : false)); 
+    printf("Adding: %s/%s\n", toks[1].Data(), toks[0].Data()); 
+    add(MVAVar(strdup(toks[1].Data()), strdup(toks[0].Data()), toks.size() > 2 ? toks[2].Data()[0] : 'F' , toks.size() > 3 ? atoi(toks[3].Data()) : false)); 
   }
 
 
@@ -107,19 +114,21 @@ TTree* AnitaTMVA::makeTMVATree(int ntrees, TTree ** in, TFile * outf, const char
 //  printf("%s\n",drawstr.str().c_str()); 
 
   //now the real work happens... which we can parallelize! 
-#ifdef ENABLE_OPENMP
+#ifdef USE_OMP
 #pragma omp parallel for 
 #endif
   for (int t = 0; t < ntrees; t++) 
   {
-    Nout[t] = in[t]->Draw(drawstr.str().c_str(), cut,"goff"); 
+    in[t]->SetEstimate(in[t]->GetEntries() *10); 
+    Nout[t] = in[t]->Draw(drawstr.str().c_str(),cut,"goff"); 
   }
  
-  outf->cd(); 
 
+  outf->cd(); 
   //This is madness. I should just use a custom selector but I'm too lazy for that right now. 
   for (int t = 0; t < ntrees; t++)
   {
+    printf("Nout[%d]=%d\n", t, Nout[t]); 
     for (int j =0; j < Nout[t]; j++) 
     {
 
@@ -136,6 +145,7 @@ TTree* AnitaTMVA::makeTMVATree(int ntrees, TTree ** in, TFile * outf, const char
         }
       }
 
+      outf->cd(); 
       out->Fill(); 
     }
   }
