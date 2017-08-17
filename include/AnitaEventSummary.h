@@ -189,17 +189,15 @@ public:
       ClassDefNV(SourceHypothesis,3);
   };
 
-  class MCTruth
+  class MCTruth : public SourceHypothesis
   {
     public: 
       MCTruth() { reset(); } 
-    double phi; 
-    double theta; 
     WaveformInfo wf[AnitaPol::kNotAPol]; 
     double weight; 
     void reset(); 
 
-    ClassDefNV(MCTruth,3); 
+    ClassDefNV(MCTruth,4);
   }; 
 
   
@@ -293,12 +291,19 @@ public:
   double dThetaSun(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const{
     return dThetaSource(sun, peakInd, pol);
   }
-  double peakBearing(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const;
+  double dPhiMC(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const{
+    return dPhiSource(mc, peakInd, pol);
+  }
+  double dThetaMC(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const{
+    return dThetaSource(mc, peakInd, pol);
+  }
 
+  double peakBearing(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const;
+  double weight(){return mc.weight > 0 ? mc.weight : 1;}
   
   private: 
 
-  ClassDefNV(AnitaEventSummary, 21);
+  ClassDefNV(AnitaEventSummary, 22);
 }; 
 
 
