@@ -48,6 +48,18 @@ namespace AnitaTMVA
     /* make from arrays */ 
     MVAVarSet( int nvars,  const char * varNames[], const char * varExpr[], const char * type = 0, const bool * spectator = 0); //defaults to 'F'  
 
+    /* Make from a text file 
+     * 
+     * format is: 
+     * #comment 
+     * varname @ varExpr @ (type = F ) @ (spectator = 0) 
+     *
+     * */
+    MVAVarSet(const char * ifile); 
+
+    /* create a text file  on the format of an input file*/ 
+    int toFile(const char * ofile); 
+
     /* Use this TMVA::DataLoader (or a TMVA::Factory if using an old TMVA) */ 
     template <typename T> 
     void setUpData(T *t) const
@@ -95,6 +107,16 @@ namespace AnitaTMVA
                    const MVAVarSet & vars,
                     const char * selection
                    ); 
+
+  /** Parallel version of above, will treat each input tree separately 
+   **/ 
+ TTree* makeTMVATree(int ntrees, TTree ** intree, 
+                   TFile * outfile,
+                   const char * out_tree_name, 
+                   const MVAVarSet & vars,
+                    const char * selection
+                   ); 
+
 
 
   /** Adds the TMVA classifier result to a tree.  This tree should have been

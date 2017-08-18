@@ -85,10 +85,17 @@ void AnitaResponse::ImpulseResponseXCorr::deconvolve(size_t N, double df, FFTWCo
 {
 
   (void) df; 
+  double total_mag = 0; 
+  for (unsigned i = 0; i < N; i++) 
+  {
+    total_mag += response[i].getAbsSq(); 
+  }
+  total_mag = sqrt(total_mag); 
+  
   for (unsigned i = 0; i < N; i++) 
   {
     FFTWComplex r = response[i].conj(); 
-    Y[i]*=r; 
+    Y[i]*=r/total_mag; 
   }
 }
 

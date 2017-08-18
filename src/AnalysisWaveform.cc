@@ -82,6 +82,8 @@ static void setNewSize(TGraphAligned * g, int size )
 }
 
 
+static int complaints = 0; 
+
 AnalysisWaveform::AnalysisWaveform(int N, const double *x, const double * y, double nominal_dt,
                                    InterpolationType interp_type, InterpolationOptions *opt)
   : g_uneven(N,x,y),  dt(nominal_dt), fft(0), theEvenAkimaInterpolator(0,ROOT::Math::Interpolation::kAKIMA),
@@ -98,6 +100,25 @@ AnalysisWaveform::AnalysisWaveform(int N, const double *x, const double * y, dou
   phase_dirty = true;
   just_padded = false; 
   fft_len = 0; 
+
+  //HACK HACK HACK 
+  //check for zero's at the end
+  for (int i = 1; i < g_uneven.GetN(); i++)
+  {
+    if (g_uneven.GetX()[i] < g_uneven.GetX()[i-1])
+    {
+      if (complaints++ < 100)
+      {
+        fprintf(stderr,"WARNING: truncating graph to %d points to make monotonic\n",i); 
+        if (complaints == 100)
+        {
+          fprintf(stderr," shutting up about truncating graphs after 100 complaints... I think I've made my point clear!\n"); 
+        }
+      }
+      g_uneven.Set(i); 
+      break; 
+    }
+  }
 }
 
 AnalysisWaveform::AnalysisWaveform(int N, const double * y, double dt, double t0)

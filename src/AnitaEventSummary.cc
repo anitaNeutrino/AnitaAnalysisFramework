@@ -257,6 +257,7 @@ void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat, const TruthAnit
     mc.theta*=TMath::RadToDeg();
     mc.phi*=TMath::RadToDeg();
     mc.weight = truth->weight; 
+    mc.distance = pat->getTriggerTimeNsFromSource(truth->sourceLat, truth->sourceLon, truth->sourceAlt);
   }
   
 }
@@ -264,11 +265,10 @@ void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat, const TruthAnit
 
 void AnitaEventSummary::MCTruth::reset()
 {
- theta = -999;
- phi = -999; 
- memset(&wf[0],0,sizeof(WaveformInfo)); 
- memset(&wf[1],0,sizeof(WaveformInfo)); 
- weight = 0; 
+  SourceHypothesis::reset();
+  memset(&wf[0],0,sizeof(WaveformInfo));
+  memset(&wf[1],0,sizeof(WaveformInfo));
+  weight = 0;
 }
 
 
