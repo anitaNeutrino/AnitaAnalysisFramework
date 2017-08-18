@@ -15,7 +15,8 @@ class TruthAnitaEvent;
  * */ 
 
 
-class AnitaEventSummary 
+class AnitaEventSummary
+:public TObject
 {
 public: 
 
@@ -298,7 +299,7 @@ public:
   
   private: 
 
-  ClassDefNV(AnitaEventSummary, 21);
+  ClassDefNV(AnitaEventSummary, 22);
 }; 
 
 
