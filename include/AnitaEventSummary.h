@@ -15,8 +15,7 @@ class TruthAnitaEvent;
  * */ 
 
 
-class AnitaEventSummary
-:public TObject
+class AnitaEventSummary : public TObject
 {
 public: 
 
@@ -195,10 +194,11 @@ public:
     public: 
       MCTruth() { reset(); } 
     WaveformInfo wf[AnitaPol::kNotAPol]; 
-    double weight; 
+    double weight;
+    double energy;
     void reset(); 
 
-    ClassDefNV(MCTruth,4);
+    ClassDefNV(MCTruth,5);
   }; 
 
   
@@ -271,41 +271,56 @@ public:
   const WaveformInfo& higherDeconvolvedFiltered(int peakInd=0) const;
 
   // Resolution utility functions, for more keystoke saving
-  double dPhiSource(const SourceHypothesis& source, int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const; 
-  double dThetaSource(const SourceHypothesis& source, int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const;
+  double dPhiSource(const SourceHypothesis& source, int peakInd=0, int polInd = AnitaPol::kNotAPol) const; 
+  double dThetaSource(const SourceHypothesis& source, int peakInd=0, int polInd = AnitaPol::kNotAPol) const;
 
-  double dPhiWais(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const{
-    return dPhiSource(wais, peakInd, pol);
+  double dPhiWais(int peakInd=0, int polInd = AnitaPol::kNotAPol) const{
+    return dPhiSource(wais, peakInd, polInd);
   }
-  double dThetaWais(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const{
-    return dThetaSource(wais, peakInd, pol);
+  double dThetaWais(int peakInd=0, int polInd = AnitaPol::kNotAPol) const{
+    return dThetaSource(wais, peakInd, polInd);
   }
-  double dPhiLDB(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const{
-    return dPhiSource(ldb, peakInd, pol);
+  double dPhiLDB(int peakInd=0, int polInd = AnitaPol::kNotAPol) const{
+    return dPhiSource(ldb, peakInd, polInd);
   }
-  double dThetaLDB(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const{
-    return dThetaSource(ldb, peakInd, pol);
+  double dThetaLDB(int peakInd=0, int polInd = AnitaPol::kNotAPol) const{
+    return dThetaSource(ldb, peakInd, polInd);
   }
-  double dPhiSun(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const{
-    return dPhiSource(sun, peakInd, pol);
+  double dPhiSun(int peakInd=0, int polInd = AnitaPol::kNotAPol) const{
+    return dPhiSource(sun, peakInd, polInd);
   }
-  double dThetaSun(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const{
-    return dThetaSource(sun, peakInd, pol);
+  double dThetaSun(int peakInd=0, int polInd = AnitaPol::kNotAPol) const{
+    return dThetaSource(sun, peakInd, polInd);
   }
-  double dPhiMC(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const{
-    return dPhiSource(mc, peakInd, pol);
+  double dPhiMC(int peakInd=0, int polInd = AnitaPol::kNotAPol) const{
+    return mc.weight > 0 ? dPhiSource(mc, peakInd, polInd) : -999;
   }
-  double dThetaMC(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const{
-    return dThetaSource(mc, peakInd, pol);
+  double dThetaMC(int peakInd=0, int polInd = AnitaPol::kNotAPol) const{
+    return mc.weight > 0 ? dThetaSource(mc, peakInd, polInd) : -999;
   }
 
-  double peakBearing(int peakInd=0, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol) const;
+  double peakBearing(int peakInd=0, int polInd = AnitaPol::kNotAPol) const;
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Monte Carlo utilities.
+  // What if your MC neutrino isn't the brighest peak in the map?
+  // These utilitiy functions loop through all peaks in the polarisation of choice and return the one most
+  // compatible with the MC Truth information.
+  // In the case that you don't have any MC truth information (i.e. just data) calls the regular functions:
+  // higherPeak(), higherCoherent(), AND WILL OVERRIDE THE POLARISATION YOU GIVE IT! etc.
+  //////////////////////////////////////////////////////////////// /////////////////////////////////////////
   double weight(){return mc.weight > 0 ? mc.weight : 1;}
-  
-  private: 
+  int bestMCPeakInd(int polInd = AnitaPol::kNotAPol) const;
+  const PointingHypothesis& bestMCPeak(int polInd = AnitaPol::kNotAPol) const;
+  const WaveformInfo& bestMCCoherent(int polInd = AnitaPol::kNotAPol) const;
+  const WaveformInfo& bestMCDeconvolved(int polInd = AnitaPol::kNotAPol) const;
+  const WaveformInfo& bestMCCoherentFiltered(int polInd = AnitaPol::kNotAPol) const;
+  const WaveformInfo& bestMCDeconvolvedFiltered(int polInd = AnitaPol::kNotAPol) const;
 
-  ClassDefNV(AnitaEventSummary, 22);
-}; 
+  private:
+
+  ClassDefNV(AnitaEventSummary, 24);
+};
 
 
 

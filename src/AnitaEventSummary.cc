@@ -258,6 +258,7 @@ void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat, const TruthAnit
     mc.phi*=TMath::RadToDeg();
     mc.weight = truth->weight; 
     mc.distance = pat->getTriggerTimeNsFromSource(truth->sourceLat, truth->sourceLon, truth->sourceAlt);
+    mc.energy = truth->nuMom; // I guess this won't be true if icemc ever simulates non-relativistic neutrinos :P
   }
   
 }
@@ -269,6 +270,7 @@ void AnitaEventSummary::MCTruth::reset()
   memset(&wf[0],0,sizeof(WaveformInfo));
   memset(&wf[1],0,sizeof(WaveformInfo));
   weight = 0;
+  energy = 0;
 }
 
 
@@ -344,11 +346,7 @@ double AnitaEventSummary::WaveformInfo::totalPolFrac() const {
 
 /** 
  * Make the source hypothesis go back to nonsense thats easy to recognize
- * 
- * 
- * 
  */
-
 void AnitaEventSummary::SourceHypothesis::reset() {
 
   theta = -999;
@@ -403,8 +401,8 @@ void AnitaEventSummary::PayloadLocation::update(const Adu5Pat* pat){
  * 
  * @return the phi angle between the selected peak and source
  */
-double AnitaEventSummary::dPhiSource(const SourceHypothesis& source, int peakInd, AnitaPol::AnitaPol_t pol) const{
-
+double AnitaEventSummary::dPhiSource(const SourceHypothesis& source, int peakInd, int polInd) const{
+  AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
   // select pol if default value AnitaPol::kNotAPol passed
   pol = pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
 
@@ -439,15 +437,17 @@ double AnitaEventSummary::dPhiSource(const SourceHypothesis& source, int peakInd
  * 
  * @return the theta angle between the selected peak and WAIS divide
  */
-double AnitaEventSummary::dThetaSource(const SourceHypothesis& source, int peakInd, AnitaPol::AnitaPol_t pol) const{
+double AnitaEventSummary::dThetaSource(const SourceHypothesis& source, int peakInd, int polInd) const{
+  AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;  
   // select pol if default value AnitaPol::kNotAPol passed
   pol = pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
   double dTheta = peak[pol][peakInd].theta + source.theta; // + instead of - due to sign convention difference
   return dTheta;
 }
 
-
-double AnitaEventSummary::peakBearing(int peakInd, AnitaPol::AnitaPol_t pol) const{
+double AnitaEventSummary::peakBearing(int peakInd, int polInd) const{
+  AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;  
+  
   pol = pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
   double heading = double(anitaLocation.heading);
 
@@ -465,4 +465,60 @@ double AnitaEventSummary::peakBearing(int peakInd, AnitaPol::AnitaPol_t pol) con
               << heading << std::endl;
   }
   return bearing;
+}
+
+
+int AnitaEventSummary::bestMCPeakInd(int polInd) const {
+  AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
+  pol = mc.weight <= 0 || pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
+  int bestPeakInd = 0;
+  if(mc.weight > 0){
+    double minSquareAngleDiff = DBL_MAX;
+    for(int peakInd=0; peakInd < nPeaks[pol]; peakInd++){
+      double dPhi = dPhiMC(peakInd, pol);
+      double dTheta = dPhiMC(peakInd, pol);
+      double dAngleSq = dPhi*dPhi + dTheta*dTheta;
+      if(dAngleSq < minSquareAngleDiff){
+        minSquareAngleDiff = dAngleSq;
+        bestPeakInd = peakInd;
+      }
+    }
+  }
+  // std::cerr << "In " << __PRETTY_FUNCTION__ << ", weight = " << mc.weight << ", pol = " << pol << ", bestPeakInd = " << bestPeakInd << std::endl;
+  return bestPeakInd;
+}
+
+const AnitaEventSummary::PointingHypothesis& AnitaEventSummary::bestMCPeak(int polInd) const {
+  AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;  
+  pol = mc.weight <= 0 || pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
+  int peakInd = bestMCPeakInd(pol);
+  return peak[pol][peakInd];
+}
+
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::bestMCCoherent(int polInd) const {
+  AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
+  pol = mc.weight <= 0 || pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;  
+  int peakInd = bestMCPeakInd(pol);
+  return coherent[pol][peakInd];
+}
+
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::bestMCDeconvolved(int polInd) const {
+  AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;  
+  pol = mc.weight <= 0 ||pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;  
+  int peakInd = bestMCPeakInd(pol);
+  return deconvolved[pol][peakInd];
+}
+
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::bestMCCoherentFiltered(int polInd) const {
+  AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
+  pol = mc.weight <= 0 || pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
+  int peakInd = bestMCPeakInd(pol);
+  return coherent_filtered[pol][peakInd];
+}
+
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::bestMCDeconvolvedFiltered(int polInd) const {
+  AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;  
+  pol = mc.weight <= 0 || pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
+  int peakInd = bestMCPeakInd(pol);
+  return deconvolved_filtered[pol][peakInd];
 }
