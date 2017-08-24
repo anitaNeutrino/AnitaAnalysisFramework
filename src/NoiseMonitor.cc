@@ -3,17 +3,126 @@
 #include "RawAnitaHeader.h"
 #include "FilterStrategy.h"
 #include "FilterOperation.h"
+#include "AnitaDataset.h"
 #include <numeric>
 
 #include "TTree.h"
 #include "TFile.h"
+#include "TProfile2D.h"
+#include <stdlib.h>
 
 ClassImp(NoiseMonitor::FilteredMinBiasEventNoise); // For ROOT IO
 
-/** 
+
+UInt_t NoiseMonitor::makeStratHashFromDesc(const FilterStrategy* fs){
+  TString hasher;
+  for(unsigned i=0; i < fs->nOperations(); i++){
+    hasher += fs->getOperation(i)->description();
+  }
+  UInt_t hash = hasher.Hash();
+  return hash;
+}
+
+
+
+void NoiseMonitor::rmsProfile(int run, FilterStrategy* fs, double binWidth, const char* outputDir){
+
+  if(!outputDir){
+    outputDir = getenv("ANITA_RMS_DIR");
+  }
+  if(!outputDir){
+    outputDir = ".";
+  }
+
+  bool must_delete_strat = false;
+  if(!fs){
+    fs = new FilterStrategy();
+    must_delete_strat = true;
+  }
+
+  UInt_t hash = makeStratHashFromDesc(fs);
+
+  TString fileName = TString::Format("%s/rms_%d_%u.root", outputDir, run, hash);
+
+  std::cout << "Info in " << __PRETTY_FUNCTION__ << ", generating RMS profiles for run " << run << " in file " << fileName << std::endl;
+  TFile* f = TFile::Open(fileName, "recreate");
+
+  AnitaDataset d(run);
+  const int n = d.N();
+  RawAnitaHeader* header = NULL;
+
+  d.first();
+  header = d.header();
+  double startTime = header->realTime;
+
+  d.last();
+  header = d.header();
+  double endTime = header->realTime;
+
+  const int nBin = (endTime - startTime)/binWidth;
+
+  TString name = TString::Format("rms?_%d_%u", run, hash);
+  TString title = TString::Format("RMS for each ?Pol for run %d (FilterStrategy operations descriptions hash = %u);realTime;Antenna", run, hash);
+
+  const Ssiz_t namePolCharPos = name.First('?');
+  const Ssiz_t titlePolCharPos = title.First('?');
+
+  std::vector<TProfile2D*> profs(AnitaPol::kNotAPol, NULL);
+  for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
+    AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
+
+    name[namePolCharPos] = AnitaPol::polAsChar(pol);
+    title[titlePolCharPos] = AnitaPol::polAsChar(pol);
+
+    profs.at(pol) = new TProfile2D(name, title, nBin, startTime, endTime, NUM_SEAVEYS, -0.5, NUM_SEAVEYS-0.5);
+  }
+
+  const int printEvery = n/100;
+  int nextPrint = 0;
+  for(int entry=0; entry < n; entry++){
+    d.getEntry(entry);
+    header = d.header();
+    if(header->getTriggerBitRF()==0){
+
+      FilteredAnitaEvent fEv(d.useful(), fs, d.gps(), header);
+      for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
+        AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
+
+        for(int ant=0; ant < NUM_SEAVEYS; ant++){
+          const AnalysisWaveform* wf = fEv.getFilteredGraph(ant, pol);
+          const TGraphAligned* gr = wf->even();
+          double rms = TMath::RMS(gr->GetN(), gr->GetY());
+          profs.at(pol)->Fill(header->realTime, ant, rms);
+        }
+      }
+    }
+    if(entry == nextPrint){
+      std::cerr << "\r" << 100*(entry+1)/n << "% ";
+      nextPrint += printEvery;
+      nextPrint = nextPrint >= n ? n - 1 : nextPrint;
+      if(entry==n-1){
+        std::cerr << std::endl;
+      }
+    }
+  }
+
+
+  f->Write();
+  f->Close();
+
+  if(must_delete_strat){
+    delete fs;
+  }
+
+  std::cout << "Info in " << __PRETTY_FUNCTION__ << ", complete!" << std::endl;
+  return;
+}
+
+
+/**
  * Default constructor. Chose the time scale to monitor the noise over, exactly which waveform to check.
  * 
- * This class is intended to give you the noise value for an SNR like number.
+ * This class is intended to give you the noise value for an SNR-like number.
  *
  * @param timeScaleSeconds is the number of seconds to track minimum bias events over
  * @param waveOption is the internal state of the AnalysisWaveform you want to query for the waveform RMS.
@@ -30,7 +139,7 @@ NoiseMonitor::NoiseMonitor(double timeScaleSeconds, WaveOption waveOption, TFile
 
 
 /** 
- * Default constructor. Chose the time scale to monitor the noise over, exactly which waveform to check.
+ * Constructor from pre-calculated file.
  * 
  * This class is intended to give you the noise value for an SNR like number.
  *
@@ -105,7 +214,7 @@ void NoiseMonitor::update(const FilteredAnitaEvent* fEv){
             if(opInd < nOp - 1){
               fEventNoise->fFilterDesc += "\n";
             }
-          }    
+          }
         }
         else{
           fEventNoise->fFilterDesc = "No filter";

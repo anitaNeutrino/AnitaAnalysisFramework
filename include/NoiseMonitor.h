@@ -6,6 +6,7 @@
 #include "TObject.h"
 
 class FilteredAnitaEvent;
+class FilterStrategy;
 class TFile;
 class TTree;
 
@@ -36,6 +37,7 @@ class NoiseMonitor {
 
 
 
+  void rmsProfile(int run, FilterStrategy* fs = NULL, double binWidth=defaultTimeScaleSeconds, const char* outputDir=NULL);
 
   /**
    * @class Wrapper class for simplified ROOT IO, just holds data we'd like to persist
@@ -106,6 +108,7 @@ class NoiseMonitor {
 
   static const char* getDefaultTreeName(){return "filteredNoiseTree";}
   static const char* getDefaultBranchName(){return "filteredNoise";}
+  static UInt_t makeStratHashFromDesc(const FilterStrategy* fs);
 
 };
 
