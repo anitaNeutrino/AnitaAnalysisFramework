@@ -18,7 +18,10 @@ const double C_IN_M_NS = 0.299792;
  *
  * Default constructor for ROOT
  */
-AnitaEventSummary::AnitaEventSummary(){
+AnitaEventSummary::AnitaEventSummary()
+    : fHighestPeakIndex(-1), fHighestPol(AnitaPol::kNotAPol),
+      fMCPeakIndex(-1), fMCPol(AnitaPol::kNotAPol)
+{
   zeroInternals();
 }
 
@@ -31,7 +34,10 @@ AnitaEventSummary::AnitaEventSummary(){
  * Takes care of copying the header info into the event summary
  */
 AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header)
-    : anitaLocation() {
+    : anitaLocation(),
+      fHighestPeakIndex(-1), fHighestPol(AnitaPol::kNotAPol),
+      fMCPeakIndex(-1), fMCPol(AnitaPol::kNotAPol)
+{
 
   zeroInternals();
 
@@ -52,8 +58,10 @@ AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header)
  *
  * Takes care of copying the header and GPS info into the event summary
  */
-AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header, UsefulAdu5Pat* pat, const TruthAnitaEvent * truth) :
-    anitaLocation(dynamic_cast<Adu5Pat*>(pat))
+AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header, UsefulAdu5Pat* pat, const TruthAnitaEvent * truth)
+    : anitaLocation(dynamic_cast<Adu5Pat*>(pat)),
+      fHighestPeakIndex(-1), fHighestPol(AnitaPol::kNotAPol),
+      fMCPeakIndex(-1), fMCPol(AnitaPol::kNotAPol)
 {
 
   zeroInternals();
@@ -81,7 +89,9 @@ void AnitaEventSummary::zeroInternals(){
       memset(&coherent[polInd][dir],0,sizeof(WaveformInfo)); 
       memset(&deconvolved[polInd][dir],0,sizeof(WaveformInfo)); 
       memset(&coherent_filtered[polInd][dir],0,sizeof(WaveformInfo)); 
-      memset(&deconvolved_filtered[polInd][dir],0,sizeof(WaveformInfo)); 
+      memset(&deconvolved_filtered[polInd][dir],0,sizeof(WaveformInfo));
+
+      peak[polInd][dir].fContainer = this; // Set non-persistent pointer to container in hacky fashion.
     }
   }
   memset(&flags,0, sizeof(EventFlags)); 
@@ -95,26 +105,40 @@ void AnitaEventSummary::zeroInternals(){
 }
 
 
+
 /** 
- * Utility function to get the polarisation of the higher map peak
+ * Utility function to get the polarisation of the highest map peak
  * Useful for TTree::Draw() 
  * 
- * @param peakInd which highest peak. The default = 0, which is the highest (not sure how much sense it makes for peakInd > 0)
- * 
- * @return the polarisation which has the higher interferometric map peak (kNotAPol if peakInd required outside allowed range)
+ * @return the polarisation of the largest interferometric map peak
  */
-AnitaPol::AnitaPol_t AnitaEventSummary::higherPeakPol(int peakInd) const{
+AnitaPol::AnitaPol_t AnitaEventSummary::highestPol() const{
+  findHighestPeak();
+  return fHighestPol;
+}
 
-  AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol;
-  if(peakInd >= 0 && peakInd < maxDirectionsPerPol){
-    if(peak[AnitaPol::kVertical][peakInd].value >= peak[AnitaPol::kHorizontal][peakInd].value){
-      pol = AnitaPol::kVertical;
-    }
-    else{
-      pol = AnitaPol::kHorizontal;
-    }
-  }
-  return pol;
+
+/** 
+ * Utility function to get the polarisation of the highest map peak
+ * Useful for TTree::Draw()
+ * 
+ * @return the polarisation of the largest interferometric map peak
+ */
+int AnitaEventSummary::highestPolAsInt() const{
+  findHighestPeak();
+  return int(fHighestPol);
+}
+
+
+/** 
+ * Utility function to get the index of the highest map peak
+ * Useful for TTree::Draw()
+ * 
+ * @return the index of the largest interferometric map peak
+ */
+int AnitaEventSummary::highestPeakInd() const{
+  findHighestPeak();
+  return fHighestPeakIndex;
 }
 
 
@@ -123,76 +147,73 @@ AnitaPol::AnitaPol_t AnitaEventSummary::higherPeakPol(int peakInd) const{
  * Utility function to return a const reference to the higher map peak. 
  * Useful for TTree::Draw() 
  * 
- * @param peakInd peakInd which highest peak. The default = 0, which is the highest (not sure how much sense it makes for peakInd > 0)
- * 
- * @return the 
+ * @return the peak with largest value
  */
-const AnitaEventSummary::PointingHypothesis& AnitaEventSummary::higherPeak(int peakInd) const{
-  AnitaPol::AnitaPol_t pol = higherPeakPol();
-  return peak[pol][peakInd];
+const AnitaEventSummary::PointingHypothesis& AnitaEventSummary::highestPeak() const{
+  findHighestPeak();
+  return peak[fHighestPol][fHighestPeakIndex];
 }
 
 
 /** 
- * Utility function to return a const reference to the the unfiltered coherently summed waveform info of the polarisation of the higher map peak
+ * Utility function to return a const reference to the the unfiltered coherently summed waveform info of the polarisation of the highest map peak
  * Useful for TTree::Draw() 
  * 
- * @param peakInd peakInd which highest peak. The default = 0, which is the highest (not sure how much sense it makes for peakInd > 0)
- * 
- * @return the unfiltered coherently summed waveform info
+ * @return the unfiltered coherently summed waveform info corresponding to the highest map peak
  */
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::higherCoherent(int peakInd) const{
-  AnitaPol::AnitaPol_t pol = higherPeakPol();
-  return coherent[pol][peakInd];
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::highestCoherent() const{
+  findHighestPeak();
+  return coherent[fHighestPol][fHighestPeakIndex];
 }
 
 
 /** 
- * Utility function to return a const reference to the the unfiltered and deconvolved coherently summed waveform info of the polarisation of the higher map peak
+ * Utility function to return a const reference to the the unfiltered, deconvolved coherently summed waveform info of the polarisation of the highest map peak
  * Useful for TTree::Draw() 
  * 
- * @param peakInd peakInd which highest peak. The default = 0, which is the highest (not sure how much sense it makes for peakInd > 0)
- * 
- * @return the unfiltered, deconvolved coherently summed waveform info
+ * @return the unfiltered, deconvolved coherently summed waveform info corresponding to the highest map peak
  */
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::higherDeconvolved(int peakInd) const{
-  AnitaPol::AnitaPol_t pol = higherPeakPol();
-  return deconvolved[pol][peakInd];
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::highestDeconvolved() const{
+  findHighestPeak();
+  return deconvolved[fHighestPol][fHighestPeakIndex];
 }
 
 
 
 
 /** 
- * Utility function to return a const reference to the the filtered coherently summed waveform info of the polarisation of the higher map peak
+ * Utility function to return a const reference to the the filtered coherently summed waveform info of the polarisation of the highest map peak
  * Useful for TTree::Draw() 
  * 
- * @param peakInd peakInd which highest peak. The default = 0, which is the highest (not sure how much sense it makes for peakInd > 0)
- * 
- * @return the filtered coherently summed waveform info
+ * @return the filtered coherently summed waveform info corresponding to the highest map peak
  */
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::higherCoherentFiltered(int peakInd) const{
-  AnitaPol::AnitaPol_t pol = higherPeakPol();
-  return coherent_filtered[pol][peakInd];
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::highestCoherentFiltered() const{
+  findHighestPeak();
+  return coherent_filtered[fHighestPol][fHighestPeakIndex];
 }
 
 
 /** 
- * Utility function to return a const reference to the the filtered and deconvolved coherently summed waveform info of the polarisation of the higher map peak
+ * Utility function to return a const reference to the the filtered, deconvolved coherently summed waveform info of the polarisation of the highest map peak
  * Useful for TTree::Draw() 
  * 
- * @param peakInd peakInd which highest peak. The default = 0, which is the highest (not sure how much sense it makes for peakInd > 0)
- * 
- * @return the filtered, deconvolved coherently summed waveform info
+ * @return the filtered, deconvolved coherently summed waveform info corresponding to the highest map peak
  */
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::higherDeconvolvedFiltered(int peakInd) const{
-  AnitaPol::AnitaPol_t pol = higherPeakPol();
-  return deconvolved_filtered[pol][peakInd];
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::highestDeconvolvedFiltered() const{
+  findHighestPeak();
+  return deconvolved_filtered[fHighestPol][fHighestPeakIndex];
 }
 
 
 
 
+
+
+/** 
+ * Set trigger information in EventFlags directly from the header
+ * 
+ * @param header is a pointer to the event header
+ */
 void AnitaEventSummary::setTriggerInfomation(const RawAnitaHeader* header){  
 
   // setting to zero, for testing this function.
@@ -233,6 +254,14 @@ void AnitaEventSummary::setTriggerInfomation(const RawAnitaHeader* header){
 }
 
 
+
+
+/** 
+ * Set the source information using the GPS info (and MC truth if non-NULL)
+ * 
+ * @param pat is a pointer to the event GPS information
+ * @param truth is a pointer to the MC Truth, default value is NULL
+ */
 void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat, const TruthAnitaEvent * truth){
 
 
@@ -260,10 +289,13 @@ void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat, const TruthAnit
     mc.distance = pat->getTriggerTimeNsFromSource(truth->sourceLat, truth->sourceLon, truth->sourceAlt);
     mc.energy = truth->nuMom; // I guess this won't be true if icemc ever simulates non-relativistic neutrinos :P
   }
-  
 }
 
 
+
+/** 
+ * Set default values for MC truth
+ */
 void AnitaEventSummary::MCTruth::reset()
 {
   SourceHypothesis::reset();
@@ -392,21 +424,25 @@ void AnitaEventSummary::PayloadLocation::update(const Adu5Pat* pat){
 }
 
 
-
 /** 
- * Use the summary information to get the source resolution peak.phi - source.phi.
+ * Get the angle between this peak and the source
  * 
- * @param peakInd (default=0) the index of the peak
- * @param pol (default AnitaPol::kNotAPol) the polarisation (uses higherPeakPol() if passed AnitaPol::kNotAPol)
+ * @param source is a SourceHypothesis for the event (e.g. WAIS)
  * 
  * @return the phi angle between the selected peak and source
  */
-double AnitaEventSummary::dPhiSource(const SourceHypothesis& source, int peakInd, int polInd) const{
-  AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
-  // select pol if default value AnitaPol::kNotAPol passed
-  pol = pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
+double AnitaEventSummary::PointingHypothesis::dPhiSource(const SourceHypothesis& source) const{
+  return dPhi(source.phi);
+}
 
-  double dPhi = peak[pol][peakInd].phi - source.phi;
+
+/** 
+ * Get the angle between this peak and an arbitrary phi
+ * 
+ * @return the phi angle between the selected peak and source
+ */
+double AnitaEventSummary::PointingHypothesis::dPhi(double phi2) const{
+  double dPhi = phi - phi2;
   if(dPhi < -180){
     dPhi += 360;
   }
@@ -415,10 +451,9 @@ double AnitaEventSummary::dPhiSource(const SourceHypothesis& source, int peakInd
   }
 
   if(dPhi < -180 || dPhi >= 180){
-    std::cerr << "Warning in " << __PRETTY_FUNCTION__ << " for run "
-              << run << ", eventNumber " << eventNumber
-              << " dPhi = " << dPhi << ". peak["<< pol << "]["<< peakInd << "].phi = "
-              << peak[pol][peakInd].phi << " and the source is at " << source.phi << std::endl;
+    std::cerr << "Warning in " << __PRETTY_FUNCTION__ << " dPhi = " << dPhi
+              << " is outside expected range, peak phi = " << phi << ", source phi = "
+              << phi2 << std::endl;
   }
 
   return dPhi;
@@ -426,99 +461,152 @@ double AnitaEventSummary::dPhiSource(const SourceHypothesis& source, int peakInd
 
 
 
+
 /** 
- * Use the summary information to get the wais resolution peak.theta - source.theta.
+ * Use the summary information to get the difference in angle between two peak thetas.
+ * 
+ * Note:
+ * The sign convention for theta varies between ANITA libraries for silly historical reasons.
+ * Acclaim/UCorrelator have +ve theta is up.
+ * AnitaEventCorrelator (i.e. all usefulAdu5Pat functions) have +ve theta means down.
+ * 
+ * @param theta2 an angle to find the difference between
+ * @param different_sign_conventions is a boolian to invert theta2, set to true if interfacing between theta derived in anitaEventCorrelator and Acclaim/UCorrelator (default is false)
+ * 
+ * @return the theta angle between the peak and the source
+ */
+double AnitaEventSummary::PointingHypothesis::dTheta(double theta2, bool different_sign_conventions) const{
+  int factor = different_sign_conventions ? -1 : 1;
+  double dTheta = theta - factor*theta2; // + instead of - due to sign convention difference
+  return dTheta;
+}
+
+
+/** 
+ * Use the summary information to get the angle difference in theta peak.theta - source.theta.
  * 
  * Note:
  * Accounts for the silly sign convention difference, UsefulAdu5Pat has +ve theta is down, the UCorrelator/anitaAnalysisTools have +ve theta is up
  * 
- * @param peakInd (default=0) the index of the peak
- * @param pol (default AnitaPol::kNotAPol) the polarisation (uses higherPeakPol() if passed AnitaPol::kNotAPol)
+ * @param source is a SourceHypothesis for the event (e.g. WAIS)
  * 
- * @return the theta angle between the selected peak and WAIS divide
+ * @return the theta angle between the peak and the source
  */
-double AnitaEventSummary::dThetaSource(const SourceHypothesis& source, int peakInd, int polInd) const{
-  AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;  
-  // select pol if default value AnitaPol::kNotAPol passed
-  pol = pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
-  double dTheta = peak[pol][peakInd].theta + source.theta; // + instead of - due to sign convention difference
-  return dTheta;
+double AnitaEventSummary::PointingHypothesis::dThetaSource(const SourceHypothesis& source) const{
+  return dTheta(source.theta, true);
 }
 
-double AnitaEventSummary::peakBearing(int peakInd, int polInd) const{
-  AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;  
-  
-  pol = pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
-  double heading = double(anitaLocation.heading);
 
+
+/** 
+ * Get the bearing of the peak (i.e. phi angle from north increasing clockwise)
+ * 
+ * @return the peak bearing
+ */
+double AnitaEventSummary::PointingHypothesis::bearing() const{
   // heading increases clockwise, payload phi increases anti-clockwise so we subtract it from heading.
-  double bearing = heading - peak[pol][peakInd].phi;
+  const AnitaEventSummary* sum = getContainer(__PRETTY_FUNCTION__);
+  double bearing = -9999;
+  if(sum){
+    bearing = double(sum->anitaLocation.heading) - phi;
 
-  bearing = bearing < 0 ? bearing + 360 : bearing;
-  bearing = bearing >= 360 ? bearing - 360 : bearing;
+    bearing = bearing < 0 ? bearing + 360 : bearing;
+    bearing = bearing >= 360 ? bearing - 360 : bearing;
   
-  if(bearing < 0 || bearing >= 360){
-    std::cerr << "Warning in " << __PRETTY_FUNCTION__ << " for run "
-              << run << ", eventNumber " << eventNumber
-              << ". the bearing of peak[" << pol << "][" << peakInd << "] = "
-              << bearing << ". The phi is " << peak[pol][peakInd].phi << " with heading "
-              << heading << std::endl;
+    if(bearing < 0 || bearing >= 360){
+      std::cerr << "Warning in " << __PRETTY_FUNCTION__ << ", peak bearing = "
+                << bearing << ", phi = " << phi << ", heading = " << sum->anitaLocation.heading << std::endl;
+    }
   }
   return bearing;
 }
 
 
-int AnitaEventSummary::bestMCPeakInd(int polInd) const {
-  AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
-  pol = mc.weight <= 0 || pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
-  int bestPeakInd = 0;
-  if(mc.weight > 0){
-    double minSquareAngleDiff = DBL_MAX;
-    for(int peakInd=0; peakInd < nPeaks[pol]; peakInd++){
-      double dPhi = dPhiMC(peakInd, pol);
-      double dTheta = dPhiMC(peakInd, pol);
-      double dAngleSq = dPhi*dPhi + dTheta*dTheta;
-      if(dAngleSq < minSquareAngleDiff){
-        minSquareAngleDiff = dAngleSq;
-        bestPeakInd = peakInd;
-      }
-    }
+/** 
+ * Get the polarisation of the peak best corresponding to the MC peak
+ * In the case of data, just returns the highestPeak
+ * 
+ * @return the polarisation of the peak closest to MC truth (or highest peak if data)
+ */
+AnitaPol::AnitaPol_t AnitaEventSummary::mcPol() const {
+  findMC();
+  return fMCPol;
+}
+
+int AnitaEventSummary::mcPolAsInt() const {
+  findMC();
+  return int(fMCPol);
+}
+
+int AnitaEventSummary::mcPeakInd() const {
+  findMC();
+  return fMCPeakIndex;
+}
+
+const AnitaEventSummary::PointingHypothesis& AnitaEventSummary::mcPeak() const {
+  findMC();
+  return peak[fMCPol][fMCPeakIndex];
+}
+
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mcCoherent() const {
+  findMC();
+  return coherent[fMCPol][fMCPeakIndex];
+}
+
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mcDeconvolved() const {
+  findMC();
+  return deconvolved[fMCPol][fMCPeakIndex];
+}
+
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mcCoherentFiltered() const {
+  findMC();
+  return coherent_filtered[fMCPol][fMCPeakIndex];
+}
+
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mcDeconvolvedFiltered() const {
+  findMC();
+  return deconvolved_filtered[fMCPol][fMCPeakIndex];
+}
+
+
+/** 
+ * Print warning if fContainer is NULL as the majority the utility functions that rely on it will print nonsense
+ * 
+ * @param funcName should be the __PRETTY_FUNCTION__ macro for nice debugging info
+ * 
+ * @return the fContainer pointer
+ */
+const AnitaEventSummary* AnitaEventSummary::PointingHypothesis::getContainer(const char* funcName) const{
+  if(!fContainer){
+    std::cerr << "Error in " << funcName
+              << " don't have access to AnitaEventSummary that contains me!"
+              << " Was the AnitaEventSummary constructor called?"
+              << std::endl;
   }
-  // std::cerr << "In " << __PRETTY_FUNCTION__ << ", weight = " << mc.weight << ", pol = " << pol << ", bestPeakInd = " << bestPeakInd << std::endl;
-  return bestPeakInd;
+  return fContainer;
 }
 
-const AnitaEventSummary::PointingHypothesis& AnitaEventSummary::bestMCPeak(int polInd) const {
-  AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;  
-  pol = mc.weight <= 0 || pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
-  int peakInd = bestMCPeakInd(pol);
-  return peak[pol][peakInd];
+double AnitaEventSummary::PointingHypothesis::dPhiWais() const {
+  return getContainer(__PRETTY_FUNCTION__) ? dPhiSource(fContainer->wais) : dPhi(-9999); // should trigger warning message
 }
-
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::bestMCCoherent(int polInd) const {
-  AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
-  pol = mc.weight <= 0 || pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;  
-  int peakInd = bestMCPeakInd(pol);
-  return coherent[pol][peakInd];
+double AnitaEventSummary::PointingHypothesis::dThetaWais() const {
+  return getContainer(__PRETTY_FUNCTION__) ? dThetaSource(fContainer->wais) : dPhi(-9999); // should trigger warning message
 }
-
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::bestMCDeconvolved(int polInd) const {
-  AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;  
-  pol = mc.weight <= 0 ||pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;  
-  int peakInd = bestMCPeakInd(pol);
-  return deconvolved[pol][peakInd];
+double AnitaEventSummary::PointingHypothesis::dPhiSun() const {
+  return getContainer(__PRETTY_FUNCTION__) ? dPhiSource(fContainer->sun) : dPhi(-9999); // should trigger warning message
 }
-
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::bestMCCoherentFiltered(int polInd) const {
-  AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
-  pol = mc.weight <= 0 || pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
-  int peakInd = bestMCPeakInd(pol);
-  return coherent_filtered[pol][peakInd];
+double AnitaEventSummary::PointingHypothesis::dThetaSun() const {
+  return getContainer(__PRETTY_FUNCTION__) ? dThetaSource(fContainer->sun) : dPhi(-9999); // should trigger warning message
 }
-
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::bestMCDeconvolvedFiltered(int polInd) const {
-  AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;  
-  pol = mc.weight <= 0 || pol < 0 || pol >= AnitaPol::kNotAPol ? higherPeakPol() : pol;
-  int peakInd = bestMCPeakInd(pol);
-  return deconvolved_filtered[pol][peakInd];
+double AnitaEventSummary::PointingHypothesis::dPhiLDB() const {
+  return getContainer(__PRETTY_FUNCTION__) ? dPhiSource(fContainer->ldb) : dPhi(-9999); // should trigger warning message
+}
+double AnitaEventSummary::PointingHypothesis::dThetaLDB() const {
+  return getContainer(__PRETTY_FUNCTION__) ? dThetaSource(fContainer->ldb) : dPhi(-9999); // should trigger warning message
+}
+double AnitaEventSummary::PointingHypothesis::dPhiMC() const {
+  return getContainer(__PRETTY_FUNCTION__) ? dPhiSource(fContainer->mc) : dPhi(-9999); // should trigger warning message
+}
+double AnitaEventSummary::PointingHypothesis::dThetaMC() const {
+  return getContainer(__PRETTY_FUNCTION__) ? dThetaSource(fContainer->mc) : dPhi(-9999); // should trigger warning message
 }
