@@ -22,6 +22,7 @@ class FilteredAnitaEvent;
 class FilterStrategy
 {
   friend class FilteredAnitaEvent; 
+  friend class NoiseMonitor;
 
   public: 
     /** Create a new empty strategy. If a pointer to a TFile is given, then trees may be written to that file if the operations define any output values */ 
