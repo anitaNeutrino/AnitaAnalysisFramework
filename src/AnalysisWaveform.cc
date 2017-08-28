@@ -25,6 +25,7 @@ AnalysisWaveform::InterpolationOptions AnalysisWaveform::defaultInterpolationOpt
 #define likely(x)       __builtin_expect((!!x),1)
 #define unlikely(x)     __builtin_expect((!!x),0)
 
+const int minPointsForGslInterp = 6;
 
 #ifdef ANITA_ANALYSIS_DEBUG
 static bool DEBUGON = false; 
@@ -119,6 +120,13 @@ AnalysisWaveform::AnalysisWaveform(int N, const double *x, const double * y, dou
       break; 
     }
   }
+
+  //should prevent interpolation error from too few points
+  while (g_uneven.GetN() < minPointsForGslInterp) {  
+      g_uneven.SetPoint(g_uneven.GetN(), g_uneven.GetX()[g_uneven.GetN()-1] + 1, 0); 
+  }
+ 
+
 }
 
 AnalysisWaveform::AnalysisWaveform(int N, const double * y, double dt, double t0)
@@ -353,11 +361,7 @@ void AnalysisWaveform::calculateUnevenFromEven() const
   if (interpolation_type == AKIMA) 
   {
 
-    //should prevent interpolation error from too few points
-    while (g_uneven.GetN() < 5) {  
-      g_uneven.SetPoint(g_uneven.GetN(), g_uneven.GetX()[g_uneven.GetN()-1] + 1, 0); 
-    }
-    
+   
     const ROOT::Math::Interpolator * irp = evenAkimaInterpolator(); 
     for (int i = 0; i < g_uneven.GetN(); i++) 
     {
@@ -384,7 +388,6 @@ const ROOT::Math::Interpolator * AnalysisWaveform::evenAkimaInterpolator() const
   if (even_akima_interpolator_dirty) 
   {
     const TGraphAligned * g = even();
-    const int minPointsForGslInterp = 6;
     if(g->GetN() >= minPointsForGslInterp){
       theEvenAkimaInterpolator.SetData(g->GetN(),g->GetX(),g->GetY());
       even_akima_interpolator_dirty= false;
@@ -402,7 +405,7 @@ void AnalysisWaveform::calculateEvenFromUneven()  const
 
 
   const TGraphAligned * g = uneven(); 
-  int npoints = (g->GetX()[g->GetN()-1] - g->GetX()[0]) / dt; 
+    int npoints = (g->GetX()[g->GetN()-1] - g->GetX()[0]) / dt; 
   g_even.Set(force_even_size ? force_even_size : npoints); 
   force_even_size = 0; 
   double t0 = g->GetX()[0]; 
@@ -416,7 +419,6 @@ void AnalysisWaveform::calculateEvenFromUneven()  const
   if (interpolation_type == AKIMA) 
   {
     ROOT::Math::Interpolator irp(g->GetN(), ROOT::Math::Interpolation::kAKIMA);
-    const int minPointsForGslInterp = 6;
     if(g->GetN() >= minPointsForGslInterp){
       irp.SetData(g->GetN(),g->GetX(),g->GetY());
     }
