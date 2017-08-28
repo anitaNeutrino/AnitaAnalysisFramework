@@ -327,7 +327,7 @@ void FilteredAnitaEvent::getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_r
   int imax = -1;
   int imin = -1;
 
-  ULong64_t usable_ants = AnitaFlightInfo::getUsableAntennas(header, pol); 
+  ULong64_t usable_ants = AnitaFlightInfo::getUsableAntennas(header, useful, pol); 
 
   for (int i = 0; i < NUM_PHI; i++)
   {
