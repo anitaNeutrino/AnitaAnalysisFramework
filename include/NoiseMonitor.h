@@ -14,26 +14,28 @@ class TProfile2D;
 
 /** 
  * @class NoiseMonitor is designed to track the channel RMS of min bias events.
- * The constructor defines exactly how long to track that value in seconds, 
- * and whether to use the uneven/even (i.e. uninterpolated/interpolated) waveforms.
- * update(FilteredAnitaEvent* fEv) is expected to be called for every event in the analysis.
- * However, noise values will only be updated for non-RF triggers.
- * A non-NULL TFile pointer passed in the constructor means a TTree of RMS values will be saved.
+ * 
+ * Define ANITA_RMS_DIR to generate profile histograms
  */
 class NoiseMonitor {
 
  public:
 
-  // The default timescale in seconds
+  // The default timescale in seconds (bin width)
   enum {
     defaultTimeScaleSeconds = 10
   };
 
   NoiseMonitor(FilterStrategy* fs);
-  virtual ~NoiseMonitor();
+  NoiseMonitor(UInt_t hash);
 
+  virtual ~NoiseMonitor();
   double getRMS(AnitaPol::AnitaPol_t pol, Int_t ant, UInt_t realTime);
 
+  const TProfile2D* getProfile(AnitaPol::AnitaPol_t pol, int run){
+    findProfilesInMemoryFromRun(run);
+    return fCurrent.get(pol);
+  }
   
  protected:
 
@@ -63,10 +65,11 @@ class NoiseMonitor {
   ProfPair fCurrent; //
   UInt_t fHash;
 
-  void findProfilesInMemory(UInt_t realTime); // from map in memory
+  void findProfilesInMemoryFromTime(UInt_t realTime); // from map in memory
+  void findProfilesInMemoryFromRun(Int_t run); // from map in memory
   void getProfilesFromFile(int run);  // search for file
   void makeProfiles(int run); // last resort, make them from scratch (generates a file)
-  
+  void getRmsDirEnv();
   TString getHistName(AnitaPol::AnitaPol_t pol, int run);
   
   

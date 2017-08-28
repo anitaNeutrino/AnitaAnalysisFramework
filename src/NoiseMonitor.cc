@@ -11,7 +11,16 @@
 #include "TProfile2D.h"
 #include <stdlib.h>
 
-
+void NoiseMonitor::getRmsDirEnv(){
+  fRmsDir = getenv("ANITA_RMS_DIR");
+  if(!fRmsDir){
+    std::cerr << "Warning in " << __PRETTY_FUNCTION__
+              << ", can't see env ANITA_RMS_DIR. "
+              << "Will look for/make rms profiles in pwd"
+              << std::endl;
+    fRmsDir = ".";
+  }
+}
 
 UInt_t NoiseMonitor::makeStratHashFromDesc(const FilterStrategy* fs){
   TString hasher;
@@ -161,16 +170,23 @@ void NoiseMonitor::makeProfiles(int run){
 NoiseMonitor::NoiseMonitor(FilterStrategy* fs)
     : fFilterStrat(fs)
 {
-
-  fRmsDir = getenv("ANITA_RMS_DIR");
-  if(!fRmsDir){
-    std::cerr << "Warning in " << __PRETTY_FUNCTION__
-              << ", can't see env ANITA_RMS_DIR. "
-              << "Will look for/make rms profiles in pwd"
-              << std::endl;
-    fRmsDir = ".";
-  }
+  getRmsDirEnv();
   fHash = makeStratHashFromDesc(fs);
+}
+
+
+
+/** 
+ * Default constructor, requires a filter strategy
+ * If you pass it a hash which doesn't match something in ANITA_RMS_DIR, it won't end well
+ * 
+ * @param fs is the filter strategy we want to use to get the waveform RMSs
+ */
+NoiseMonitor::NoiseMonitor(UInt_t hash)
+    : fFilterStrat(NULL)
+{
+  getRmsDirEnv();
+  fHash = hash;
 }
 
 
@@ -194,9 +210,20 @@ NoiseMonitor::~NoiseMonitor(){
  * 
  * @param realTime is used to find the run, to find the profile in memory
  */
-void NoiseMonitor::findProfilesInMemory(UInt_t realTime){
+void NoiseMonitor::findProfilesInMemoryFromTime(UInt_t realTime){
 
   int run = AnitaDataset::getRunAtTime(double(realTime));
+  findProfilesInMemoryFromRun(run);
+}
+
+
+
+/** 
+ * Set fCurrent if found,
+ * 
+ * @param realTime is used to find the run, to find the profile in memory
+ */
+void NoiseMonitor::findProfilesInMemoryFromRun(Int_t run){
 
   // first look in the map
   std::map<int, ProfPair>::iterator it = fRunProfiles.find(run);
@@ -215,13 +242,17 @@ double NoiseMonitor::getRMS(AnitaPol::AnitaPol_t pol, Int_t ant, UInt_t realTime
   const TProfile2D* p = fCurrent.get(pol);
   
   if(!(p && realTime >= fCurrent.startTime() && realTime < fCurrent.endTime())){
-    findProfilesInMemory(realTime); // update fCurrent
+    findProfilesInMemoryFromTime(realTime); // update fCurrent
     p = fCurrent.get(pol); // should get p again
   }
 
   // surely find bin should be const?
-  Int_t bin = ((TProfile2D*)p)->FindBin(ant, realTime);
-  return p->GetBinContent(bin);
+  double rms = 0;
+  if(p){
+    Int_t bin = ((TProfile2D*)p)->FindBin(ant, realTime);
+    rms = p->GetBinContent(bin);
+  }
+  return rms;
 }
 
 
