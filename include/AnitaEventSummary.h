@@ -69,12 +69,12 @@ public:
     Double_t longitude;/// on continent, or -9999 if doesn't intersect
     Double_t altitude;/// on continent, or -9999 if doesn't intersect
     Double_t distanceToSource; /// on continent, or -9999 if doesn't intersect
-    Double_t sigma_theta;  ///error on theta
+    Double_t sigma_theta;  /// error on theta
     Double_t sigma_phi;  /// error on phi
-    Double_t rho;  ///correlation coefficient between theta and phi
+    Double_t rho;  /// correlation coefficient between theta and phi
     Double_t chisq; /// chisq/ndof of peak finding process, if available (otherwise zero)
     Double_t theta_adjustment_needed; /// If an event barely missed the ground, it is useful to see the coordinates at which it would hit if theta adjustment by a small amount. This is the calculated small amount that leads to it hitting the ground. 
-    Double_t phi_separation; //angular separation from higher value peak in same event. 1000 if highest value event (i.e. first hypothesis) 
+    Double_t phi_separation; /// angular separation from higher value peak in same event. 1000 if highest value event (i.e. first hypothesis) 
     Double_t dphi_rough;  /// phi - phi rough
     Double_t dtheta_rough; /// theta - theta rough
     Bool_t triggered; /// was this in a triggered phi sector? 
@@ -121,21 +121,21 @@ public:
 
   public: 
     WaveformInfo() {; } 
-    Double_t snr; ///Signal to Noise of waveform 
+    Double_t snr; /// Signal to Noise of waveform 
     Double_t peakHilbert; /// peak of hilbert envelope
     Double_t peakVal;  /// peak value
-    Double_t xPolPeakVal;  // Peak of xpol trace
-    Double_t xPolPeakHilbert;  // Peak of xpol hilbert Envelope
+    Double_t xPolPeakVal;  /// Peak of xpol trace
+    Double_t xPolPeakHilbert;  /// Peak of xpol hilbert Envelope
 
     Double_t I,Q,U,V;  // Stokes Parameters
 
 
-    Double_t totalPower;  ///Total power in waveform
-    Double_t totalPowerXpol;  ///Total power in xPol waveform
+    Double_t totalPower;  /// Total power in waveform
+    Double_t totalPowerXpol;  /// Total power in xPol waveform
 
     //spectrum info 
     Double_t bandwidth[peaksPerSpectrum];  /// bandwidth of each peak (implementation defined, may not be comparable between analyses) 
-    Double_t peakFrequency[peaksPerSpectrum]; //peak frequency of power spectrum 
+    Double_t peakFrequency[peaksPerSpectrum]; /// peak frequency of power spectrum 
     Double_t peakPower[peaksPerSpectrum]; //power within +/- bandwidth of each peak 
     Double_t spectrumSlope;  ///  Slope of line fit to spectrum (in log-space, so this is spectral-index) 
     Double_t spectrumIntercept; /// Intercept of line fit to spectrum (in log-space) 
@@ -157,7 +157,7 @@ public:
     //See a number that has something to do with how impulsive it is 
     Double_t impulsivityMeasure; 
 
-    Int_t numAntennasInCoherent; // number of antennas used to make this 
+    Int_t numAntennasInCoherent; /// number of antennas used to make this 
 
     Double_t localMaxToMin; /// Largest value of local max to neighbouring local min (see Acclaim::RootTools::getLocalMaxToMin)
     Double_t localMaxToMinTime; /// Time between local maxima and minima +ve means max is before min, -ve means min is before max
