@@ -3,6 +3,7 @@
 #include "FilterStrategy.h"
 #include "RawAnitaHeader.h"
 #include "AnalysisWaveform.h"
+#include "AnitaFlightInfo.h" 
 #include "AnitaVersion.h"
 #include "AnitaGeomTool.h"
 #include <algorithm>
@@ -326,10 +327,17 @@ void FilteredAnitaEvent::getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_r
   int imax = -1;
   int imin = -1;
 
+  ULong64_t usable_ants = AnitaFlightInfo::getUsableAntennas(header, pol); 
+
   for (int i = 0; i < NUM_PHI; i++)
   {
     int ant1 = AnitaGeomTool::getAntFromPhiRing(i, ring1);
+
+    if (! (usable_ants & (1ul << ant1))) continue; 
+
     int ant2 = AnitaGeomTool::getAntFromPhiRing(i, ring2);
+
+    if (! (usable_ants & (1ul << ant2))) continue; 
 
 //    printf("%d %d %d\n", pol, ant1,ant2);
 //    printf("%p\n", rawGraphsByAntPol[pol][ant1]);
@@ -403,7 +411,7 @@ int FilteredAnitaEvent::checkSaturation(ULong64_t * save_hsat, ULong64_t * save_
       {
         if (fabs(yh[j]) > thresh)
         {
-          hsat |= 1 << i; 
+          hsat |= 1ul << i; 
           totalsat ++; 
           break; 
         }
@@ -413,7 +421,7 @@ int FilteredAnitaEvent::checkSaturation(ULong64_t * save_hsat, ULong64_t * save_
       {
         if (fabs(yv[j]) > thresh)
         {
-          vsat |= 1 << i; 
+          vsat |= 1ul << i; 
           totalsat ++; 
           break; 
         }
