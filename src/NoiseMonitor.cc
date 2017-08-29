@@ -39,22 +39,26 @@ TString NoiseMonitor::getFileName(int run){
 void NoiseMonitor::getProfilesFromFile(int run){
 
   TString theRootPwd = gDirectory->GetPath();
-
   TString fileName = getFileName(run);
   TFile* fFile = TFile::Open(fileName);
 
   ProfPair p;
   if(fFile){
-    p.set((TProfile2D*) fFile->Get(getHistName(AnitaPol::kHorizontal, run)),
-          (TProfile2D*) fFile->Get(getHistName(AnitaPol::kVertical, run)));
+    TProfile2D* pH = (TProfile2D*) fFile->Get(getHistName(AnitaPol::kHorizontal, run));
+    TProfile2D* pV = (TProfile2D*) fFile->Get(getHistName(AnitaPol::kVertical, run));
+    p.set(pH, pV);
+  }
+  else{
+    std::cerr << "Warning in " << __PRETTY_FUNCTION__ << ", couldn't find file " << fileName << ", will need to generate it. This may take some time." << std::endl;
   }
 
   if(!p.get(AnitaPol::kVertical) || !p.get(AnitaPol::kHorizontal)){
     makeProfiles(run);
 
     fFile = TFile::Open(fileName);
-    p.set((TProfile2D*) fFile->Get(getHistName(AnitaPol::kHorizontal, run)),
-          (TProfile2D*) fFile->Get(getHistName(AnitaPol::kVertical, run)));
+    TProfile2D* pH = (TProfile2D*) fFile->Get(getHistName(AnitaPol::kHorizontal, run));
+    TProfile2D* pV = (TProfile2D*) fFile->Get(getHistName(AnitaPol::kVertical, run));
+    p.set(pH, pV);
   }
 
   if(!p.get(AnitaPol::kVertical) || !p.get(AnitaPol::kHorizontal)){
@@ -239,6 +243,8 @@ void NoiseMonitor::findProfilesInMemoryFromRun(Int_t run){
 
 double NoiseMonitor::getRMS(AnitaPol::AnitaPol_t pol, Int_t ant, UInt_t realTime){
 
+  AnitaVersion::setVersionFromUnixTime(realTime);
+
   const TProfile2D* p = fCurrent.get(pol);
   
   if(!(p && realTime >= fCurrent.startTime() && realTime < fCurrent.endTime())){
@@ -257,12 +263,17 @@ double NoiseMonitor::getRMS(AnitaPol::AnitaPol_t pol, Int_t ant, UInt_t realTime
 
 
 void NoiseMonitor::ProfPair::set(const TProfile2D* h, const TProfile2D* v){
+
   H = h;
   V = v;
+
   // use both H and V so if one is NULL it fucks up
   // presumably the limits are the same.. but I'm not going to check right now
-  fStartTime = H->GetYaxis()->GetBinLowEdge(1);
-  fEndTime = V->GetYaxis()->GetBinLowEdge(V->GetNbinsY());
+
+  if(H && V){
+    fStartTime = H->GetYaxis()->GetBinLowEdge(1);
+    fEndTime = V->GetYaxis()->GetBinLowEdge(V->GetNbinsY());
+  }
 }
 
 void NoiseMonitor::ProfPair::set(const ProfPair& other){
