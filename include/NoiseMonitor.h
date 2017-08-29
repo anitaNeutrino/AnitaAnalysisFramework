@@ -36,12 +36,16 @@ class NoiseMonitor {
     findProfilesInMemoryFromRun(run);
     return fCurrent.get(pol);
   }
-  
- protected:
 
+
+  /** 
+   * @class Overengineered pair holder with set/get methods for AnitaPol_t
+   * 
+   * It's shouldn't be public, and only is so ROOT doesn't throw a hissy fit.
+   */
   class ProfPair{
    public:
-    ProfPair() : H(NULL), V(NULL) {}
+    ProfPair() : H(NULL), V(NULL), fStartTime(0), fEndTime(0) {}
     const TProfile2D* get(AnitaPol::AnitaPol_t pol) const{
       return pol == AnitaPol::kHorizontal ? H : V;
     }
@@ -56,7 +60,9 @@ class NoiseMonitor {
     double fEndTime;
     
   };
-  
+
+ protected:
+
   FilterStrategy* fFilterStrat;
   const char* fRmsDir;
   std::map<int, TFile*> fFiles; /// map of run to opened TFiles

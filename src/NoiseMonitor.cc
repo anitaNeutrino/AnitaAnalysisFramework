@@ -291,8 +291,8 @@ void NoiseMonitor::ProfPair::set(const TProfile2D* h, const TProfile2D* v){
   }
   else{
     // something impossible
-    fStartTime = DBL_MAX;
-    fEndTime = -DBL_MAX;
+    fStartTime = 0;
+    fEndTime = 0;
   }
 
   // H->GetXaxis()->LabelsOption("h");
