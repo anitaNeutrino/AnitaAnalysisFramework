@@ -63,8 +63,8 @@ void NoiseMonitor::getProfilesFromFile(int run){
 
   if(!p.get(AnitaPol::kVertical) || !p.get(AnitaPol::kHorizontal)){
     std::cerr << "Warning in " << __PRETTY_FUNCTION__
-              << ", unable to find RMS profile! "
-              << "Something bad is about to happen!"
+              << ", unable to find RMS profiles for run " << run
+              << ". Something bad is about to happen!"
               << std::endl;
   }
   fFiles[run] = fFile;
@@ -264,16 +264,39 @@ double NoiseMonitor::getRMS(AnitaPol::AnitaPol_t pol, Int_t ant, UInt_t realTime
 
 void NoiseMonitor::ProfPair::set(const TProfile2D* h, const TProfile2D* v){
 
-  H = h;
-  V = v;
-
+  H = const_cast<TProfile2D*>(h);
+  V = const_cast<TProfile2D*>(v);
   // use both H and V so if one is NULL it fucks up
   // presumably the limits are the same.. but I'm not going to check right now
+  fStartTime = H->GetYaxis()->GetBinLowEdge(1);
+  fEndTime = V->GetYaxis()->GetBinLowEdge(V->GetNbinsY());
 
+  // prettiness
   if(H && V){
+    H->GetYaxis()->SetTimeDisplay(1);
+    V->GetYaxis()->SetTimeDisplay(1);
+
+    const char* timeFormat = "#splitline{%H:%M}{%d/%m/%Y}";
+    H->GetYaxis()->SetTimeFormat(timeFormat);
+    V->GetYaxis()->SetTimeFormat(timeFormat);
+
+    H->GetYaxis()->SetTimeOffset(0);
+    V->GetYaxis()->SetTimeOffset(0);
+
+    H->GetYaxis()->SetLabelSize(0.02);
+    V->GetYaxis()->SetLabelSize(0.02);
+
     fStartTime = H->GetYaxis()->GetBinLowEdge(1);
     fEndTime = V->GetYaxis()->GetBinLowEdge(V->GetNbinsY());
   }
+  else{
+    // something impossible
+    fStartTime = DBL_MAX;
+    fEndTime = -DBL_MAX;
+  }
+
+  // H->GetXaxis()->LabelsOption("h");
+  // V->GetXaxis()->LabelsOption("h");
 }
 
 void NoiseMonitor::ProfPair::set(const ProfPair& other){

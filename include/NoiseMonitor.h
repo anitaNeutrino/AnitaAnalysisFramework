@@ -50,8 +50,8 @@ class NoiseMonitor {
     double startTime(){return fStartTime;}
     double endTime(){return fEndTime;}
    private:
-    const TProfile2D* H;
-    const TProfile2D* V;
+    TProfile2D* H;
+    TProfile2D* V;
     double fStartTime;
     double fEndTime;
     
