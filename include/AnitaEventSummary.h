@@ -3,6 +3,7 @@
 
 #include "TObject.h" 
 #include "AnitaConventions.h"
+#include <iostream>
 
 class Adu5Pat;
 class UsefulAdu5Pat;
@@ -94,6 +95,7 @@ public:
     double dThetaLDB() const;
     double dPhiMC() const;
     double dThetaMC() const;
+    double absHwAngle() const; /// Handle "unset" values = -9999 in Acclaim
 
    private:
     //----------------------------------------------------------------------------------------------------
@@ -101,7 +103,7 @@ public:
     // The //! comment after the fContainer member means it does not persist in ROOT.
     // Please do not edit that comment.
     //----------------------------------------------------------------------------------------------------
-    AnitaEventSummary* fContainer; //! WARNING! Does not persist! Get access to AnitaEventSummary that contains this PointingHypothesis
+    mutable AnitaEventSummary* fContainer; //! WARNING! Does not persist! Get access to AnitaEventSummary that contains this PointingHypothesis
     const AnitaEventSummary* getContainer(const char* funcName) const; /// Wraps getting fContainer with a warning if NULL.
     double dPhiSource(const SourceHypothesis& source) const;   // Won't work inside TTree::Draw due to limitations in TTreeFormula, so are private, use e.g. dPhiWais() instead.
     double dThetaSource(const SourceHypothesis& source) const; // Won't work inside TTree::Draw due to limitations in TTreeFormula, so are private, use e.g. dPhiWais() instead.
@@ -173,9 +175,8 @@ public:
 
     ClassDefNV(WaveformInfo, 9);
 
-   private:
-    AnitaEventSummary* fContainer; //! Disgusting hack
-
+   // private:
+   //  mutable AnitaEventSummary* fContainer; //! Disgusting hack
   }; 
 
 
@@ -360,11 +361,7 @@ public:
   const WaveformInfo& mcCoherentFiltered() const;
   const WaveformInfo& mcDeconvolvedFiltered() const;
 
-
-
-
-
-
+  void resetNonPersistent() const; /// TODO, make private in the future, when all summaries are made with bug-free ROOT
 
   //------------------------------------------------------------------------------------
  private:
@@ -381,58 +378,13 @@ public:
   mutable Int_t                fMCPeakIndex;      //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak nearest MC
   mutable AnitaPol::AnitaPol_t fMCPol;            //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak nearest MC
 
-
+  void findHighestPeak() const;
+  void findMC() const;
 
   /** 
    * Workhorse function to find the highest peak
    * Caches the result in the mutable, non-ROOT-persistent members fHighestPol and fHighestPeakIndex
    */
-  inline void findHighestPeak() const {
-    if(fHighestPeakIndex < 0){ // then we've not done this before
-      double highestVal = -1e99;
-      for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
-        AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
-        for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
-          if(peak[polInd][peakInd].value > highestVal){
-            highestVal = peak[polInd][peakInd].value;
-            fHighestPeakIndex = peakInd;
-            fHighestPol = pol;
-          }
-        }
-      }
-    }
-  }
-
-
-  /** 
-   * Workhorse function to find the peak closest to the MC
-   * Caches the result in the mutable, non-ROOT-persistent members fMCPol and fMCPeakIndex
-   * In the case of non-MC data, sets the indices to fHighestPol and fHighestPeakIndex
-   */
-  inline void findMC() const {
-    if(mc.weight <= 0){
-      findHighestPeak();
-      fMCPeakIndex = fHighestPeakIndex;
-      fMCPol = fHighestPol;
-
-    }
-    else if(fMCPeakIndex < 0){ // then we've not done this before
-      double minDeltaAngleSq = 1e99;
-      for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
-        AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
-        for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
-          double dPhi = peak[polInd][peakInd].dPhiMC();
-          double dTheta = peak[polInd][peakInd].dThetaMC();
-          double deltaAngleSq = dPhi*dPhi + dTheta*dTheta;
-          if(deltaAngleSq < minDeltaAngleSq){
-            minDeltaAngleSq = deltaAngleSq;
-            fMCPeakIndex = peakInd;
-            fMCPol = pol;
-          }
-        }
-      }
-    }
-  }
 
   ClassDefNV(AnitaEventSummary, 24);
 };
