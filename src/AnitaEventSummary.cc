@@ -624,6 +624,7 @@ double AnitaEventSummary::PointingHypothesis::dThetaMC() const {
 
 
 void AnitaEventSummary::findHighestPeak() const {
+  resetNonPersistent();
   if(fHighestPeakIndex < 0){ // then we've not done this before
     double highestVal = -1e99;
     for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
@@ -646,6 +647,7 @@ void AnitaEventSummary::findHighestPeak() const {
  * In the case of non-MC data, sets the indices to fHighestPol and fHighestPeakIndex
  */
 void AnitaEventSummary::findMC() const {
+  resetNonPersistent();
   if(mc.weight <= 0){
     findHighestPeak();
     fMCPeakIndex = fHighestPeakIndex;
@@ -674,38 +676,20 @@ void AnitaEventSummary::findMC() const {
 
 
 /** 
- * (Re)set the mutable "interesting" indices to defaults
- * The default values trigger the loop through peaks.
- * Should be called in zero pointers and in the custom streamer.
+ * Reset the mutable "interesting" indices to defaults
+ * The default values trigger the loop through peaks in findHighestPeak() and findMC().
  */
 void AnitaEventSummary::resetNonPersistent() const{
-  fHighestPeakIndex = -1;
-  fHighestPol = AnitaPol::kNotAPol;
-  fMCPeakIndex = -1;
-  fMCPol = AnitaPol::kNotAPol;
-
-  for(Int_t polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
-    for(Int_t dir=0; dir < maxDirectionsPerPol; dir++){
-      peak[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
+  if(fLastEventNumber!=eventNumber){
+    fHighestPeakIndex = -1;
+    fHighestPol = AnitaPol::kNotAPol;
+    fMCPeakIndex = -1;
+    fMCPol = AnitaPol::kNotAPol;
+    for(Int_t polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
+      for(Int_t dir=0; dir < maxDirectionsPerPol; dir++){
+        peak[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
+      }
     }
+    fLastEventNumber=eventNumber;
   }  
-}
-
-
-
-
-
-/** 
- * Custom class streamer to set non-persistent caching indices.
- * 
- * @param R__b is the TBuffer
- */
-void AnitaEventSummary::Streamer(TBuffer &R__b) {
-  if (R__b.IsReading()) {
-    AnitaEventSummary::Class()->ReadBuffer(R__b, this);
-    resetNonPersistent(); // needs to be called after reading
-  }
-  else {
-    AnitaEventSummary::Class()->WriteBuffer(R__b, this);
-  }
 }

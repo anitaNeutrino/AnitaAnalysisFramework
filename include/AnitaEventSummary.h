@@ -361,8 +361,6 @@ public:
   const WaveformInfo& mcCoherentFiltered() const;
   const WaveformInfo& mcDeconvolvedFiltered() const;
 
-  void resetNonPersistent() const; /// TODO, make private in the future, when all summaries are made with bug-free ROOT
-
   //------------------------------------------------------------------------------------
  private:
 
@@ -377,9 +375,11 @@ public:
   mutable AnitaPol::AnitaPol_t fHighestPol;       //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding highest peak
   mutable Int_t                fMCPeakIndex;      //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak nearest MC
   mutable AnitaPol::AnitaPol_t fMCPol;            //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak nearest MC
-
+  mutable UInt_t               fLastEventNumber;  //! DOES NOT PERSIST IN ROOT! To check for stale caching variables
   void findHighestPeak() const;
   void findMC() const;
+  void resetNonPersistent() const;
+
 
   /** 
    * Workhorse function to find the highest peak
