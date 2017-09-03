@@ -25,6 +25,7 @@
 #pragma link C++ class AnitaTemplateMachine+;
 
 #pragma link C++ class AnitaNoiseSummary+;
+#pragma link C++ class NoiseMonitor+;
 
 #pragma link C++ class FilterOperation+;
 #pragma link C++ class UniformFilterOperation+;

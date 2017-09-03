@@ -3,6 +3,7 @@
 
 #include "TObject.h" 
 #include "AnitaConventions.h"
+#include <iostream>
 
 class Adu5Pat;
 class UsefulAdu5Pat;
@@ -69,12 +70,12 @@ public:
     Double_t longitude;/// on continent, or -9999 if doesn't intersect
     Double_t altitude;/// on continent, or -9999 if doesn't intersect
     Double_t distanceToSource; /// on continent, or -9999 if doesn't intersect
-    Double_t sigma_theta;  ///error on theta
+    Double_t sigma_theta;  /// error on theta
     Double_t sigma_phi;  /// error on phi
-    Double_t rho;  ///correlation coefficient between theta and phi
+    Double_t rho;  /// correlation coefficient between theta and phi
     Double_t chisq; /// chisq/ndof of peak finding process, if available (otherwise zero)
     Double_t theta_adjustment_needed; /// If an event barely missed the ground, it is useful to see the coordinates at which it would hit if theta adjustment by a small amount. This is the calculated small amount that leads to it hitting the ground. 
-    Double_t phi_separation; //angular separation from higher value peak in same event. 1000 if highest value event (i.e. first hypothesis) 
+    Double_t phi_separation; /// angular separation from higher value peak in same event. 1000 if highest value event (i.e. first hypothesis) 
     Double_t dphi_rough;  /// phi - phi rough
     Double_t dtheta_rough; /// theta - theta rough
     Bool_t triggered; /// was this in a triggered phi sector? 
@@ -94,6 +95,7 @@ public:
     double dThetaLDB() const;
     double dPhiMC() const;
     double dThetaMC() const;
+    double absHwAngle() const; /// Handle "unset" values = -9999 in Acclaim
 
    private:
     //----------------------------------------------------------------------------------------------------
@@ -101,7 +103,7 @@ public:
     // The //! comment after the fContainer member means it does not persist in ROOT.
     // Please do not edit that comment.
     //----------------------------------------------------------------------------------------------------
-    AnitaEventSummary* fContainer; //! WARNING! Does not persist! Get access to AnitaEventSummary that contains this PointingHypothesis
+    mutable AnitaEventSummary* fContainer; //! WARNING! Does not persist! Get access to AnitaEventSummary that contains this PointingHypothesis
     const AnitaEventSummary* getContainer(const char* funcName) const; /// Wraps getting fContainer with a warning if NULL.
     double dPhiSource(const SourceHypothesis& source) const;   // Won't work inside TTree::Draw due to limitations in TTreeFormula, so are private, use e.g. dPhiWais() instead.
     double dThetaSource(const SourceHypothesis& source) const; // Won't work inside TTree::Draw due to limitations in TTreeFormula, so are private, use e.g. dPhiWais() instead.
@@ -121,21 +123,21 @@ public:
 
   public: 
     WaveformInfo() {; } 
-    Double_t snr; ///Signal to Noise of waveform 
+    Double_t snr; /// Signal to Noise of waveform 
     Double_t peakHilbert; /// peak of hilbert envelope
     Double_t peakVal;  /// peak value
-    Double_t xPolPeakVal;  // Peak of xpol trace
-    Double_t xPolPeakHilbert;  // Peak of xpol hilbert Envelope
+    Double_t xPolPeakVal;  /// Peak of xpol trace
+    Double_t xPolPeakHilbert;  /// Peak of xpol hilbert Envelope
 
     Double_t I,Q,U,V;  // Stokes Parameters
 
 
-    Double_t totalPower;  ///Total power in waveform
-    Double_t totalPowerXpol;  ///Total power in xPol waveform
+    Double_t totalPower;  /// Total power in waveform
+    Double_t totalPowerXpol;  /// Total power in xPol waveform
 
     //spectrum info 
     Double_t bandwidth[peaksPerSpectrum];  /// bandwidth of each peak (implementation defined, may not be comparable between analyses) 
-    Double_t peakFrequency[peaksPerSpectrum]; //peak frequency of power spectrum 
+    Double_t peakFrequency[peaksPerSpectrum]; /// peak frequency of power spectrum 
     Double_t peakPower[peaksPerSpectrum]; //power within +/- bandwidth of each peak 
     Double_t spectrumSlope;  ///  Slope of line fit to spectrum (in log-space, so this is spectral-index) 
     Double_t spectrumIntercept; /// Intercept of line fit to spectrum (in log-space) 
@@ -157,7 +159,7 @@ public:
     //See a number that has something to do with how impulsive it is 
     Double_t impulsivityMeasure; 
 
-    Int_t numAntennasInCoherent; // number of antennas used to make this 
+    Int_t numAntennasInCoherent; /// number of antennas used to make this 
 
     Double_t localMaxToMin; /// Largest value of local max to neighbouring local min (see Acclaim::RootTools::getLocalMaxToMin)
     Double_t localMaxToMinTime; /// Time between local maxima and minima +ve means max is before min, -ve means min is before max
@@ -173,9 +175,8 @@ public:
 
     ClassDefNV(WaveformInfo, 9);
 
-   private:
-    AnitaEventSummary* fContainer; //! Disgusting hack
-
+   // private:
+   //  mutable AnitaEventSummary* fContainer; //! Disgusting hack
   }; 
 
 
@@ -360,12 +361,6 @@ public:
   const WaveformInfo& mcCoherentFiltered() const;
   const WaveformInfo& mcDeconvolvedFiltered() const;
 
-
-
-
-
-
-
   //------------------------------------------------------------------------------------
  private:
 
@@ -380,59 +375,16 @@ public:
   mutable AnitaPol::AnitaPol_t fHighestPol;       //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding highest peak
   mutable Int_t                fMCPeakIndex;      //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak nearest MC
   mutable AnitaPol::AnitaPol_t fMCPol;            //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak nearest MC
-
+  mutable UInt_t               fLastEventNumber;  //! DOES NOT PERSIST IN ROOT! To check for stale caching variables
+  void findHighestPeak() const;
+  void findMC() const;
+  void resetNonPersistent() const;
 
 
   /** 
    * Workhorse function to find the highest peak
    * Caches the result in the mutable, non-ROOT-persistent members fHighestPol and fHighestPeakIndex
    */
-  inline void findHighestPeak() const {
-    if(fHighestPeakIndex < 0){ // then we've not done this before
-      double highestVal = -1e99;
-      for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
-        AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
-        for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
-          if(peak[polInd][peakInd].value > highestVal){
-            highestVal = peak[polInd][peakInd].value;
-            fHighestPeakIndex = peakInd;
-            fHighestPol = pol;
-          }
-        }
-      }
-    }
-  }
-
-
-  /** 
-   * Workhorse function to find the peak closest to the MC
-   * Caches the result in the mutable, non-ROOT-persistent members fMCPol and fMCPeakIndex
-   * In the case of non-MC data, sets the indices to fHighestPol and fHighestPeakIndex
-   */
-  inline void findMC() const {
-    if(mc.weight <= 0){
-      findHighestPeak();
-      fMCPeakIndex = fHighestPeakIndex;
-      fMCPol = fHighestPol;
-
-    }
-    else if(fMCPeakIndex < 0){ // then we've not done this before
-      double minDeltaAngleSq = 1e99;
-      for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
-        AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
-        for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
-          double dPhi = peak[polInd][peakInd].dPhiMC();
-          double dTheta = peak[polInd][peakInd].dThetaMC();
-          double deltaAngleSq = dPhi*dPhi + dTheta*dTheta;
-          if(deltaAngleSq < minDeltaAngleSq){
-            minDeltaAngleSq = deltaAngleSq;
-            fMCPeakIndex = peakInd;
-            fMCPol = pol;
-          }
-        }
-      }
-    }
-  }
 
   ClassDefNV(AnitaEventSummary, 24);
 };

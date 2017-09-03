@@ -3,14 +3,16 @@
 #include "RawAnitaHeader.h" 
 #include "UsefulAdu5Pat.h"
 #include "TruthAnitaEvent.h"
-
+#include "TBuffer.h"
+#include "TClass.h"
 //are these even necessary anymore? Who knows! 
 //ClassImp(AnitaEventSummary)
 //ClassImp(AnitaEventSummary::PointingHypothesis)
 //ClassImp(AnitaEventSummary::SourceHypothesis)
   
 
-const double C_IN_M_NS = 0.299792; 
+const double C_IN_M_NS = 0.299792;
+
 
 //---------------------------------------------------------------------------------------------------------
 /**
@@ -19,11 +21,11 @@ const double C_IN_M_NS = 0.299792;
  * Default constructor for ROOT
  */
 AnitaEventSummary::AnitaEventSummary()
-    : fHighestPeakIndex(-1), fHighestPol(AnitaPol::kNotAPol),
-      fMCPeakIndex(-1), fMCPol(AnitaPol::kNotAPol)
+    : anitaLocation()
 {
   zeroInternals();
 }
+
 
 
 
@@ -34,11 +36,8 @@ AnitaEventSummary::AnitaEventSummary()
  * Takes care of copying the header info into the event summary
  */
 AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header)
-    : anitaLocation(),
-      fHighestPeakIndex(-1), fHighestPol(AnitaPol::kNotAPol),
-      fMCPeakIndex(-1), fMCPol(AnitaPol::kNotAPol)
+    : anitaLocation()
 {
-
   zeroInternals();
 
   setTriggerInfomation(header);
@@ -59,13 +58,10 @@ AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header)
  * Takes care of copying the header and GPS info into the event summary
  */
 AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header, UsefulAdu5Pat* pat, const TruthAnitaEvent * truth)
-    : anitaLocation(dynamic_cast<Adu5Pat*>(pat)),
-      fHighestPeakIndex(-1), fHighestPol(AnitaPol::kNotAPol),
-      fMCPeakIndex(-1), fMCPol(AnitaPol::kNotAPol)
+    : anitaLocation(dynamic_cast<Adu5Pat*>(pat))
 {
 
   zeroInternals();
-
   setTriggerInfomation(header);
   setSourceInformation(pat,truth);
   eventNumber = header->eventNumber;
@@ -76,7 +72,16 @@ AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header, UsefulAdu5Pat
 
 
 
+
+
+
+
+/** 
+ * Set everything to zero, should be called in constructor
+ */
 void AnitaEventSummary::zeroInternals(){
+
+  resetNonPersistent();
 
   run = 0;
   eventNumber = 0;
@@ -90,8 +95,6 @@ void AnitaEventSummary::zeroInternals(){
       memset(&deconvolved[polInd][dir],0,sizeof(WaveformInfo)); 
       memset(&coherent_filtered[polInd][dir],0,sizeof(WaveformInfo)); 
       memset(&deconvolved_filtered[polInd][dir],0,sizeof(WaveformInfo));
-
-      peak[polInd][dir].fContainer = this; // Set non-persistent pointer to container in hacky fashion.
     }
   }
   memset(&flags,0, sizeof(EventFlags)); 
@@ -586,6 +589,14 @@ const AnitaEventSummary* AnitaEventSummary::PointingHypothesis::getContainer(con
   return fContainer;
 }
 
+double AnitaEventSummary::PointingHypothesis::absHwAngle() const {
+  // I set no hardware trigger to be -9999, but that screws up linear things like a TMVA,
+  // which want a smooth transition from good to bad values, so I'll max this out at the
+  // worst geometric possibility, which is 180 degrees
+  double absHw = TMath::Abs(hwAngle);
+  return absHw > 180 ? 180 : absHw;
+}
+
 double AnitaEventSummary::PointingHypothesis::dPhiWais() const {
   return getContainer(__PRETTY_FUNCTION__) ? dPhiSource(fContainer->wais) : dPhi(-9999); // should trigger warning message
 }
@@ -609,4 +620,76 @@ double AnitaEventSummary::PointingHypothesis::dPhiMC() const {
 }
 double AnitaEventSummary::PointingHypothesis::dThetaMC() const {
   return getContainer(__PRETTY_FUNCTION__) ? dThetaSource(fContainer->mc) : dPhi(-9999); // should trigger warning message
+}
+
+
+void AnitaEventSummary::findHighestPeak() const {
+  resetNonPersistent();
+  if(fHighestPeakIndex < 0){ // then we've not done this before
+    double highestVal = -1e99;
+    for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
+      AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
+      for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
+        if(peak[polInd][peakInd].value > highestVal){
+          highestVal = peak[polInd][peakInd].value;
+          fHighestPeakIndex = peakInd;
+          fHighestPol = pol;
+        }
+      }
+    }
+  }
+}
+
+
+/** 
+ * Workhorse function to find the peak closest to the MC
+ * Caches the result in the mutable, non-ROOT-persistent members fMCPol and fMCPeakIndex
+ * In the case of non-MC data, sets the indices to fHighestPol and fHighestPeakIndex
+ */
+void AnitaEventSummary::findMC() const {
+  resetNonPersistent();
+  if(mc.weight <= 0){
+    findHighestPeak();
+    fMCPeakIndex = fHighestPeakIndex;
+    fMCPol = fHighestPol;
+  }
+  else if(fMCPeakIndex < 0){ // then we've not done this before
+    double minDeltaAngleSq = 1e99;
+    for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
+      AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
+      for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
+        double dPhi = peak[polInd][peakInd].dPhiMC();
+        double dTheta = peak[polInd][peakInd].dThetaMC();
+        double deltaAngleSq = dPhi*dPhi + dTheta*dTheta;
+        if(deltaAngleSq < minDeltaAngleSq){
+          minDeltaAngleSq = deltaAngleSq;
+          fMCPeakIndex = peakInd;
+          fMCPol = pol;
+        }
+      }
+    }
+  }
+}
+
+
+
+
+
+/** 
+ * Reset the mutable "interesting" indices to defaults
+ * The default values trigger the loop through peaks in findHighestPeak() and findMC().
+ */
+void AnitaEventSummary::resetNonPersistent() const{
+  if(fLastEventNumber!=eventNumber){
+    fHighestPeakIndex = -1;
+    fHighestPol = AnitaPol::kNotAPol;
+    fMCPeakIndex = -1;
+    fMCPol = AnitaPol::kNotAPol;
+    for(Int_t polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
+      for(Int_t dir=0; dir < maxDirectionsPerPol; dir++){
+        peak[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
+      }
+    }
+    fLastEventNumber=eventNumber;
+  }  
 }

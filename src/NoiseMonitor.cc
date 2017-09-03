@@ -11,7 +11,16 @@
 #include "TProfile2D.h"
 #include <stdlib.h>
 
-
+void NoiseMonitor::getRmsDirEnv(){
+  fRmsDir = getenv("ANITA_RMS_DIR");
+  if(!fRmsDir){
+    std::cerr << "Warning in " << __PRETTY_FUNCTION__
+              << ", can't see env ANITA_RMS_DIR. "
+              << "Will look for/make rms profiles in pwd"
+              << std::endl;
+    fRmsDir = ".";
+  }
+}
 
 UInt_t NoiseMonitor::makeStratHashFromDesc(const FilterStrategy* fs){
   TString hasher;
@@ -30,28 +39,32 @@ TString NoiseMonitor::getFileName(int run){
 void NoiseMonitor::getProfilesFromFile(int run){
 
   TString theRootPwd = gDirectory->GetPath();
-
   TString fileName = getFileName(run);
   TFile* fFile = TFile::Open(fileName);
 
   ProfPair p;
   if(fFile){
-    p.set((TProfile2D*) fFile->Get(getHistName(AnitaPol::kHorizontal, run)),
-          (TProfile2D*) fFile->Get(getHistName(AnitaPol::kVertical, run)));
+    TProfile2D* pH = (TProfile2D*) fFile->Get(getHistName(AnitaPol::kHorizontal, run));
+    TProfile2D* pV = (TProfile2D*) fFile->Get(getHistName(AnitaPol::kVertical, run));
+    p.set(pH, pV);
+  }
+  else{
+    std::cerr << "Warning in " << __PRETTY_FUNCTION__ << ", couldn't find file " << fileName << ", will need to generate it. This may take some time." << std::endl;
   }
 
   if(!p.get(AnitaPol::kVertical) || !p.get(AnitaPol::kHorizontal)){
     makeProfiles(run);
 
     fFile = TFile::Open(fileName);
-    p.set((TProfile2D*) fFile->Get(getHistName(AnitaPol::kHorizontal, run)),
-          (TProfile2D*) fFile->Get(getHistName(AnitaPol::kVertical, run)));
+    TProfile2D* pH = (TProfile2D*) fFile->Get(getHistName(AnitaPol::kHorizontal, run));
+    TProfile2D* pV = (TProfile2D*) fFile->Get(getHistName(AnitaPol::kVertical, run));
+    p.set(pH, pV);
   }
 
   if(!p.get(AnitaPol::kVertical) || !p.get(AnitaPol::kHorizontal)){
     std::cerr << "Warning in " << __PRETTY_FUNCTION__
-              << ", unable to find RMS profile! "
-              << "Something bad is about to happen!"
+              << ", unable to find RMS profiles for run " << run
+              << ". Something bad is about to happen!"
               << std::endl;
   }
   fFiles[run] = fFile;
@@ -161,16 +174,23 @@ void NoiseMonitor::makeProfiles(int run){
 NoiseMonitor::NoiseMonitor(FilterStrategy* fs)
     : fFilterStrat(fs)
 {
-
-  fRmsDir = getenv("ANITA_RMS_DIR");
-  if(!fRmsDir){
-    std::cerr << "Warning in " << __PRETTY_FUNCTION__
-              << ", can't see env ANITA_RMS_DIR. "
-              << "Will look for/make rms profiles in pwd"
-              << std::endl;
-    fRmsDir = ".";
-  }
+  getRmsDirEnv();
   fHash = makeStratHashFromDesc(fs);
+}
+
+
+
+/** 
+ * Default constructor, requires a filter strategy
+ * If you pass it a hash which doesn't match something in ANITA_RMS_DIR, it won't end well
+ * 
+ * @param fs is the filter strategy we want to use to get the waveform RMSs
+ */
+NoiseMonitor::NoiseMonitor(UInt_t hash)
+    : fFilterStrat(NULL)
+{
+  getRmsDirEnv();
+  fHash = hash;
 }
 
 
@@ -194,9 +214,20 @@ NoiseMonitor::~NoiseMonitor(){
  * 
  * @param realTime is used to find the run, to find the profile in memory
  */
-void NoiseMonitor::findProfilesInMemory(UInt_t realTime){
+void NoiseMonitor::findProfilesInMemoryFromTime(UInt_t realTime){
 
   int run = AnitaDataset::getRunAtTime(double(realTime));
+  findProfilesInMemoryFromRun(run);
+}
+
+
+
+/** 
+ * Set fCurrent if found,
+ * 
+ * @param realTime is used to find the run, to find the profile in memory
+ */
+void NoiseMonitor::findProfilesInMemoryFromRun(Int_t run){
 
   // first look in the map
   std::map<int, ProfPair>::iterator it = fRunProfiles.find(run);
@@ -212,26 +243,60 @@ void NoiseMonitor::findProfilesInMemory(UInt_t realTime){
 
 double NoiseMonitor::getRMS(AnitaPol::AnitaPol_t pol, Int_t ant, UInt_t realTime){
 
+  AnitaVersion::setVersionFromUnixTime(realTime);
+
   const TProfile2D* p = fCurrent.get(pol);
   
   if(!(p && realTime >= fCurrent.startTime() && realTime < fCurrent.endTime())){
-    findProfilesInMemory(realTime); // update fCurrent
+    findProfilesInMemoryFromTime(realTime); // update fCurrent
     p = fCurrent.get(pol); // should get p again
   }
 
   // surely find bin should be const?
-  Int_t bin = ((TProfile2D*)p)->FindBin(ant, realTime);
-  return p->GetBinContent(bin);
+  double rms = 0;
+  if(p){
+    Int_t bin = ((TProfile2D*)p)->FindBin(ant, realTime);
+    rms = p->GetBinContent(bin);
+  }
+  return rms;
 }
 
 
 void NoiseMonitor::ProfPair::set(const TProfile2D* h, const TProfile2D* v){
-  H = h;
-  V = v;
+
+  H = const_cast<TProfile2D*>(h);
+  V = const_cast<TProfile2D*>(v);
   // use both H and V so if one is NULL it fucks up
   // presumably the limits are the same.. but I'm not going to check right now
   fStartTime = H->GetYaxis()->GetBinLowEdge(1);
   fEndTime = V->GetYaxis()->GetBinLowEdge(V->GetNbinsY());
+
+  // prettiness
+  if(H && V){
+    H->GetYaxis()->SetTimeDisplay(1);
+    V->GetYaxis()->SetTimeDisplay(1);
+
+    const char* timeFormat = "#splitline{%H:%M}{%d/%m/%Y}";
+    H->GetYaxis()->SetTimeFormat(timeFormat);
+    V->GetYaxis()->SetTimeFormat(timeFormat);
+
+    H->GetYaxis()->SetTimeOffset(0);
+    V->GetYaxis()->SetTimeOffset(0);
+
+    H->GetYaxis()->SetLabelSize(0.02);
+    V->GetYaxis()->SetLabelSize(0.02);
+
+    fStartTime = H->GetYaxis()->GetBinLowEdge(1);
+    fEndTime = V->GetYaxis()->GetBinLowEdge(V->GetNbinsY());
+  }
+  else{
+    // something impossible
+    fStartTime = 0;
+    fEndTime = 0;
+  }
+
+  // H->GetXaxis()->LabelsOption("h");
+  // V->GetXaxis()->LabelsOption("h");
 }
 
 void NoiseMonitor::ProfPair::set(const ProfPair& other){

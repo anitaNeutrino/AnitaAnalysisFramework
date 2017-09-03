@@ -14,32 +14,38 @@ class TProfile2D;
 
 /** 
  * @class NoiseMonitor is designed to track the channel RMS of min bias events.
- * The constructor defines exactly how long to track that value in seconds, 
- * and whether to use the uneven/even (i.e. uninterpolated/interpolated) waveforms.
- * update(FilteredAnitaEvent* fEv) is expected to be called for every event in the analysis.
- * However, noise values will only be updated for non-RF triggers.
- * A non-NULL TFile pointer passed in the constructor means a TTree of RMS values will be saved.
+ * 
+ * Define ANITA_RMS_DIR to generate profile histograms
  */
 class NoiseMonitor {
 
  public:
 
-  // The default timescale in seconds
+  // The default timescale in seconds (bin width)
   enum {
     defaultTimeScaleSeconds = 10
   };
 
   NoiseMonitor(FilterStrategy* fs);
-  virtual ~NoiseMonitor();
+  NoiseMonitor(UInt_t hash);
 
+  virtual ~NoiseMonitor();
   double getRMS(AnitaPol::AnitaPol_t pol, Int_t ant, UInt_t realTime);
 
-  
- protected:
+  const TProfile2D* getProfile(AnitaPol::AnitaPol_t pol, int run){
+    findProfilesInMemoryFromRun(run);
+    return fCurrent.get(pol);
+  }
 
+
+  /** 
+   * @class Overengineered pair holder with set/get methods for AnitaPol_t
+   * 
+   * It's shouldn't be public, and only is so ROOT doesn't throw a hissy fit.
+   */
   class ProfPair{
    public:
-    ProfPair() : H(NULL), V(NULL) {}
+    ProfPair() : H(NULL), V(NULL), fStartTime(0), fEndTime(0) {}
     const TProfile2D* get(AnitaPol::AnitaPol_t pol) const{
       return pol == AnitaPol::kHorizontal ? H : V;
     }
@@ -48,13 +54,15 @@ class NoiseMonitor {
     double startTime(){return fStartTime;}
     double endTime(){return fEndTime;}
    private:
-    const TProfile2D* H;
-    const TProfile2D* V;
+    TProfile2D* H;
+    TProfile2D* V;
     double fStartTime;
     double fEndTime;
     
   };
-  
+
+ protected:
+
   FilterStrategy* fFilterStrat;
   const char* fRmsDir;
   std::map<int, TFile*> fFiles; /// map of run to opened TFiles
@@ -63,10 +71,11 @@ class NoiseMonitor {
   ProfPair fCurrent; //
   UInt_t fHash;
 
-  void findProfilesInMemory(UInt_t realTime); // from map in memory
+  void findProfilesInMemoryFromTime(UInt_t realTime); // from map in memory
+  void findProfilesInMemoryFromRun(Int_t run); // from map in memory
   void getProfilesFromFile(int run);  // search for file
   void makeProfiles(int run); // last resort, make them from scratch (generates a file)
-  
+  void getRmsDirEnv();
   TString getHistName(AnitaPol::AnitaPol_t pol, int run);
   
   
