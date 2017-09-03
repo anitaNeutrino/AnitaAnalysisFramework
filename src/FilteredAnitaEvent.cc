@@ -10,6 +10,8 @@
 #include "TCanvas.h"
 #include "TStyle.h"
 
+// maybe this should be configurable? :) 
+static const int pad_to_size = 260; 
 
 //ClassImp(FilteredAnitaEvent);
 
@@ -42,6 +44,7 @@ FilteredAnitaEvent:: FilteredAnitaEvent(const FilteredAnitaEvent* fEv, FilterStr
   // AnitaGeomTool * geom = AnitaGeomTool::Instance();
   // Initialize the filtered graphs with the raw graphs from Raw Anita Event
 
+
   for (int pol = AnitaPol::kHorizontal; pol <= AnitaPol::kVertical; pol++)
   {
     for (unsigned ant = 0; ant < NUM_SEAVEYS; ant++)
@@ -57,8 +60,8 @@ FilteredAnitaEvent:: FilteredAnitaEvent(const FilteredAnitaEvent* fEv, FilterStr
       rawGraphs[k] = new AnalysisWaveform (*rawIn);      
       filteredGraphs[k] = new AnalysisWaveform(*filteredIn);
       
-      filteredGraphs[k]->forceEvenSize(260); // do this for correlations
-//      rawGraphs[k]->forceEvenSize(260); // do this for correlations
+      filteredGraphs[k]->forceEvenSize(pad_to_size); // do this for correlations
+//      rawGraphs[k]->forceEvenSize(max_size); // do this for correlations
       filteredGraphsByAntPol[pol][ant] = filteredGraphs[k];
       rawGraphsByAntPol[pol][ant] = rawGraphs[k];
     }
@@ -68,14 +71,14 @@ FilteredAnitaEvent:: FilteredAnitaEvent(const FilteredAnitaEvent* fEv, FilterStr
   //tell the strategy to process this
   strategy->process(this);
 
-  int max_size = 260; 
   
+  int max_size = pad_to_size;
   for (int pol = AnitaPol::kHorizontal; pol <= AnitaPol::kVertical; pol++)
   {
     for (unsigned ant = 0; ant < NUM_SEAVEYS; ant++)
     {
       int k = pol * NUM_SEAVEYS  + ant;
-      if (filteredGraphs[k]->Neven() > max_size) 
+      if (filteredGraphs[k]->Neven() > pad_to_size) 
       {
         max_size = filteredGraphs[k]->Neven(); 
       }
@@ -120,7 +123,7 @@ FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterSt
       int i = geom->getChanIndexFromAntPol(ant, (AnitaPol::AnitaPol_t) pol);
       filteredGraphs[k] = new AnalysisWaveform (useful->fNumPoints[i], useful->fTimes[i], useful->fVolts[i]);
       rawGraphs[k] = new AnalysisWaveform (useful->fNumPoints[i], useful->fTimes[i], useful->fVolts[i]);
-      filteredGraphs[k]->forceEvenSize(260); // do this for correlations
+      filteredGraphs[k]->forceEvenSize(pad_to_size); // do this for correlations
 //      rawGraphs[k]->forceEvenSize(260); // do this for correlations
       filteredGraphsByAntPol[pol][ant] = filteredGraphs[k];
       rawGraphsByAntPol[pol][ant] = rawGraphs[k];
@@ -131,8 +134,9 @@ FilteredAnitaEvent:: FilteredAnitaEvent(const UsefulAnitaEvent * event, FilterSt
   //tell the strategy to process this
   strategy->process(this);
 
-  int max_size = 260; 
   
+  int max_size = pad_to_size; 
+
   for (int pol = AnitaPol::kHorizontal; pol <= AnitaPol::kVertical; pol++)
   {
     for (unsigned ant = 0; ant < NUM_SEAVEYS; ant++)
