@@ -209,6 +209,7 @@ public:
     Int_t strongCWFlag;
     Int_t isHPolTrigger;
     Int_t isVPolTrigger;
+    Int_t isStepFunction;
 
     CalPulser pulser;
     Bool_t isVarner;
