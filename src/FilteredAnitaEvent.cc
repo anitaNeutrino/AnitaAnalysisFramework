@@ -435,6 +435,26 @@ int FilteredAnitaEvent::checkSaturation(ULong64_t * save_hsat, ULong64_t * save_
   return totalsat; 
 }
 
+int FilteredAnitaEvent::checkStepFunction(Int_t lab, AnitaRing::AnitaRing_t ring, Int_t phiSector, AnitaPol::AnitaPol_t pol)  const {
+	if(useful->getLabChip(0) != lab) return 0;
+  int ant0 = AnitaGeomTool::getAntFromPhiRing(phiSector, ring);
+  if(rawGraphsByAntPol[pol][ant0]->uneven()->pk2pk(0,0) < 1000) return 0;
+	for (int i = 0; i < NUM_PHI; i++)
+  {
+    int ant1 = AnitaGeomTool::getAntFromPhiRing(i, AnitaRing::kBottomRing);
+    int ant2 = AnitaGeomTool::getAntFromPhiRing(i, AnitaRing::kMiddleRing);
+    int ant3 = AnitaGeomTool::getAntFromPhiRing(i, AnitaRing::kTopRing);
+
+    double peak1 = rawGraphsByAntPol[pol][ant1]->uneven()->pk2pk(0,0);
+    double peak2 = rawGraphsByAntPol[pol][ant2]->uneven()->pk2pk(0,0);
+    double peak3 = rawGraphsByAntPol[pol][ant3]->uneven()->pk2pk(0,0);
+		if((peak1 > 500) && (ant1 != ant0)) return 0;
+		if((peak2 > 500) && (ant2 != ant0)) return 0;
+		if((peak3 > 500) && (ant3 != ant0)) return 0;
+  }
+	return 1;
+}
+
 
 
 const AnalysisWaveform *FilteredAnitaEvent::getRawGraph(UInt_t phi,
