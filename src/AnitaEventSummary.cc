@@ -379,6 +379,37 @@ double AnitaEventSummary::WaveformInfo::totalPolFrac() const {
 }
 
 
+
+
+/** 
+ * Return the standardized values of the peakMoments.
+ * See https://en.wikipedia.org/wiki/Standardized_moment
+ * 
+ * @param k is the degree (as shown on wikipedia)
+ * k = 1 would be zero if the origin of the moments was the mean
+ * k = 2 is 1 is 1, definitionally
+ * k = 3 is a measure of skewness about the origin
+ * k = 4 is a measure of kurtosis about the origin
+ * @return the normalized peak moment
+ */
+double AnitaEventSummary::WaveformInfo::standardizedPeakMoment(int k) const {
+
+  // the first moment k=1, is stored in peakMoments[0]...  
+  if(k <= 0){
+    return -1;
+  }
+  else if (k <= 5){
+    return peakMoments[k-1]/pow(peakMoments[1], 0.5*double(k));
+  }
+  else{
+    return -1;
+  }
+}
+
+
+
+
+
 /** 
  * Make the source hypothesis go back to nonsense thats easy to recognize
  */
@@ -616,10 +647,10 @@ double AnitaEventSummary::PointingHypothesis::dThetaLDB() const {
   return getContainer(__PRETTY_FUNCTION__) ? dThetaSource(fContainer->ldb) : dPhi(-9999); // should trigger warning message
 }
 double AnitaEventSummary::PointingHypothesis::dPhiMC() const {
-  return getContainer(__PRETTY_FUNCTION__) ? dPhiSource(fContainer->mc) : dPhi(-9999); // should trigger warning message
+  return getContainer(__PRETTY_FUNCTION__) && fContainer->mc.weight > 0 ? dPhiSource(fContainer->mc) : -9999;
 }
 double AnitaEventSummary::PointingHypothesis::dThetaMC() const {
-  return getContainer(__PRETTY_FUNCTION__) ? dThetaSource(fContainer->mc) : dPhi(-9999); // should trigger warning message
+  return getContainer(__PRETTY_FUNCTION__) && fContainer->mc.weight > 0 ? dThetaSource(fContainer->mc) : -9999;
 }
 
 
@@ -693,3 +724,5 @@ void AnitaEventSummary::resetNonPersistent() const{
     fLastEventNumber=eventNumber;
   }  
 }
+
+

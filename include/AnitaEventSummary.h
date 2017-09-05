@@ -155,7 +155,6 @@ public:
     Double_t peakTime;  // Time that peak hilbert env occurs
     Double_t peakMoments[5];  // moments about Peak  (1st - 5th moments) 
 
-
     //See a number that has something to do with how impulsive it is 
     Double_t impulsivityMeasure; 
 
@@ -172,6 +171,11 @@ public:
     double linearPolAngle() const;
     double circPolFrac() const;
     double totalPolFrac() const;
+
+    double standardizedPeakMoment(int i) const;
+
+    inline double skewness(){return standardizedPeakMoment(3);}
+    inline double kurtosis(){return standardizedPeakMoment(4);}
 
     ClassDefNV(WaveformInfo, 9);
 
