@@ -66,6 +66,7 @@ public:
     Double_t mapRMS; /// rms of interferometric map
     Double_t mapHistoryVal; /// value of average of the peak location over the past 60 min-bias events
     Double_t hwAngle; /// angle with respect to triggering phi sector
+    Double_t hwAngleXPol; /// angle with respect to triggering phi sector in opposite polarisation
     Double_t latitude;/// on continent, or -9999 if doesn't intersect
     Double_t longitude;/// on continent, or -9999 if doesn't intersect
     Double_t altitude;/// on continent, or -9999 if doesn't intersect
@@ -95,7 +96,8 @@ public:
     double dThetaLDB() const;
     double dPhiMC() const;
     double dThetaMC() const;
-    double absHwAngle() const; /// Handle "unset" values = -9999 in Acclaim
+    double minAbsHwAngle() const;
+    Bool_t absHwAngleLessThanAbsHwAngleXPol() const;
 
    private:
     //----------------------------------------------------------------------------------------------------
@@ -110,7 +112,7 @@ public:
     void printEvent() const;
     friend class AnitaEventSummary;
 
-    ClassDefNV(PointingHypothesis,13); 
+    ClassDefNV(PointingHypothesis,14);
   }; 
 
   /** 
@@ -121,7 +123,7 @@ public:
   class WaveformInfo
   {
 
-  public: 
+   public: 
     WaveformInfo() {; } 
     Double_t snr; /// Signal to Noise of waveform 
     Double_t peakHilbert; /// peak of hilbert envelope
@@ -179,8 +181,8 @@ public:
 
     ClassDefNV(WaveformInfo, 9);
 
-   // private:
-   //  mutable AnitaEventSummary* fContainer; //! Disgusting hack
+    // private:
+    //  mutable AnitaEventSummary* fContainer; //! Disgusting hack
   }; 
 
 
@@ -223,17 +225,17 @@ public:
      *  The first element is the total, and then the next are by ring 
      *  So to get the top ring, do 1 + AnitaRing::kTopRing, etc. 
      */
-    Double_t meanPower[1+AnitaRing::kNotARing]; 
-    Double_t medianPower[1+AnitaRing::kNotARing]; 
-    Double_t meanPowerFiltered[1+AnitaRing::kNotARing]; 
-    Double_t medianPowerFiltered[1+AnitaRing::kNotARing]; 
+    Double_t meanPower[1+AnitaRing::kNotARing];
+    Double_t medianPower[1+AnitaRing::kNotARing];
+    Double_t meanPowerFiltered[1+AnitaRing::kNotARing];
+    Double_t medianPowerFiltered[1+AnitaRing::kNotARing];
 
     Double_t maxBottomToTopRatio[AnitaPol::kNotAPol]; 
     int maxBottomToTopRatioSector[AnitaPol::kNotAPol]; 
     Double_t minBottomToTopRatio[AnitaPol::kNotAPol]; 
     int minBottomToTopRatioSector[AnitaPol::kNotAPol]; 
 
-    ClassDefNV(EventFlags,7); 
+    ClassDefNV(EventFlags,8);
   };
 
 
@@ -381,17 +383,17 @@ public:
   mutable Int_t                fMCPeakIndex;      //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak nearest MC
   mutable AnitaPol::AnitaPol_t fMCPol;            //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak nearest MC
   mutable UInt_t               fLastEventNumber;  //! DOES NOT PERSIST IN ROOT! To check for stale caching variables
+  /** 
+   * Workhorse function to find the highest peak
+   * Caches the result in the mutable, non-ROOT-persistent members fHighestPol and fHighestPeakIndex
+   */
   void findHighestPeak() const;
   void findMC() const;
   void resetNonPersistent() const;
 
 
-  /** 
-   * Workhorse function to find the highest peak
-   * Caches the result in the mutable, non-ROOT-persistent members fHighestPol and fHighestPeakIndex
-   */
 
-  ClassDefNV(AnitaEventSummary, 24);
+  ClassDefNV(AnitaEventSummary, 25);
 };
 
 

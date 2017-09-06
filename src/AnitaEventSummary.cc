@@ -620,13 +620,32 @@ const AnitaEventSummary* AnitaEventSummary::PointingHypothesis::getContainer(con
   return fContainer;
 }
 
-double AnitaEventSummary::PointingHypothesis::absHwAngle() const {
-  // I set no hardware trigger to be -9999, but that screws up linear things like a TMVA,
-  // which want a smooth transition from good to bad values, so I'll max this out at the
-  // worst geometric possibility, which is 180 degrees
-  double absHw = TMath::Abs(hwAngle);
-  return absHw > 180 ? 180 : absHw;
+
+/** 
+ * Return the smaller of the two hardware angles, hwAngle / hwAngleXPol
+ * To know which one was smaller, same pol as peak or xpol, see 
+ * @return 
+ */
+double AnitaEventSummary::PointingHypothesis::minAbsHwAngle() const {
+  if(TMath::Abs(hwAngle) < TMath::Abs(hwAngleXPol)){
+    return hwAngle;
+  }
+  else{
+    return hwAngleXPol;
+  }
 }
+
+/** 
+ * Return the smaller of the two hardware angles, hwAngle / hwAngleXPol
+ * To know which one was smaller, same pol as peak or xpol, see 
+ * @return 
+ */
+Bool_t AnitaEventSummary::PointingHypothesis::absHwAngleLessThanAbsHwAngleXPol() const {
+  return (TMath::Abs(hwAngle) < TMath::Abs(hwAngleXPol));
+}
+
+
+
 
 double AnitaEventSummary::PointingHypothesis::dPhiWais() const {
   return getContainer(__PRETTY_FUNCTION__) ? dPhiSource(fContainer->wais) : dPhi(-9999); // should trigger warning message
