@@ -229,7 +229,7 @@ public:
     Double_t minBottomToTopRatio[AnitaPol::kNotAPol]; 
     int minBottomToTopRatioSector[AnitaPol::kNotAPol]; 
 
-    ClassDefNV(EventFlags,7); 
+    ClassDefNV(EventFlags,8); 
   };
 
 
