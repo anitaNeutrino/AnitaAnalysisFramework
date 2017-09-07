@@ -95,6 +95,10 @@ void AnitaEventSummary::zeroInternals(){
       memset(&deconvolved[polInd][dir],0,sizeof(WaveformInfo)); 
       memset(&coherent_filtered[polInd][dir],0,sizeof(WaveformInfo)); 
       memset(&deconvolved_filtered[polInd][dir],0,sizeof(WaveformInfo));
+
+    }
+    for(Int_t ant=0; ant < 48; ant++){
+      memset(&channels[polInd][ant],0,sizeof(ChannelInfo)); 
     }
   }
   memset(&flags,0, sizeof(EventFlags)); 

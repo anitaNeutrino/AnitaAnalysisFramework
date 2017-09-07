@@ -120,7 +120,10 @@ TTree* AnitaTMVA::makeTMVATree(int ntrees, TTree ** in, TFile * outf, const char
   for (int t = 0; t < ntrees; t++) 
   {
     in[t]->SetEstimate(in[t]->GetEntries() *10); 
-    Nout[t] = in[t]->Draw(drawstr.str().c_str(),cut,"goff"); 
+    // Nout[t] = in[t]->Draw(drawstr.str().c_str(),cut,"goff"); 
+    Nout[t] = in[t]->Draw(drawstr.str().c_str(),cut,"para"); 
+    Nout[t] = in[t]->Draw(drawstr.str().c_str(),cut,"gl5d"); 
+    Nout[t] = in[t]->Draw(drawstr.str().c_str(),cut,"candle"); 
   }
  
 

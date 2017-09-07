@@ -179,6 +179,26 @@ public:
    //  mutable AnitaEventSummary* fContainer; //! Disgusting hack
   }; 
 
+  /** 
+   * @class ChannelInfo
+   * @brief Stores information about a channel's waveform
+   */
+  class ChannelInfo
+  {
+
+  public: 
+    ChannelInfo() {; } 
+    Int_t channelNumber;
+    Double_t phi;
+    Double_t theta;
+    Double_t rms;
+    Double_t avgPower;
+    Double_t snr; /// Signal to Noise of waveform 
+    Double_t peakHilbert; /// peak of hilbert envelope
+   
+    ClassDefNV(ChannelInfo, 1);
+  }; 
+
 
   /** 
    * @class EventFlags
@@ -320,6 +340,7 @@ public:
   WaveformInfo deconvolved[AnitaPol::kNotAPol][maxDirectionsPerPol]; /// Summaries of the (unfiltered) de-dispersed coherently summed waveforms, array index correponds to entry in peak[][] 
   WaveformInfo coherent_filtered[AnitaPol::kNotAPol][maxDirectionsPerPol]; /// Summaries of the filtered, coherently summed waveforms, array index correponds to entry in peak[][] 
   WaveformInfo deconvolved_filtered[AnitaPol::kNotAPol][maxDirectionsPerPol]; /// Summaries of the filtered, de-dispersed, coherently summed waveforms, array index correponds to entry in peak[][] 
+  ChannelInfo channels[AnitaPol::kNotAPol][48]; /// Summaries of each channel's waveform. 
   EventFlags flags; /// Flags corresponding the event quality, trigger type, calibration pulser timing, etc.
   SourceHypothesis sun; /// Contains location of sun in map coordinates at time of event
   SourceHypothesis wais; /// Contains location of WAIS divide cal pulser in map coordinates at time of event
@@ -386,7 +407,7 @@ public:
    * Caches the result in the mutable, non-ROOT-persistent members fHighestPol and fHighestPeakIndex
    */
 
-  ClassDefNV(AnitaEventSummary, 24);
+  ClassDefNV(AnitaEventSummary, 25);
 };
 
 

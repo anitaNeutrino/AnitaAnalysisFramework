@@ -8,6 +8,7 @@
 #pragma link C++ class AnitaEventSummary+;
 #pragma link C++ class AnitaEventSummary::PointingHypothesis+;
 #pragma link C++ class AnitaEventSummary::WaveformInfo+;
+#pragma link C++ class AnitaEventSummary::ChannelInfo+;
 #pragma link C++ class AnitaEventSummary::EventFlags+;
 #pragma link C++ class AnitaEventSummary::SourceHypothesis+;
 #pragma link C++ class AnitaEventSummary::MCTruth+;
