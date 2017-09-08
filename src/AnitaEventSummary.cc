@@ -410,7 +410,12 @@ double AnitaEventSummary::WaveformInfo::standardizedPeakMoment(int k) const {
   }
 }
 
-
+/** 
+ * Get the phi in degree of the current channel
+ */
+double AnitaEventSummary::ChannelInfo::getPhi() const {
+  return AnitaGeomTool::Instance()->getPhiFromAnt(ant);
+}
 
 
 

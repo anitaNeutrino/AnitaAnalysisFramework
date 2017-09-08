@@ -187,22 +187,20 @@ public:
 
   /** 
    * @class ChannelInfo
-   * @brief Stores information about a channel's waveform
+   * @Stores brief information of a channel's waveform
    */
   class ChannelInfo
   {
 
   public: 
     ChannelInfo() {; } 
-    Int_t channelNumber;
-    Double_t phi;
-    Double_t theta;
+    Int_t ant; // antenna number, which is dummy info. but useful when you want to plot it directly from root console.
     Double_t rms;
     Double_t avgPower;
     Double_t snr; /// Signal to Noise of waveform 
-    Double_t peakHilbert; /// peak of hilbert envelope
-   
-    ClassDefNV(ChannelInfo, 1);
+    Double_t peakHilbert; /// peak of hilbert envelope   
+    double getPhi() const;
+    ClassDefNV(ChannelInfo, 2);
   }; 
 
 
@@ -414,7 +412,7 @@ public:
 
 
 
-  ClassDefNV(AnitaEventSummary, 25);
+  ClassDefNV(AnitaEventSummary, 26);
 };
 
 
