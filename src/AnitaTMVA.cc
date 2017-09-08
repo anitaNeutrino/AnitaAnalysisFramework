@@ -8,7 +8,7 @@
 
 
 
-union idiocy
+struct idiocy
 {
   int i;
   float f;
@@ -35,7 +35,7 @@ AnitaTMVA::MVAVarSet::MVAVarSet(const char * ifile)
   }
 
 
-  char buf[1024]; 
+  char buf[2048]; 
   int lineno = 0;
   while(!feof(f))
   {
@@ -174,7 +174,7 @@ int AnitaTMVA::evaluateTMVA(TTree * tree, const AnitaTMVA::MVAVarSet & vars, con
     {
       case 'I':
          tree->SetBranchAddress(vars.at(i).name, &mem[i].i); 
-         reader.AddVariable(vars.at(i).name, &mem[i].i); 
+         reader.AddVariable(vars.at(i).name, &mem[i].f); //ugh ??!? 
       case 'F':
       default:
          tree->SetBranchAddress(vars.at(i).name, &mem[i].f); 
@@ -190,6 +190,10 @@ int AnitaTMVA::evaluateTMVA(TTree * tree, const AnitaTMVA::MVAVarSet & vars, con
   for (int j = 0; j < tree->GetEntries(); j++) 
   {
     tree->GetEntry(j); 
+    if (vars.at(j).type == 'I') 
+    {
+      mem[j].f = mem[j].i; 
+    }
     value = reader.EvaluateMVA(branch_name,aux); 
     b->Fill(); 
   }
