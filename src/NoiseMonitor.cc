@@ -36,11 +36,14 @@ TString NoiseMonitor::getFileName(int run){
   return TString::Format("%s/rms_anita%d_run%d_hash%u.root", fRmsDir, AnitaVersion::get(), run, fHash);
 }
 
-void NoiseMonitor::getProfilesFromFile(int run){
+void NoiseMonitor::getProfilesFromFileRun(int run){
 
   TString theRootPwd = gDirectory->GetPath();
   TString fileName = getFileName(run);
-  TFile* fFile = TFile::Open(fileName);
+  if(fFile){
+    fFile->Close();
+  }
+  fFile = TFile::Open(fileName);
 
   ProfPair p;
   if(fFile){
@@ -67,7 +70,7 @@ void NoiseMonitor::getProfilesFromFile(int run){
               << ". Something bad is about to happen!"
               << std::endl;
   }
-  fFiles[run] = fFile;
+  // fFiles[run] = fFile;
 
   fCurrent.set(p);
 
@@ -172,7 +175,7 @@ void NoiseMonitor::makeProfiles(int run){
  * @param fs is the filter strategy we want to use to get the waveform RMSs
  */
 NoiseMonitor::NoiseMonitor(FilterStrategy* fs)
-    : fFilterStrat(fs)
+    : fFilterStrat(fs), fFile(NULL)
 {
   getRmsDirEnv();
   fHash = makeStratHashFromDesc(fs);
@@ -187,7 +190,7 @@ NoiseMonitor::NoiseMonitor(FilterStrategy* fs)
  * @param fs is the filter strategy we want to use to get the waveform RMSs
  */
 NoiseMonitor::NoiseMonitor(UInt_t hash)
-    : fFilterStrat(NULL)
+    : fFilterStrat(NULL), fFile(NULL)
 {
   getRmsDirEnv();
   fHash = hash;
@@ -201,43 +204,53 @@ NoiseMonitor::NoiseMonitor(UInt_t hash)
  */
 NoiseMonitor::~NoiseMonitor(){
 
-  std::map<int, TFile*>::iterator it;
-  for(it = fFiles.begin(); it != fFiles.end(); it++){
-    it->second->Close();
+  // std::map<int, TFile*>::iterator it;
+  // for(it = fFiles.begin(); it != fFiles.end(); it++){
+  //   it->second->Close();
+  // }
+  if(fFile){
+    fFile->Close();
+    fFile = NULL;
   }
 }
 
 
 
-/** 
- * Set fCurrent if found,
- * 
- * @param realTime is used to find the run, to find the profile in memory
- */
-void NoiseMonitor::findProfilesInMemoryFromTime(UInt_t realTime){
+// /** 
+//  * Set fCurrent if found,
+//  * 
+//  * @param realTime is used to find the run, to find the profile in memory
+//  */
+// void NoiseMonitor::findProfilesInMemoryFromTime(UInt_t realTime){
 
+//   int run = AnitaDataset::getRunAtTime(double(realTime));
+//   findProfilesInMemoryFromRun(run);
+// }
+
+
+
+// /** 
+//  * Set fCurrent if found,
+//  * 
+//  * @param realTime is used to find the run, to find the profile in memory
+//  */
+// void NoiseMonitor::findProfilesInMemoryFromRun(Int_t run){
+
+//   // first look in the map
+//   std::map<int, ProfPair>::iterator it = fRunProfiles.find(run);
+//   if(it!=fRunProfiles.end()){
+//     // then this the map
+//     fCurrent.set(it->second);
+//   }
+//   else{
+//     getProfilesFromFileRun(run);
+//   }
+// }
+
+
+void NoiseMonitor::getProfilesFromFileTime(UInt_t realTime){
   int run = AnitaDataset::getRunAtTime(double(realTime));
-  findProfilesInMemoryFromRun(run);
-}
-
-
-
-/** 
- * Set fCurrent if found,
- * 
- * @param realTime is used to find the run, to find the profile in memory
- */
-void NoiseMonitor::findProfilesInMemoryFromRun(Int_t run){
-
-  // first look in the map
-  std::map<int, ProfPair>::iterator it = fRunProfiles.find(run);
-  if(it!=fRunProfiles.end()){
-    // then this the map
-    fCurrent.set(it->second);
-  }
-  else{
-    getProfilesFromFile(run);
-  }
+  getProfilesFromFileRun(run); // update fCurrent
 }
 
 
@@ -248,7 +261,7 @@ double NoiseMonitor::getRMS(AnitaPol::AnitaPol_t pol, Int_t ant, UInt_t realTime
   const TProfile2D* p = fCurrent.get(pol);
   
   if(!(p && realTime >= fCurrent.startTime() && realTime < fCurrent.endTime())){
-    findProfilesInMemoryFromTime(realTime); // update fCurrent
+    getProfilesFromFileTime(realTime); // update fCurrent
     p = fCurrent.get(pol); // should get p again
   }
 
