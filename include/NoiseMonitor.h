@@ -33,7 +33,7 @@ class NoiseMonitor {
   double getRMS(AnitaPol::AnitaPol_t pol, Int_t ant, UInt_t realTime);
 
   const TProfile2D* getProfile(AnitaPol::AnitaPol_t pol, int run){
-    findProfilesInMemoryFromRun(run);
+    getProfilesFromFileRun(run);
     return fCurrent.get(pol);
   }
 
@@ -41,7 +41,7 @@ class NoiseMonitor {
   /** 
    * @class Overengineered pair holder with set/get methods for AnitaPol_t
    * 
-   * It's shouldn't be public, and only is so ROOT doesn't throw a hissy fit.
+   * It shouldn't be public, and only is so ROOT doesn't throw a hissy fit.
    */
   class ProfPair{
    public:
@@ -65,15 +65,17 @@ class NoiseMonitor {
 
   FilterStrategy* fFilterStrat;
   const char* fRmsDir;
-  std::map<int, TFile*> fFiles; /// map of run to opened TFiles
-  std::map<int, ProfPair> fRunProfiles; /// map of run to pair of TProfiles (H/V)
+  TFile* fFile; // Pointer to currently opened file
+  // std::map<int, TFile*> fFiles; /// map of run to opened TFiles
+  // std::map<int, ProfPair> fRunProfiles; /// map of run to pair of TProfiles (H/V)
 
   ProfPair fCurrent; //
   UInt_t fHash;
 
-  void findProfilesInMemoryFromTime(UInt_t realTime); // from map in memory
-  void findProfilesInMemoryFromRun(Int_t run); // from map in memory
-  void getProfilesFromFile(int run);  // search for file
+  // void findProfilesInMemoryFromTime(UInt_t realTime); // from map in memory
+  // void findProfilesInMemoryFromRun(Int_t run); // from map in memory
+  void getProfilesFromFileRun(int run);  // search for file
+  void getProfilesFromFileTime(UInt_t realTime);  // search for file
   void makeProfiles(int run); // last resort, make them from scratch (generates a file)
   void getRmsDirEnv();
   TString getHistName(AnitaPol::AnitaPol_t pol, int run);

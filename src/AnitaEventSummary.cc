@@ -87,6 +87,7 @@ void AnitaEventSummary::zeroInternals(){
   eventNumber = 0;
 
   for(Int_t polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
+    AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
     nPeaks[polInd] = 0; 
     for(Int_t dir=0; dir < maxDirectionsPerPol; dir++)
     {
@@ -95,6 +96,12 @@ void AnitaEventSummary::zeroInternals(){
       memset(&deconvolved[polInd][dir],0,sizeof(WaveformInfo)); 
       memset(&coherent_filtered[polInd][dir],0,sizeof(WaveformInfo)); 
       memset(&deconvolved_filtered[polInd][dir],0,sizeof(WaveformInfo));
+
+    }
+    for(Int_t ant=0; ant < 48; ant++){
+      memset(&channels[polInd][ant],0,sizeof(ChannelInfo));
+      channels[polInd][ant].pol = pol;
+      channels[polInd][ant].ant = ant;
     }
   }
   memset(&flags,0, sizeof(EventFlags)); 
@@ -379,6 +386,46 @@ double AnitaEventSummary::WaveformInfo::totalPolFrac() const {
 }
 
 
+
+
+/** 
+ * Return the standardized values of the peakMoments.
+ * See https://en.wikipedia.org/wiki/Standardized_moment
+ * 
+ * @param k is the degree (as shown on wikipedia)
+ * k = 1 would be zero if the origin of the moments was the mean
+ * k = 2 is 1 is 1, definitionally
+ * k = 3 is a measure of skewness about the origin
+ * k = 4 is a measure of kurtosis about the origin
+ * @return the normalized peak moment
+ */
+double AnitaEventSummary::WaveformInfo::standardizedPeakMoment(int k) const {
+
+  // the first moment k=1, is stored in peakMoments[0]...  
+  if(k <= 0){
+    return -1;
+  }
+  else if (k <= 5){
+    return peakMoments[k-1]/pow(peakMoments[1], 0.5*double(k));
+  }
+  else{
+    return -1;
+  }
+}
+
+
+
+/** 
+ * Get the phi in degree of the current channel
+ */
+double AnitaEventSummary::ChannelInfo::getPhi() const {
+  return AnitaGeomTool::Instance()->getPhiFromAnt(ant);
+}
+
+
+
+
+
 /** 
  * Make the source hypothesis go back to nonsense thats easy to recognize
  */
@@ -589,13 +636,32 @@ const AnitaEventSummary* AnitaEventSummary::PointingHypothesis::getContainer(con
   return fContainer;
 }
 
-double AnitaEventSummary::PointingHypothesis::absHwAngle() const {
-  // I set no hardware trigger to be -9999, but that screws up linear things like a TMVA,
-  // which want a smooth transition from good to bad values, so I'll max this out at the
-  // worst geometric possibility, which is 180 degrees
-  double absHw = TMath::Abs(hwAngle);
-  return absHw > 180 ? 180 : absHw;
+
+/** 
+ * Return the smaller of the two hardware angles, hwAngle / hwAngleXPol
+ * To know which one was smaller, same pol as peak or xpol, see 
+ * @return 
+ */
+double AnitaEventSummary::PointingHypothesis::minAbsHwAngle() const {
+  if(TMath::Abs(hwAngle) < TMath::Abs(hwAngleXPol)){
+    return hwAngle;
+  }
+  else{
+    return hwAngleXPol;
+  }
 }
+
+/** 
+ * Return the smaller of the two hardware angles, hwAngle / hwAngleXPol
+ * To know which one was smaller, same pol as peak or xpol, see 
+ * @return 
+ */
+Bool_t AnitaEventSummary::PointingHypothesis::absHwAngleLessThanAbsHwAngleXPol() const {
+  return (TMath::Abs(hwAngle) < TMath::Abs(hwAngleXPol));
+}
+
+
+
 
 double AnitaEventSummary::PointingHypothesis::dPhiWais() const {
   return getContainer(__PRETTY_FUNCTION__) ? dPhiSource(fContainer->wais) : dPhi(-9999); // should trigger warning message
@@ -616,10 +682,10 @@ double AnitaEventSummary::PointingHypothesis::dThetaLDB() const {
   return getContainer(__PRETTY_FUNCTION__) ? dThetaSource(fContainer->ldb) : dPhi(-9999); // should trigger warning message
 }
 double AnitaEventSummary::PointingHypothesis::dPhiMC() const {
-  return getContainer(__PRETTY_FUNCTION__) ? dPhiSource(fContainer->mc) : dPhi(-9999); // should trigger warning message
+  return getContainer(__PRETTY_FUNCTION__) && fContainer->mc.weight > 0 ? dPhiSource(fContainer->mc) : -9999;
 }
 double AnitaEventSummary::PointingHypothesis::dThetaMC() const {
-  return getContainer(__PRETTY_FUNCTION__) ? dThetaSource(fContainer->mc) : dPhi(-9999); // should trigger warning message
+  return getContainer(__PRETTY_FUNCTION__) && fContainer->mc.weight > 0 ? dThetaSource(fContainer->mc) : -9999;
 }
 
 
@@ -693,3 +759,5 @@ void AnitaEventSummary::resetNonPersistent() const{
     fLastEventNumber=eventNumber;
   }  
 }
+
+

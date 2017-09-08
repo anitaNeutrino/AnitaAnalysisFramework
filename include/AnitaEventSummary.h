@@ -66,6 +66,7 @@ public:
     Double_t mapRMS; /// rms of interferometric map
     Double_t mapHistoryVal; /// value of average of the peak location over the past 60 min-bias events
     Double_t hwAngle; /// angle with respect to triggering phi sector
+    Double_t hwAngleXPol; /// angle with respect to triggering phi sector in opposite polarisation
     Double_t latitude;/// on continent, or -9999 if doesn't intersect
     Double_t longitude;/// on continent, or -9999 if doesn't intersect
     Double_t altitude;/// on continent, or -9999 if doesn't intersect
@@ -95,7 +96,8 @@ public:
     double dThetaLDB() const;
     double dPhiMC() const;
     double dThetaMC() const;
-    double absHwAngle() const; /// Handle "unset" values = -9999 in Acclaim
+    double minAbsHwAngle() const;
+    Bool_t absHwAngleLessThanAbsHwAngleXPol() const;
 
    private:
     //----------------------------------------------------------------------------------------------------
@@ -106,11 +108,11 @@ public:
     mutable AnitaEventSummary* fContainer; //! WARNING! Does not persist! Get access to AnitaEventSummary that contains this PointingHypothesis
     const AnitaEventSummary* getContainer(const char* funcName) const; /// Wraps getting fContainer with a warning if NULL.
     double dPhiSource(const SourceHypothesis& source) const;   // Won't work inside TTree::Draw due to limitations in TTreeFormula, so are private, use e.g. dPhiWais() instead.
-    double dThetaSource(const SourceHypothesis& source) const; // Won't work inside TTree::Draw due to limitations in TTreeFormula, so are private, use e.g. dPhiWais() instead.
+    double dThetaSource(const SourceHypothesis& source) const; // Won't work inside TTree::Draw due to limitations in TTreeFormula, so are private, use e.g. dThetaWais() instead.
     void printEvent() const;
     friend class AnitaEventSummary;
 
-    ClassDefNV(PointingHypothesis,13); 
+    ClassDefNV(PointingHypothesis,14);
   }; 
 
   /** 
@@ -121,7 +123,7 @@ public:
   class WaveformInfo
   {
 
-  public: 
+   public: 
     WaveformInfo() {; } 
     Double_t snr; /// Signal to Noise of waveform 
     Double_t peakHilbert; /// peak of hilbert envelope
@@ -155,11 +157,10 @@ public:
     Double_t peakTime;  // Time that peak hilbert env occurs
     Double_t peakMoments[5];  // moments about Peak  (1st - 5th moments) 
 
+    Double_t impulsivityMeasure; /// A number that has something to do with how impulsive it is
+    Double_t narrowestWidths[5]; /// Narrowest width containing {10%, 20%, 30%, 40%, 50%} of the total power
 
-    //See a number that has something to do with how impulsive it is 
-    Double_t impulsivityMeasure; 
-
-    Int_t numAntennasInCoherent; /// number of antennas used to make this 
+    Int_t numAntennasInCoherent; /// Number of antennas used to make this
 
     Double_t localMaxToMin; /// Largest value of local max to neighbouring local min (see Acclaim::RootTools::getLocalMaxToMin)
     Double_t localMaxToMinTime; /// Time between local maxima and minima +ve means max is before min, -ve means min is before max
@@ -173,10 +174,47 @@ public:
     double circPolFrac() const;
     double totalPolFrac() const;
 
-    ClassDefNV(WaveformInfo, 9);
+    double standardizedPeakMoment(int i) const;
 
-   // private:
-   //  mutable AnitaEventSummary* fContainer; //! Disgusting hack
+    inline double skewness(){return standardizedPeakMoment(3);}
+    inline double kurtosis(){return standardizedPeakMoment(4);}
+
+    ClassDefNV(WaveformInfo, 10);
+
+    // private:
+    //  mutable AnitaEventSummary* fContainer; //! Disgusting hack
+  }; 
+
+  /** 
+   * @class ChannelInfo
+   * @Stores brief information of a channel's waveform
+   */
+  class ChannelInfo
+  {
+
+   public:
+    /// Correct indices are set in the AnitaEventSummary constructor
+    ChannelInfo() : pol(AnitaPol::kNotAPol), ant(-1) {; }
+
+    Double_t rms;
+    Double_t avgPower;
+    Double_t snr; /// Signal to Noise of waveform 
+    Double_t peakHilbert; /// peak of hilbert envelope
+
+    Double_t getPhi() const;
+    inline Int_t getAnt() const {return ant;}                // could add some errors on -1 here...
+    inline AnitaPol::AnitaPol_t getPol() const {return pol;} // could add some errors on 2 here...
+
+   private:
+    friend class AnitaEventSummary;
+    // WARNING! THE COMMENTS TRAILING THESE AFFECT WHAT HAPPENS IN ROOT!
+    // The //! comment initializer means ROOT does not store these variables when writing to files.
+    // These variables are filled in the AnitaEventSummary constructor, so each ChannelInfo knows
+    // its location in the ChannelInfo channels[2][48] array in AnitaEventSummary
+    AnitaPol::AnitaPol_t     pol; //! DOES NOT PERSIST IN ROOT! the polarization
+    Int_t                    ant; //! DOES NOT PERSIST IN ROOT! the antenna
+
+    ClassDefNV(ChannelInfo, 3);
   }; 
 
 
@@ -186,17 +224,17 @@ public:
    */
   class EventFlags
   {
-  public: 
+   public:
     EventFlags() {; }
     /** Is this event from a cal pulser? */ 
     enum CalPulser 
-      {
-        NONE, 
-        WAIS, 
-        LDB, 
-        SIPLE,
-        TD
-      }; 
+    {
+      NONE,
+      WAIS,
+      LDB,
+      SIPLE,
+      TD
+    };
 
     Int_t isGood;
     Int_t isRF;
@@ -209,6 +247,7 @@ public:
     Int_t strongCWFlag;
     Int_t isHPolTrigger;
     Int_t isVPolTrigger;
+    Int_t isStepFunction;
 
     CalPulser pulser;
     Bool_t isVarner;
@@ -218,10 +257,10 @@ public:
      *  The first element is the total, and then the next are by ring 
      *  So to get the top ring, do 1 + AnitaRing::kTopRing, etc. 
      */
-    Double_t meanPower[1+AnitaRing::kNotARing]; 
-    Double_t medianPower[1+AnitaRing::kNotARing]; 
-    Double_t meanPowerFiltered[1+AnitaRing::kNotARing]; 
-    Double_t medianPowerFiltered[1+AnitaRing::kNotARing]; 
+    Double_t meanPower[1+AnitaRing::kNotARing];
+    Double_t medianPower[1+AnitaRing::kNotARing];
+    Double_t meanPowerFiltered[1+AnitaRing::kNotARing];
+    Double_t medianPowerFiltered[1+AnitaRing::kNotARing];
 
     Double_t maxBottomToTopRatio[AnitaPol::kNotAPol]; 
     int maxBottomToTopRatioSector[AnitaPol::kNotAPol]; 
@@ -231,7 +270,7 @@ public:
     /** The fraction of nearby events that are payload blasts */ 
     Double_t blastFraction; 
 
-    ClassDefNV(EventFlags,8); 
+    ClassDefNV(EventFlags,9);
   };
 
 
@@ -244,19 +283,19 @@ public:
    */
   class SourceHypothesis
   {
-    public:
-      SourceHypothesis() { reset(); }
-      Double_t theta;
-      Double_t phi;
-      Double_t distance;
+   public:
+    SourceHypothesis() { reset(); }
+    Double_t theta;
+    Double_t phi;
+    Double_t distance;
 
-      Double_t mapValue[NUM_POLS];  ///what the instantaneous map value is at this source hypothesis
-      Double_t mapHistoryVal[NUM_POLS]; /// a history of the interferometric map value for the source location
+    Double_t mapValue[NUM_POLS];  ///what the instantaneous map value is at this source hypothesis
+    Double_t mapHistoryVal[NUM_POLS]; /// a history of the interferometric map value for the source location
 
-      void reset(); /// sets all the values to nonsense.  Sorry, mapHistoryVal means this is in source now 
+    void reset(); /// sets all the values to nonsense.  Sorry, mapHistoryVal means this is in source now 
       
 
-      ClassDefNV(SourceHypothesis,3);
+    ClassDefNV(SourceHypothesis,3);
   };
 
 
@@ -268,8 +307,8 @@ public:
    */
   class MCTruth : public SourceHypothesis
   {
-    public: 
-      MCTruth() { reset(); } 
+   public:
+    MCTruth() { reset(); }
     WaveformInfo wf[AnitaPol::kNotAPol]; 
     double weight;
     double energy;
@@ -287,9 +326,9 @@ public:
    */
   class PayloadLocation
   {
-  public:
+   public:
     PayloadLocation() { reset(); }
-    PayloadLocation(const Adu5Pat* pat); //!< Slightly more useful constructor
+    PayloadLocation(const Adu5Pat* pat); /// Slightly more useful constructor
 
     Float_t latitude;
     Float_t longitude;
@@ -299,7 +338,7 @@ public:
     Float_t prevHeading; //useful for determining rotation rate
 
     void reset() { latitude = -999; longitude = -999; altitude = -999; heading = -999; prevHeading = -999;};
-    void update(const Adu5Pat* pat); //!< Copy the data from the pat into the object
+    void update(const Adu5Pat* pat); /// Copy the data from the pat into the object
 
     ClassDefNV(PayloadLocation,2);
   };  
@@ -313,7 +352,6 @@ public:
   /*************************************************************************************
    * Public member variables
    *************************************************************************************/
-  PayloadLocation anitaLocation; /// Reduced GPS data
   Int_t run; /// Run
   UInt_t eventNumber; /// Event number
   UInt_t realTime; /// Time of the event
@@ -323,18 +361,19 @@ public:
   WaveformInfo deconvolved[AnitaPol::kNotAPol][maxDirectionsPerPol]; /// Summaries of the (unfiltered) de-dispersed coherently summed waveforms, array index correponds to entry in peak[][] 
   WaveformInfo coherent_filtered[AnitaPol::kNotAPol][maxDirectionsPerPol]; /// Summaries of the filtered, coherently summed waveforms, array index correponds to entry in peak[][] 
   WaveformInfo deconvolved_filtered[AnitaPol::kNotAPol][maxDirectionsPerPol]; /// Summaries of the filtered, de-dispersed, coherently summed waveforms, array index correponds to entry in peak[][] 
+  ChannelInfo channels[AnitaPol::kNotAPol][NUM_SEAVEYS]; /// Summaries of each channel's waveform.
   EventFlags flags; /// Flags corresponding the event quality, trigger type, calibration pulser timing, etc.
   SourceHypothesis sun; /// Contains location of sun in map coordinates at time of event
   SourceHypothesis wais; /// Contains location of WAIS divide cal pulser in map coordinates at time of event
   SourceHypothesis ldb; /// Contains location of LDB cal pulser in map coordinates at time of event
   MCTruth mc; /// Contains summary information about MC truth, if real data then this filled with constant, unphysical values.
-
+  PayloadLocation anitaLocation; /// Reduced GPS data
 
 
   //------------------------------------------------------------------------------------
   /*************************************************************************************
    * Public member functions
-    *************************************************************************************/
+   *************************************************************************************/
   // See source file for doxygen comments
   AnitaEventSummary();
   AnitaEventSummary(const RawAnitaHeader* header);
@@ -369,7 +408,7 @@ public:
 
   /*************************************************************************************
    * Private member variables/functions
-   *************************************************************************************/
+   *************************************************************************************/ 
   // WARNING! THE COMMENTS TRAILING THESE AFFECT WHAT HAPPENS IN ROOT!
   // The //! comment initializer means ROOT does not store these variables when writing to files.
   // We want to keep it this way, since they are only used to cache the results of the utility
@@ -379,21 +418,17 @@ public:
   mutable Int_t                fMCPeakIndex;      //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak nearest MC
   mutable AnitaPol::AnitaPol_t fMCPol;            //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak nearest MC
   mutable UInt_t               fLastEventNumber;  //! DOES NOT PERSIST IN ROOT! To check for stale caching variables
+  /** 
+   * Workhorse function to find the highest peak
+   * Caches the result in the mutable, non-ROOT-persistent members fHighestPol and fHighestPeakIndex
+   */
   void findHighestPeak() const;
   void findMC() const;
   void resetNonPersistent() const;
 
 
-  /** 
-   * Workhorse function to find the highest peak
-   * Caches the result in the mutable, non-ROOT-persistent members fHighestPol and fHighestPeakIndex
-   */
 
-  ClassDefNV(AnitaEventSummary, 24);
+  ClassDefNV(AnitaEventSummary, 28);
 };
-
-
-
-
 
 #endif 
