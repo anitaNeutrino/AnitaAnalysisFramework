@@ -87,6 +87,7 @@ void AnitaEventSummary::zeroInternals(){
   eventNumber = 0;
 
   for(Int_t polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
+    AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
     nPeaks[polInd] = 0; 
     for(Int_t dir=0; dir < maxDirectionsPerPol; dir++)
     {
@@ -98,7 +99,9 @@ void AnitaEventSummary::zeroInternals(){
 
     }
     for(Int_t ant=0; ant < 48; ant++){
-      memset(&channels[polInd][ant],0,sizeof(ChannelInfo)); 
+      memset(&channels[polInd][ant],0,sizeof(ChannelInfo));
+      channels[polInd][ant].pol = pol;
+      channels[polInd][ant].ant = ant;
     }
   }
   memset(&flags,0, sizeof(EventFlags)); 
@@ -410,12 +413,16 @@ double AnitaEventSummary::WaveformInfo::standardizedPeakMoment(int k) const {
   }
 }
 
+
+
 /** 
  * Get the phi in degree of the current channel
  */
 double AnitaEventSummary::ChannelInfo::getPhi() const {
   return AnitaGeomTool::Instance()->getPhiFromAnt(ant);
 }
+
+
 
 
 
