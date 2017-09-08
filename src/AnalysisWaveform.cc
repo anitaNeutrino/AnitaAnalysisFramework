@@ -99,6 +99,7 @@ AnalysisWaveform::AnalysisWaveform(int N, const double *x, const double * y, dou
   power_db_dirty = true; 
   hilbert_envelope_dirty = true; 
   phase_dirty = true;
+  group_delay_dirty = true;
   just_padded = false; 
   fft_len = 0; 
 
@@ -144,6 +145,7 @@ AnalysisWaveform::AnalysisWaveform(int N, const double * y, double dt, double t0
   hilbert_envelope_dirty = true; 
   even_akima_interpolator_dirty = true; 
   phase_dirty = true;
+  group_delay_dirty = true;
   just_padded = false; 
   df = 0; 
 }
@@ -163,6 +165,7 @@ AnalysisWaveform::AnalysisWaveform(int N, double dt, double t0)
   hilbert_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true;
+  group_delay_dirty = true;
   hilbert_envelope_dirty = true; 
   even_akima_interpolator_dirty = true; 
   just_padded = false; 
@@ -190,6 +193,7 @@ AnalysisWaveform::AnalysisWaveform(int N, const FFTWComplex * f, double df, doub
   hilbert_envelope_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true; 
+  group_delay_dirty = true; 
   just_padded = false; 
   even_akima_interpolator_dirty = true; 
 }
@@ -320,6 +324,7 @@ FFTWComplex * AnalysisWaveform::updateFreq()
   hilbert_dirty = true;
   hilbert_envelope_dirty = true;
   phase_dirty = true; 
+  group_delay_dirty = true; 
   just_padded = false; 
 
   even_akima_interpolator_dirty = true; 
@@ -513,6 +518,7 @@ void AnalysisWaveform::calculateFreqFromEven() const
   hilbert_envelope_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true; 
+  group_delay_dirty = true; 
 }
 
 
@@ -548,6 +554,7 @@ void AnalysisWaveform::updateFreq(int new_N, const FFTWComplex * new_fft, double
   power_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true; 
+  group_delay_dirty = true; 
   just_padded = false; 
 }
 
@@ -569,6 +576,33 @@ const TGraphAligned * AnalysisWaveform::phase() const
   return &g_phase; 
 }
 
+const TGraphAligned * AnalysisWaveform::groupDelay() const
+{
+  if (group_delay_dirty)
+  {
+
+    g_group_delay.adopt(phase()); 
+    g_group_delay.SetTitle("Group Delay"); 
+    g_group_delay.GetYaxis()->SetTitle("ns ? "); 
+    g_group_delay.GetXaxis()->SetTitle("f (Ghz)"); 
+
+    FFTtools::unwrap( g_group_delay.GetN(), g_group_delay.GetY(), 2 * TMath::Pi()); 
+
+    double last = g_group_delay.GetY()[0]; 
+    double dw = df * 2 * TMath::Pi(); 
+    for (int i = 1; i < fft_len; i++) 
+    {
+      double current = g_group_delay.GetY()[i] ; 
+      g_group_delay.GetY()[i-1] = (last - current) /dw; 
+      last = current; 
+    }
+
+    g_group_delay.GetY()[g_group_delay.GetN()-1] = 0; 
+    group_delay_dirty = false; 
+  }
+
+  return &g_group_delay; 
+}
 
 const TGraphAligned * AnalysisWaveform::powerdB() const
 {
@@ -890,6 +924,7 @@ AnalysisWaveform::AnalysisWaveform(const AnalysisWaveform & other)
   power_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true; 
+  group_delay_dirty = true; 
   hilbert_dirty = true; 
   hilbert_envelope_dirty = true; 
   hilbert_transform = 0; 
@@ -1030,6 +1065,7 @@ void AnalysisWaveform::padFreq(int npad)
   power_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true; 
+  group_delay_dirty = true; 
   hilbert_dirty = true; 
   hilbert_envelope_dirty = true; 
   just_padded = false; 
@@ -1085,6 +1121,7 @@ void AnalysisWaveform::padFreqAdd(int npad)
   power_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true; 
+  group_delay_dirty = true; 
   hilbert_dirty = true; 
   hilbert_envelope_dirty = true; 
   just_padded = false; 
@@ -1279,4 +1316,6 @@ void AnalysisWaveform::setCorrelationNag(bool nag)
 
   nag_if_not_zero_padded = nag; 
 }
+
+
 

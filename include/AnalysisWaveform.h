@@ -183,6 +183,9 @@ class AnalysisWaveform
     /** Get the phase */ 
     const TGraphAligned * phase() const; 
 
+    /** Get the group delay  */ 
+    const TGraphAligned * groupDelay() const; 
+
     /** Get the hilbert envelope */ 
     const TGraphAligned * hilbertEnvelope() const; 
 
@@ -301,6 +304,7 @@ class AnalysisWaveform
     mutable TGraphAligned g_power; 
     mutable TGraphAligned g_power_db;
     mutable TGraphAligned g_phase;  
+    mutable TGraphAligned g_group_delay; 
     mutable double dt;  
     mutable double df; 
     mutable int fft_len; 
@@ -322,6 +326,7 @@ class AnalysisWaveform
     mutable bool power_dirty; 
     mutable bool power_db_dirty; 
     mutable bool phase_dirty; 
+    mutable bool group_delay_dirty;
     mutable bool hilbert_envelope_dirty; 
     mutable bool hilbert_dirty; 
     mutable bool even_akima_interpolator_dirty; 
