@@ -228,7 +228,10 @@ public:
     Double_t minBottomToTopRatio[AnitaPol::kNotAPol]; 
     int minBottomToTopRatioSector[AnitaPol::kNotAPol]; 
 
-    ClassDefNV(EventFlags,7); 
+    /** The fraction of nearby events that are payload blasts */ 
+    Double_t blastFraction; 
+
+    ClassDefNV(EventFlags,8); 
   };
 
 
