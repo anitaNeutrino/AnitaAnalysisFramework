@@ -459,4 +459,34 @@ Double_t TGraphAligned::peakVal(Int_t * location, Int_t istart, Int_t iend, bool
 
 
 
+TH1 *  TGraphAligned::valueHist(int nbins, const double * w, TH1 * out) const 
+{
+  if (!out) 
+  {
+    out = new TH1I(TString::Format("%s_value_hist", GetName()), TString::Format("Values for %s", GetTitle()), nbins, GetMinimum(), GetMaximum()); 
+  }
+  else
+  {
+    out->Reset(); 
+    out->SetBins(nbins, GetMinimum(), GetMaximum()); 
+  }
+
+  double sumw2 = 0; 
+  if (w) 
+  {
+    for (int i = 0; i < GetN(); i++)
+    {
+      sumw2 += w[i]*w[i]; 
+    }
+    sumw2 = sqrt(sumw2); 
+  }
+  for (int i = 0; i < GetN(); i++) 
+  {
+    out->Fill(GetY()[i], w? w[i]/sumw2 : 1./GetN()); 
+  }
+
+  return out; 
+}
+
+   
 

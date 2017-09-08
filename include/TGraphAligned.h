@@ -6,9 +6,11 @@
 /** 
  *  Slight modification of TGraph where the arrays are guaranteed to be aligned properly. The wisdom
  *  of this class is questionable; in principle it might help the compiler autovectorize, but that seems like 
- *  a fool's errand. For manual vectorization, it can make loads faster in certain cases. 
+ *  a fool's errand. For manual vectorization, it can make loads faster in certain cases (depending on the processor). 
  *
+ *  I also added a few convenience methods... 
  */ 
+
 
 
 
@@ -54,6 +56,8 @@ class TGraphAligned : public TGraph {
     Double_t peakVal(Int_t * location = 0, Int_t istart= 0, Int_t iend = -1, bool abs = false) const; 
     Double_t pk2pk(Int_t nthMax = 0, Int_t nthMin = 0,Int_t * location_max = 0, Int_t * location_min = 0, Int_t istart= 0, Int_t iend = -1) const; 
 
+    /** Makes a histogram of the Y-values */ 
+    TH1 * valueHist(int nbins = 100, const double * weights =0,  TH1 * out = 0 ) const; 
 
     aligned_double_v GetX() const { return fX; } 
     aligned_double_v GetY() const { return fY; } 
