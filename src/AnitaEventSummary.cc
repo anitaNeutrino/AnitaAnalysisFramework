@@ -81,6 +81,7 @@ AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header, UsefulAdu5Pat
  */
 void AnitaEventSummary::zeroInternals(){
 
+  fLastEventNumber = -1; 
   resetNonPersistent();
 
   run = 0;
