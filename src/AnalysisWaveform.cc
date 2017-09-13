@@ -290,6 +290,7 @@ TGraphAligned * AnalysisWaveform::updateEven()
   even_akima_interpolator_dirty = true; 
   just_padded = false; 
   hilbert_envelope_dirty = true; 
+  hilbert_dirty = true; 
   return ev; 
 }
 
@@ -551,6 +552,8 @@ void AnalysisWaveform::updateFreq(int new_N, const FFTWComplex * new_fft, double
   must_update_freq = false; 
   must_update_even = true; 
   must_update_uneven = !uneven_equals_even; 
+  hilbert_dirty = true; 
+  hilbert_envelope_dirty = true; 
   power_dirty = true; 
   power_db_dirty = true; 
   phase_dirty = true; 
