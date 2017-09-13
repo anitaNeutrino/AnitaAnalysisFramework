@@ -64,8 +64,11 @@ AnitaTMVA::MVAVarSet::MVAVarSet(const char * ifile)
       fprintf(stderr,"Not enough tokens in line %d: %s\n", lineno, buf); 
     }
     
-    printf("Adding: %s/%s\n", toks[1].Data(), toks[0].Data()); 
-    add(MVAVar(strdup(toks[1].Data()), strdup(toks[0].Data()), toks.size() > 2 ? toks[2].Data()[0] : 'F' , toks.size() > 3 ? atoi(toks[3].Data()) : false)); 
+    char type = toks.size() > 2 ? toks[2].Data()[0] : 'F'; 
+    bool spectator = toks.size() > 3 ? atoi(toks[3].Data()) : false;
+
+    printf("Adding: %s/%s/%c/%d\n", toks[1].Data(), toks[0].Data(), type,spectator); 
+    add(MVAVar(strdup(toks[1].Data()), strdup(toks[0].Data()), type ,spectator )); 
   }
 
 
