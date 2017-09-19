@@ -82,10 +82,10 @@ AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header, UsefulAdu5Pat
 void AnitaEventSummary::zeroInternals(){
 
   fLastEventNumber = -1; 
-  resetNonPersistent();
-
   run = 0;
   eventNumber = 0;
+  resetNonPersistent();
+
 
   for(Int_t polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
     AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
