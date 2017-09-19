@@ -9,7 +9,7 @@
 //ClassImp(AnitaEventSummary)
 //ClassImp(AnitaEventSummary::PointingHypothesis)
 //ClassImp(AnitaEventSummary::SourceHypothesis)
-  
+
 
 const double C_IN_M_NS = 0.299792;
 
@@ -243,7 +243,7 @@ void AnitaEventSummary::setTriggerInfomation(const RawAnitaHeader* header){
     // 	      << trigBit << "\t" << trigBit2 << std::endl;
 
     if(trigBit > 0 && trigBit2 > 0){
-      flags.isVPolTrigger = 1;      
+      flags.isVPolTrigger = 1;
     }
 
     Int_t trigBitH = (header->l3TrigPatternH >> phi) & 1;
@@ -317,6 +317,89 @@ void AnitaEventSummary::MCTruth::reset()
 }
 
 
+
+/** 
+ * Utility function so that quantities derived from the narrowest widths array
+ * are only calculated once per event.
+ * 
+ * As currently implemented this will cause things not to work if WaveformInfo
+ * is not contained inside an AnitaEventSummary.
+ */
+void AnitaEventSummary::WaveformInfo::cacheQuantitiesDerivedFromNarrowestWidths() const{
+  if(!(fContainer && fContainer->eventNumber == fLastEventNumberCache)){
+
+    // first do the mean
+    nwMeanCache = TMath::Mean(5, narrowestWidths);
+
+    // then the gradient
+    // The power fractions x[5] = {0.1, 0.2, 0.3, 0.4, 0.5} (sum = 1.5, mean = 0.3)
+    // the widths are y[5] = narrowestWidths
+    // want least squres gradient = sum over (x - xbar)(y - ybar) / ((x - xbar)^{2})
+    const double gradDenom = 0.1; //0.04 + 0.01 + 0 + 0.01 + 0.04 = sum over (x[i] - mean_x)^{2}
+
+    // gradNumerator = sum over (x[i] - mean_x)*(y[i] - mean_y), skip third term since x[i] - mean_x  = 0
+    double gradNumerator = - 0.2*(narrowestWidths[0] - nwMeanCache) + -0.1*(narrowestWidths[1] - nwMeanCache)
+                           + 0.1*(narrowestWidths[3] - nwMeanCache) + 0.2*(narrowestWidths[4] - nwMeanCache);
+    nwGradCache = gradNumerator/gradDenom;
+
+
+    // then the intercept
+    nwInterceptCache = nwMeanCache - nwGradCache*0.3; // 0.3 = mean power fraction
+
+    // finally the chisquare
+    nwChisquareCache = 0;
+    for(int i=0; i < 5; i++){
+      double f = 0.1*(i+1);
+      double y = nwGradCache*f + nwInterceptCache;
+      double dy = (y - narrowestWidths[i]);
+      nwChisquareCache += dy*dy;
+    }
+  }
+}
+
+
+/** 
+ * Get the mean of the of the narrowest widths array
+ * 
+ * @return mean of narrowestWidths[5]
+ */
+double AnitaEventSummary::WaveformInfo::narrowestWidthsMean() const{
+  cacheQuantitiesDerivedFromNarrowestWidths();
+  return nwMeanCache;
+}
+
+/** 
+ * Get the gradient of the narrowest width array
+ * (Note: assumes the power fractions go 0.1, 0.2, 0.3, 0.4, 0.5)
+ * 
+ * @return meangradient of narrowestWidths[5]
+ */
+double AnitaEventSummary::WaveformInfo::narrowestWidthsGradient() const {
+  cacheQuantitiesDerivedFromNarrowestWidths();
+  return nwGradCache;
+}
+
+/** 
+ *  The intercept of a linear fit of the narrowest widths array
+ * (Note: assumes the power fractions go 0.1, 0.2, 0.3, 0.4, 0.5)
+ * 
+ * @return interecpt of linear fit to narrowestWiths[5]
+ */
+double AnitaEventSummary::WaveformInfo::narrowestWidthsIntercept() const {
+  cacheQuantitiesDerivedFromNarrowestWidths();
+  return nwInterceptCache;
+}
+
+
+/** 
+ * Get the chisquare of the of the linear fit to the narrowest width array
+ * 
+ * @return chisquare of the linear fit (gradient + intercept) to narrowestWidths
+ */
+double AnitaEventSummary::WaveformInfo::narrowestWidthsChisquare() const {
+  cacheQuantitiesDerivedFromNarrowestWidths();
+  return nwChisquareCache;
+}
 
 
 
@@ -612,37 +695,37 @@ const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mcDeconvolved() const 
 const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mcCoherentFiltered() const {
   findMC();
   return coherent_filtered[fMCPol][fMCPeakIndex];
-}
-
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mcDeconvolvedFiltered() const {
-  findMC();
-  return deconvolved_filtered[fMCPol][fMCPeakIndex];
-}
-
-
-/** 
- * Print warning if fContainer is NULL as the majority the utility functions that rely on it will print nonsense
- * 
- * @param funcName should be the __PRETTY_FUNCTION__ macro for nice debugging info
- * 
- * @return the fContainer pointer
- */
-const AnitaEventSummary* AnitaEventSummary::PointingHypothesis::getContainer(const char* funcName) const{
-  if(!fContainer){
-    std::cerr << "Error in " << funcName
-              << " don't have access to AnitaEventSummary that contains me!"
-              << " Was the AnitaEventSummary constructor called?"
-              << std::endl;
   }
-  return fContainer;
-}
+
+  const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mcDeconvolvedFiltered() const {
+    findMC();
+    return deconvolved_filtered[fMCPol][fMCPeakIndex];
+  }
 
 
-/** 
- * Return the smaller of the two hardware angles, hwAngle / hwAngleXPol
- * To know which one was smaller, same pol as peak or xpol, see 
- * @return 
- */
+  /** 
+   * Print warning if fContainer is NULL as the majority the utility functions that rely on it will print nonsense
+   * 
+   * @param funcName should be the __PRETTY_FUNCTION__ macro for nice debugging info
+   * 
+   * @return the fContainer pointer
+   */
+  const AnitaEventSummary* AnitaEventSummary::PointingHypothesis::getContainer(const char* funcName) const{
+    if(!fContainer){
+      std::cerr << "Error in " << funcName
+                << " don't have access to AnitaEventSummary that contains me!"
+                << " Was the AnitaEventSummary constructor called?"
+                << std::endl;
+    }
+    return fContainer;
+  }
+
+
+  /** 
+   * Return the smaller of the two hardware angles, hwAngle / hwAngleXPol
+   * To know which one was smaller, same pol as peak or xpol, see 
+   * @return 
+   */
 double AnitaEventSummary::PointingHypothesis::minAbsHwAngle() const {
   if(TMath::Abs(hwAngle) < TMath::Abs(hwAngleXPol)){
     return hwAngle;
@@ -755,10 +838,14 @@ void AnitaEventSummary::resetNonPersistent() const{
     for(Int_t polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
       for(Int_t dir=0; dir < maxDirectionsPerPol; dir++){
         peak[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
+        coherent[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
+        coherent_filtered[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.                    
+        deconvolved[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
+        deconvolved_filtered[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
       }
     }
     fLastEventNumber=eventNumber;
-  }  
+  }
 }
 
 

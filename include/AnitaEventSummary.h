@@ -30,7 +30,7 @@ class TruthAnitaEvent;
 
 class AnitaEventSummary : public TObject
 {
-public: 
+ public:
 
 
   //------------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ public:
 
   class PointingHypothesis 
   {
-  public: 
+   public:
     PointingHypothesis() : fContainer(NULL) { ; }
     Double_t phi;  /// peak phi, degrees
     Double_t theta; /// peak theta, degrees
@@ -124,7 +124,8 @@ public:
   {
 
    public: 
-    WaveformInfo() {; } 
+    WaveformInfo() : fContainer(NULL), fLastEventNumberCache(0), nwMeanCache(-1),
+                     nwGradCache(-1), nwInterceptCache(-1), nwChisquareCache(-1) {; }
     Double_t snr; /// Signal to Noise of waveform 
     Double_t peakHilbert; /// peak of hilbert envelope
     Double_t peakVal;  /// peak value
@@ -175,14 +176,25 @@ public:
     double totalPolFrac() const;
 
     double standardizedPeakMoment(int i) const;
-
     inline double skewness(){return standardizedPeakMoment(3);}
     inline double kurtosis(){return standardizedPeakMoment(4);}
 
+    double narrowestWidthsMean() const;
+    double narrowestWidthsGradient() const;
+    double narrowestWidthsIntercept() const;
+    double narrowestWidthsChisquare() const;
+
     ClassDefNV(WaveformInfo, 10);
 
-    // private:
-    //  mutable AnitaEventSummary* fContainer; //! Disgusting hack
+   private:
+    friend class AnitaEventSummary;
+    void cacheQuantitiesDerivedFromNarrowestWidths() const;
+    mutable AnitaEventSummary* fContainer; //! Disgusting hack, do not persist!
+    mutable UInt_t fLastEventNumberCache; //! Caching variables, do not persist!
+    mutable double nwMeanCache;           //! Caching variables, do not persist!
+    mutable double nwGradCache;           //! Caching variables, do not persist!
+    mutable double nwInterceptCache;      //! Caching variables, do not persist!
+    mutable double nwChisquareCache;      //! Caching variables, do not persist!
   }; 
 
   /** 
