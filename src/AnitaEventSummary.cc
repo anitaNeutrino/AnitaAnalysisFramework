@@ -771,6 +771,12 @@ double AnitaEventSummary::PointingHypothesis::dPhiMC() const {
 double AnitaEventSummary::PointingHypothesis::dThetaMC() const {
   return getContainer(__PRETTY_FUNCTION__) && fContainer->mc.weight > 0 ? dThetaSource(fContainer->mc) : -9999;
 }
+double AnitaEventSummary::PointingHypothesis::dPhiTagged() const {
+  return getContainer(__PRETTY_FUNCTION__) && fContainer->sourceFromTag() ? dPhiSource(*fContainer->sourceFromTag()) : -9999;
+}
+double AnitaEventSummary::PointingHypothesis::dThetaTagged() const {
+  return getContainer(__PRETTY_FUNCTION__) && fContainer->sourceFromTag() ? dThetaSource(*fContainer->sourceFromTag()) : -9999;
+}
 
 
 void AnitaEventSummary::findHighestPeak() const {
@@ -792,36 +798,65 @@ void AnitaEventSummary::findHighestPeak() const {
 
 
 /** 
- * Workhorse function to find the peak closest to the MC
- * Caches the result in the mutable, non-ROOT-persistent members fMCPol and fMCPeakIndex
- * In the case of non-MC data, sets the indices to fHighestPol and fHighestPeakIndex
+ * Looks at the calPulser tags in the eventSummary, and MC truth information
+ * If they are non-zero, returns the corresponding source hypothesis, otherwise NULL.
+ * 
+ * @return pointer to the best matching source hypothesis.
  */
-void AnitaEventSummary::findMC() const {
-  resetNonPersistent();
-  if(mc.weight <= 0){
-    findHighestPeak();
-    fMCPeakIndex = fHighestPeakIndex;
-    fMCPol = fHighestPol;
-  }
-  else if(fMCPeakIndex < 0){ // then we've not done this before
-    double minDeltaAngleSq = 1e99;
-    for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
-      AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
-      for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
-        double dPhi = peak[polInd][peakInd].dPhiMC();
-        double dTheta = peak[polInd][peakInd].dThetaMC();
-        double deltaAngleSq = dPhi*dPhi + dTheta*dTheta;
-        if(deltaAngleSq < minDeltaAngleSq){
-          minDeltaAngleSq = deltaAngleSq;
-          fMCPeakIndex = peakInd;
-          fMCPol = pol;
-        }
+const AnitaEventSummary::SourceHypothesis* AnitaEventSummary::sourceFromTag() const {
+  switch(flags.pulser){
+    case EventFlags::WAIS: return &wais;
+    case EventFlags::LDB:  return &ldb;
+    default:
+      if(mc.weight > 0){
+        return &mc;
       }
-    }
+      else{
+        return NULL;
+      }
   }
 }
 
 
+/** 
+ * Workhorse function to find the most interesting peak in a map using MC truth or pulser timing tags
+ * Caches the result in the mutable, non-ROOT-persistent members fMCPol and fMCPeakIndex
+ * In the case of non-MC or non-pulser-tagged data, sets the indices to fHighestPol and fHighestPeakIndex
+ */
+void AnitaEventSummary::findMC() const {
+  resetNonPersistent();
+
+  if(fMCPeakIndex < 0){
+    // then we've not done this before
+    // and we need to figure out the peak of interest
+
+    // Time to make this yet more complicated...
+    // in the case we have a calPulser tagged event
+    // return the peak closest to that source...
+    const SourceHypothesis* peakOfInterest = sourceFromTag();
+    if(peakOfInterest){
+      double minDeltaAngleSq = 1e99;
+      for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
+        AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
+        for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
+          double dPhi = peak[polInd][peakInd].dPhiSource(*peakOfInterest);
+          double dTheta = peak[polInd][peakInd].dThetaSource(*peakOfInterest);
+          double deltaAngleSq = dPhi*dPhi + dTheta*dTheta;
+          if(deltaAngleSq < minDeltaAngleSq){
+            minDeltaAngleSq = deltaAngleSq;
+            fMCPeakIndex = peakInd;
+            fMCPol = pol;
+          }
+        }
+      }
+    }
+    else{ // otherwise, just do highest peak in map
+      findHighestPeak();
+      fMCPeakIndex = fHighestPeakIndex;
+      fMCPol = fHighestPol;
+    }
+  }
+}
 
 
 

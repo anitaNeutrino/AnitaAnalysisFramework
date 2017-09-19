@@ -96,6 +96,8 @@ class AnitaEventSummary : public TObject
     double dThetaLDB() const;
     double dPhiMC() const;
     double dThetaMC() const;
+    double dPhiTagged() const;    /// See AnitaEventSummary::sourceFromTag()
+    double dThetaTagged() const;  /// See AnitaEventSummary::sourceFromTag()
     double minAbsHwAngle() const;
     Bool_t absHwAngleLessThanAbsHwAngleXPol() const;
 
@@ -430,15 +432,12 @@ class AnitaEventSummary : public TObject
   mutable Int_t                fMCPeakIndex;      //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak nearest MC
   mutable AnitaPol::AnitaPol_t fMCPol;            //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak nearest MC
   mutable UInt_t               fLastEventNumber;  //! DOES NOT PERSIST IN ROOT! To check for stale caching variables
-  /** 
-   * Workhorse function to find the highest peak
-   * Caches the result in the mutable, non-ROOT-persistent members fHighestPol and fHighestPeakIndex
-   */
+
+
   void findHighestPeak() const;
   void findMC() const;
   void resetNonPersistent() const;
-
-
+  const SourceHypothesis* sourceFromTag() const;
 
   ClassDefNV(AnitaEventSummary, 28);
 };
