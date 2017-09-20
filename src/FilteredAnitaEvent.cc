@@ -323,13 +323,15 @@ void FilteredAnitaEvent::getAverageSpectrum(TGraph * target, AnitaPol::AnitaPol_
 
 }
 
-void FilteredAnitaEvent::getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_ratio, double * min_ratio, int* max_sector, int* min_sector, AnitaRing::AnitaRing_t ring1 , AnitaRing::AnitaRing_t ring2, int nth )  const
+void FilteredAnitaEvent::getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_ratio, double * min_ratio, int* max_sector, int* min_sector, AnitaRing::AnitaRing_t ring1 , AnitaRing::AnitaRing_t ring2, int nth, int * n_greater )  const
 {
 
   double max = 0;
   double min = 999;
   int imax = -1;
   int imin = -1;
+
+  int greater = 0; 
 
   ULong64_t usable_ants = AnitaFlightInfo::getUsableAntennas(header, useful, pol); 
 
@@ -350,6 +352,7 @@ void FilteredAnitaEvent::getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_r
     double peak2 = rawGraphsByAntPol[pol][ant2]->uneven()->pk2pk(nth,nth);
 
     double ratio = peak1/peak2;
+    if (ratio > 1) greater++; 
 
     if ( imax < 0 || ratio > max )
     {
@@ -367,8 +370,7 @@ void FilteredAnitaEvent::getMinMaxRatio(AnitaPol::AnitaPol_t pol, double * max_r
   if (min_ratio) *min_ratio = min;
   if (max_sector) *max_sector= imax;
   if (min_sector) *min_sector= imin;
-
-
+  if (n_greater) *n_greater = greater; 
 }
 
 
