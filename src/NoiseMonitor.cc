@@ -56,6 +56,8 @@ void NoiseMonitor::getProfilesFromFileRun(int run){
   }
 
   if(!p.get(AnitaPol::kVertical) || !p.get(AnitaPol::kHorizontal)){
+    std::cerr << "Error! unable to get the profiles I just tried to read for run " << run << ", "
+              << p.get(AnitaPol::kVertical) << ", " << p.get(AnitaPol::kHorizontal) << std::endl;
     makeProfiles(run);
 
     fFile = TFile::Open(fileName);

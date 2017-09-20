@@ -9,7 +9,7 @@
 //ClassImp(AnitaEventSummary)
 //ClassImp(AnitaEventSummary::PointingHypothesis)
 //ClassImp(AnitaEventSummary::SourceHypothesis)
-  
+
 
 const double C_IN_M_NS = 0.299792;
 
@@ -243,7 +243,7 @@ void AnitaEventSummary::setTriggerInfomation(const RawAnitaHeader* header){
     // 	      << trigBit << "\t" << trigBit2 << std::endl;
 
     if(trigBit > 0 && trigBit2 > 0){
-      flags.isVPolTrigger = 1;      
+      flags.isVPolTrigger = 1;
     }
 
     Int_t trigBitH = (header->l3TrigPatternH >> phi) & 1;
@@ -317,6 +317,89 @@ void AnitaEventSummary::MCTruth::reset()
 }
 
 
+
+/** 
+ * Utility function so that quantities derived from the narrowest widths array
+ * are only calculated once per event.
+ * 
+ * As currently implemented this will cause things not to work if WaveformInfo
+ * is not contained inside an AnitaEventSummary.
+ */
+void AnitaEventSummary::WaveformInfo::cacheQuantitiesDerivedFromNarrowestWidths() const{
+  if(!(fContainer && fContainer->eventNumber == fLastEventNumberCache)){
+
+    // first do the mean
+    nwMeanCache = TMath::Mean(5, narrowestWidths);
+
+    // then the gradient
+    // The power fractions x[5] = {0.1, 0.2, 0.3, 0.4, 0.5} (sum = 1.5, mean = 0.3)
+    // the widths are y[5] = narrowestWidths
+    // want least squres gradient = sum over (x - xbar)(y - ybar) / ((x - xbar)^{2})
+    const double gradDenom = 0.1; //0.04 + 0.01 + 0 + 0.01 + 0.04 = sum over (x[i] - mean_x)^{2}
+
+    // gradNumerator = sum over (x[i] - mean_x)*(y[i] - mean_y), skip third term since x[i] - mean_x  = 0
+    double gradNumerator = - 0.2*(narrowestWidths[0] - nwMeanCache) + -0.1*(narrowestWidths[1] - nwMeanCache)
+                           + 0.1*(narrowestWidths[3] - nwMeanCache) + 0.2*(narrowestWidths[4] - nwMeanCache);
+    nwGradCache = gradNumerator/gradDenom;
+
+
+    // then the intercept
+    nwInterceptCache = nwMeanCache - nwGradCache*0.3; // 0.3 = mean power fraction
+
+    // finally the chisquare
+    nwChisquareCache = 0;
+    for(int i=0; i < 5; i++){
+      double f = 0.1*(i+1);
+      double y = nwGradCache*f + nwInterceptCache;
+      double dy = (y - narrowestWidths[i]);
+      nwChisquareCache += dy*dy;
+    }
+  }
+}
+
+
+/** 
+ * Get the mean of the of the narrowest widths array
+ * 
+ * @return mean of narrowestWidths[5]
+ */
+double AnitaEventSummary::WaveformInfo::narrowestWidthsMean() const{
+  cacheQuantitiesDerivedFromNarrowestWidths();
+  return nwMeanCache;
+}
+
+/** 
+ * Get the gradient of the narrowest width array
+ * (Note: assumes the power fractions go 0.1, 0.2, 0.3, 0.4, 0.5)
+ * 
+ * @return meangradient of narrowestWidths[5]
+ */
+double AnitaEventSummary::WaveformInfo::narrowestWidthsGradient() const {
+  cacheQuantitiesDerivedFromNarrowestWidths();
+  return nwGradCache;
+}
+
+/** 
+ *  The intercept of a linear fit of the narrowest widths array
+ * (Note: assumes the power fractions go 0.1, 0.2, 0.3, 0.4, 0.5)
+ * 
+ * @return interecpt of linear fit to narrowestWiths[5]
+ */
+double AnitaEventSummary::WaveformInfo::narrowestWidthsIntercept() const {
+  cacheQuantitiesDerivedFromNarrowestWidths();
+  return nwInterceptCache;
+}
+
+
+/** 
+ * Get the chisquare of the of the linear fit to the narrowest width array
+ * 
+ * @return chisquare of the linear fit (gradient + intercept) to narrowestWidths
+ */
+double AnitaEventSummary::WaveformInfo::narrowestWidthsChisquare() const {
+  cacheQuantitiesDerivedFromNarrowestWidths();
+  return nwChisquareCache;
+}
 
 
 
@@ -579,44 +662,44 @@ double AnitaEventSummary::PointingHypothesis::bearing() const{
  * 
  * @return the polarisation of the peak closest to MC truth (or highest peak if data)
  */
-AnitaPol::AnitaPol_t AnitaEventSummary::mcPol() const {
-  findMC();
-  return fMCPol;
+AnitaPol::AnitaPol_t AnitaEventSummary::trainingPol() const {
+  findTrainingPeak();
+  return fTrainingPol;
 }
 
-int AnitaEventSummary::mcPolAsInt() const {
-  findMC();
-  return int(fMCPol);
+int AnitaEventSummary::trainingPolAsInt() const {
+  findTrainingPeak();
+  return int(fTrainingPol);
 }
 
-int AnitaEventSummary::mcPeakInd() const {
-  findMC();
-  return fMCPeakIndex;
+int AnitaEventSummary::trainingPeakInd() const {
+  findTrainingPeak();
+  return fTrainingPeakIndex;
 }
 
-const AnitaEventSummary::PointingHypothesis& AnitaEventSummary::mcPeak() const {
-  findMC();
-  return peak[fMCPol][fMCPeakIndex];
+const AnitaEventSummary::PointingHypothesis& AnitaEventSummary::trainingPeak() const {
+  findTrainingPeak();
+  return peak[fTrainingPol][fTrainingPeakIndex];
 }
 
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mcCoherent() const {
-  findMC();
-  return coherent[fMCPol][fMCPeakIndex];
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::trainingCoherent() const {
+  findTrainingPeak();
+  return coherent[fTrainingPol][fTrainingPeakIndex];
 }
 
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mcDeconvolved() const {
-  findMC();
-  return deconvolved[fMCPol][fMCPeakIndex];
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::trainingDeconvolved() const {
+  findTrainingPeak();
+  return deconvolved[fTrainingPol][fTrainingPeakIndex];
 }
 
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mcCoherentFiltered() const {
-  findMC();
-  return coherent_filtered[fMCPol][fMCPeakIndex];
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::trainingCoherentFiltered() const {
+  findTrainingPeak();
+  return coherent_filtered[fTrainingPol][fTrainingPeakIndex];
 }
 
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mcDeconvolvedFiltered() const {
-  findMC();
-  return deconvolved_filtered[fMCPol][fMCPeakIndex];
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::trainingDeconvolvedFiltered() const {
+  findTrainingPeak();
+  return deconvolved_filtered[fTrainingPol][fTrainingPeakIndex];
 }
 
 
@@ -688,6 +771,38 @@ double AnitaEventSummary::PointingHypothesis::dPhiMC() const {
 double AnitaEventSummary::PointingHypothesis::dThetaMC() const {
   return getContainer(__PRETTY_FUNCTION__) && fContainer->mc.weight > 0 ? dThetaSource(fContainer->mc) : -9999;
 }
+double AnitaEventSummary::PointingHypothesis::dPhiTagged() const {
+  return getContainer(__PRETTY_FUNCTION__) && fContainer->sourceFromTag() ? dPhiSource(*fContainer->sourceFromTag()) : -9999;
+}
+double AnitaEventSummary::PointingHypothesis::dThetaTagged() const {
+  return getContainer(__PRETTY_FUNCTION__) && fContainer->sourceFromTag() ? dThetaSource(*fContainer->sourceFromTag()) : -9999;
+}
+
+
+
+Bool_t AnitaEventSummary::PointingHypothesis::closeToMC(double deltaPhiDeg, double deltaThetaDeg) const {
+  return TMath::Abs(dThetaMC()) < deltaThetaDeg && TMath::Abs(dPhiMC()) < deltaPhiDeg;
+}
+Bool_t AnitaEventSummary::PointingHypothesis::closeToWais(double deltaPhiDeg, double deltaThetaDeg) const {
+  return TMath::Abs(dThetaWais()) < deltaThetaDeg && TMath::Abs(dPhiWais()) < deltaPhiDeg;
+}
+Bool_t AnitaEventSummary::PointingHypothesis::closeToLDB(double deltaPhiDeg, double deltaThetaDeg) const {
+  return TMath::Abs(dThetaLDB()) < deltaThetaDeg && TMath::Abs(dPhiLDB()) < deltaPhiDeg;
+}
+Bool_t AnitaEventSummary::PointingHypothesis::closeToSun(double deltaPhiDeg, double deltaThetaDeg) const {
+  return TMath::Abs(dThetaSun()) < deltaThetaDeg && TMath::Abs(dPhiSun()) < deltaPhiDeg;
+}
+Bool_t AnitaEventSummary::PointingHypothesis::closeToTagged(double deltaPhiDeg, double deltaThetaDeg) const {
+  const AnitaEventSummary* s = getContainer(__PRETTY_FUNCTION__);
+  if(s){
+    const AnitaEventSummary::SourceHypothesis* taggedSource = s->sourceFromTag();
+    if(taggedSource){
+      return TMath::Abs(dThetaSource(*taggedSource)) < deltaThetaDeg && TMath::Abs(dPhiSource(*taggedSource)) < deltaPhiDeg;
+    }
+  }
+  return false;
+}
+
 
 
 void AnitaEventSummary::findHighestPeak() const {
@@ -709,56 +824,92 @@ void AnitaEventSummary::findHighestPeak() const {
 
 
 /** 
- * Workhorse function to find the peak closest to the MC
- * Caches the result in the mutable, non-ROOT-persistent members fMCPol and fMCPeakIndex
- * In the case of non-MC data, sets the indices to fHighestPol and fHighestPeakIndex
+ * Looks at the calPulser tags in the eventSummary, and MC truth information
+ * If they are non-zero, returns the corresponding source hypothesis, otherwise NULL.
+ * 
+ * @return pointer to the best matching source hypothesis.
  */
-void AnitaEventSummary::findMC() const {
-  resetNonPersistent();
-  if(mc.weight <= 0){
-    findHighestPeak();
-    fMCPeakIndex = fHighestPeakIndex;
-    fMCPol = fHighestPol;
-  }
-  else if(fMCPeakIndex < 0){ // then we've not done this before
-    double minDeltaAngleSq = 1e99;
-    for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
-      AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
-      for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
-        double dPhi = peak[polInd][peakInd].dPhiMC();
-        double dTheta = peak[polInd][peakInd].dThetaMC();
-        double deltaAngleSq = dPhi*dPhi + dTheta*dTheta;
-        if(deltaAngleSq < minDeltaAngleSq){
-          minDeltaAngleSq = deltaAngleSq;
-          fMCPeakIndex = peakInd;
-          fMCPol = pol;
-        }
+const AnitaEventSummary::SourceHypothesis* AnitaEventSummary::sourceFromTag() const {
+  switch(flags.pulser){
+    case EventFlags::WAIS:
+      // std::cerr << "wais" << std::endl;
+      return &wais;
+    case EventFlags::LDB:  
+      // std::cerr << "ldb" << std::endl;
+      return &ldb;      
+    default:
+      if(mc.weight > 0){
+        // std::cerr << "mc" << std::endl;
+        return &mc;
       }
-    }
+      else{
+        return NULL;
+      }
   }
 }
 
 
+/** 
+ * Workhorse function to find the most interesting peak in a map using MC truth or pulser timing tags
+ * Caches the result in the mutable, non-ROOT-persistent members fTrainingPol and fTrainingPeakIndex
+ * In the case of non-MC or non-pulser-tagged data, sets the indices to fHighestPol and fHighestPeakIndex
+ */
+void AnitaEventSummary::findTrainingPeak() const {
+  resetNonPersistent();
+
+  if(fTrainingPeakIndex < 0){
+    // then we've not done this before
+    // and we need to figure out the peak of interest
+
+    // Time to make this yet more complicated...
+    // in the case we have a calPulser tagged event
+    // return the peak closest to that source...
+    const SourceHypothesis* peakOfInterest = sourceFromTag();
+    if(peakOfInterest){
+      double minDeltaAngleSq = 1e99;
+      for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
+        AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
+        for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
+          double dPhi = peak[polInd][peakInd].dPhiSource(*peakOfInterest);
+          double dTheta = peak[polInd][peakInd].dThetaSource(*peakOfInterest);
+          double deltaAngleSq = dPhi*dPhi + dTheta*dTheta;
+          if(deltaAngleSq < minDeltaAngleSq){
+            minDeltaAngleSq = deltaAngleSq;
+            fTrainingPeakIndex = peakInd;
+            fTrainingPol = pol;
+          }
+        }
+      }
+    }
+    else{ // otherwise, just do highest peak in map
+      findHighestPeak();
+      fTrainingPeakIndex = fHighestPeakIndex;
+      fTrainingPol = fHighestPol;
+    }
+  }
+}
 
 
 
 /** 
  * Reset the mutable "interesting" indices to defaults
- * The default values trigger the loop through peaks in findHighestPeak() and findMC().
+ * The default values trigger the loop through peaks in findHighestPeak() and findTrainingPeak().
  */
 void AnitaEventSummary::resetNonPersistent() const{
   if(fLastEventNumber!=eventNumber){
     fHighestPeakIndex = -1;
     fHighestPol = AnitaPol::kNotAPol;
-    fMCPeakIndex = -1;
-    fMCPol = AnitaPol::kNotAPol;
+    fTrainingPeakIndex = -1;
+    fTrainingPol = AnitaPol::kNotAPol;
     for(Int_t polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
       for(Int_t dir=0; dir < maxDirectionsPerPol; dir++){
         peak[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
+        coherent[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
+        coherent_filtered[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.                    
+        deconvolved[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
+        deconvolved_filtered[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
       }
     }
     fLastEventNumber=eventNumber;
-  }  
+  }
 }
-
-
