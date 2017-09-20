@@ -662,70 +662,70 @@ double AnitaEventSummary::PointingHypothesis::bearing() const{
  * 
  * @return the polarisation of the peak closest to MC truth (or highest peak if data)
  */
-AnitaPol::AnitaPol_t AnitaEventSummary::mcPol() const {
-  findMC();
-  return fMCPol;
+AnitaPol::AnitaPol_t AnitaEventSummary::trainingPol() const {
+  findTrainingPeak();
+  return fTrainingPol;
 }
 
-int AnitaEventSummary::mcPolAsInt() const {
-  findMC();
-  return int(fMCPol);
+int AnitaEventSummary::trainingPolAsInt() const {
+  findTrainingPeak();
+  return int(fTrainingPol);
 }
 
-int AnitaEventSummary::mcPeakInd() const {
-  findMC();
-  return fMCPeakIndex;
+int AnitaEventSummary::trainingPeakInd() const {
+  findTrainingPeak();
+  return fTrainingPeakIndex;
 }
 
-const AnitaEventSummary::PointingHypothesis& AnitaEventSummary::mcPeak() const {
-  findMC();
-  return peak[fMCPol][fMCPeakIndex];
+const AnitaEventSummary::PointingHypothesis& AnitaEventSummary::trainingPeak() const {
+  findTrainingPeak();
+  return peak[fTrainingPol][fTrainingPeakIndex];
 }
 
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mcCoherent() const {
-  findMC();
-  return coherent[fMCPol][fMCPeakIndex];
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::trainingCoherent() const {
+  findTrainingPeak();
+  return coherent[fTrainingPol][fTrainingPeakIndex];
 }
 
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mcDeconvolved() const {
-  findMC();
-  return deconvolved[fMCPol][fMCPeakIndex];
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::trainingDeconvolved() const {
+  findTrainingPeak();
+  return deconvolved[fTrainingPol][fTrainingPeakIndex];
 }
 
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mcCoherentFiltered() const {
-  findMC();
-  return coherent_filtered[fMCPol][fMCPeakIndex];
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::trainingCoherentFiltered() const {
+  findTrainingPeak();
+  return coherent_filtered[fTrainingPol][fTrainingPeakIndex];
+}
+
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::trainingDeconvolvedFiltered() const {
+  findTrainingPeak();
+  return deconvolved_filtered[fTrainingPol][fTrainingPeakIndex];
+}
+
+
+/** 
+ * Print warning if fContainer is NULL as the majority the utility functions that rely on it will print nonsense
+ * 
+ * @param funcName should be the __PRETTY_FUNCTION__ macro for nice debugging info
+ * 
+ * @return the fContainer pointer
+ */
+const AnitaEventSummary* AnitaEventSummary::PointingHypothesis::getContainer(const char* funcName) const{
+  if(!fContainer){
+    std::cerr << "Error in " << funcName
+              << " don't have access to AnitaEventSummary that contains me!"
+              << " Was the AnitaEventSummary constructor called?"
+              << std::endl;
   }
-
-  const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mcDeconvolvedFiltered() const {
-    findMC();
-    return deconvolved_filtered[fMCPol][fMCPeakIndex];
-  }
+  return fContainer;
+}
 
 
-  /** 
-   * Print warning if fContainer is NULL as the majority the utility functions that rely on it will print nonsense
-   * 
-   * @param funcName should be the __PRETTY_FUNCTION__ macro for nice debugging info
-   * 
-   * @return the fContainer pointer
-   */
-  const AnitaEventSummary* AnitaEventSummary::PointingHypothesis::getContainer(const char* funcName) const{
-    if(!fContainer){
-      std::cerr << "Error in " << funcName
-                << " don't have access to AnitaEventSummary that contains me!"
-                << " Was the AnitaEventSummary constructor called?"
-                << std::endl;
-    }
-    return fContainer;
-  }
-
-
-  /** 
-   * Return the smaller of the two hardware angles, hwAngle / hwAngleXPol
-   * To know which one was smaller, same pol as peak or xpol, see 
-   * @return 
-   */
+/** 
+ * Return the smaller of the two hardware angles, hwAngle / hwAngleXPol
+ * To know which one was smaller, same pol as peak or xpol, see 
+ * @return 
+ */
 double AnitaEventSummary::PointingHypothesis::minAbsHwAngle() const {
   if(TMath::Abs(hwAngle) < TMath::Abs(hwAngleXPol)){
     return hwAngle;
@@ -779,6 +779,32 @@ double AnitaEventSummary::PointingHypothesis::dThetaTagged() const {
 }
 
 
+
+Bool_t AnitaEventSummary::PointingHypothesis::closeToMC(double deltaPhiDeg, double deltaThetaDeg) const {
+  return TMath::Abs(dThetaMC()) < deltaThetaDeg && TMath::Abs(dPhiMC()) < deltaPhiDeg;
+}
+Bool_t AnitaEventSummary::PointingHypothesis::closeToWais(double deltaPhiDeg, double deltaThetaDeg) const {
+  return TMath::Abs(dThetaWais()) < deltaThetaDeg && TMath::Abs(dPhiWais()) < deltaPhiDeg;
+}
+Bool_t AnitaEventSummary::PointingHypothesis::closeToLDB(double deltaPhiDeg, double deltaThetaDeg) const {
+  return TMath::Abs(dThetaLDB()) < deltaThetaDeg && TMath::Abs(dPhiLDB()) < deltaPhiDeg;
+}
+Bool_t AnitaEventSummary::PointingHypothesis::closeToSun(double deltaPhiDeg, double deltaThetaDeg) const {
+  return TMath::Abs(dThetaSun()) < deltaThetaDeg && TMath::Abs(dPhiSun()) < deltaPhiDeg;
+}
+Bool_t AnitaEventSummary::PointingHypothesis::closeToTagged(double deltaPhiDeg, double deltaThetaDeg) const {
+  const AnitaEventSummary* s = getContainer(__PRETTY_FUNCTION__);
+  if(s){
+    const AnitaEventSummary::SourceHypothesis* taggedSource = s->sourceFromTag();
+    if(taggedSource){
+      return TMath::Abs(dThetaSource(*taggedSource)) < deltaThetaDeg && TMath::Abs(dPhiSource(*taggedSource)) < deltaPhiDeg;
+    }
+  }
+  return false;
+}
+
+
+
 void AnitaEventSummary::findHighestPeak() const {
   resetNonPersistent();
   if(fHighestPeakIndex < 0){ // then we've not done this before
@@ -805,10 +831,15 @@ void AnitaEventSummary::findHighestPeak() const {
  */
 const AnitaEventSummary::SourceHypothesis* AnitaEventSummary::sourceFromTag() const {
   switch(flags.pulser){
-    case EventFlags::WAIS: return &wais;
-    case EventFlags::LDB:  return &ldb;
+    case EventFlags::WAIS:
+      // std::cerr << "wais" << std::endl;
+      return &wais;
+    case EventFlags::LDB:  
+      // std::cerr << "ldb" << std::endl;
+      return &ldb;      
     default:
       if(mc.weight > 0){
+        // std::cerr << "mc" << std::endl;
         return &mc;
       }
       else{
@@ -820,13 +851,13 @@ const AnitaEventSummary::SourceHypothesis* AnitaEventSummary::sourceFromTag() co
 
 /** 
  * Workhorse function to find the most interesting peak in a map using MC truth or pulser timing tags
- * Caches the result in the mutable, non-ROOT-persistent members fMCPol and fMCPeakIndex
+ * Caches the result in the mutable, non-ROOT-persistent members fTrainingPol and fTrainingPeakIndex
  * In the case of non-MC or non-pulser-tagged data, sets the indices to fHighestPol and fHighestPeakIndex
  */
-void AnitaEventSummary::findMC() const {
+void AnitaEventSummary::findTrainingPeak() const {
   resetNonPersistent();
 
-  if(fMCPeakIndex < 0){
+  if(fTrainingPeakIndex < 0){
     // then we've not done this before
     // and we need to figure out the peak of interest
 
@@ -844,16 +875,16 @@ void AnitaEventSummary::findMC() const {
           double deltaAngleSq = dPhi*dPhi + dTheta*dTheta;
           if(deltaAngleSq < minDeltaAngleSq){
             minDeltaAngleSq = deltaAngleSq;
-            fMCPeakIndex = peakInd;
-            fMCPol = pol;
+            fTrainingPeakIndex = peakInd;
+            fTrainingPol = pol;
           }
         }
       }
     }
     else{ // otherwise, just do highest peak in map
       findHighestPeak();
-      fMCPeakIndex = fHighestPeakIndex;
-      fMCPol = fHighestPol;
+      fTrainingPeakIndex = fHighestPeakIndex;
+      fTrainingPol = fHighestPol;
     }
   }
 }
@@ -862,14 +893,14 @@ void AnitaEventSummary::findMC() const {
 
 /** 
  * Reset the mutable "interesting" indices to defaults
- * The default values trigger the loop through peaks in findHighestPeak() and findMC().
+ * The default values trigger the loop through peaks in findHighestPeak() and findTrainingPeak().
  */
 void AnitaEventSummary::resetNonPersistent() const{
   if(fLastEventNumber!=eventNumber){
     fHighestPeakIndex = -1;
     fHighestPol = AnitaPol::kNotAPol;
-    fMCPeakIndex = -1;
-    fMCPol = AnitaPol::kNotAPol;
+    fTrainingPeakIndex = -1;
+    fTrainingPol = AnitaPol::kNotAPol;
     for(Int_t polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
       for(Int_t dir=0; dir < maxDirectionsPerPol; dir++){
         peak[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
@@ -882,5 +913,3 @@ void AnitaEventSummary::resetNonPersistent() const{
     fLastEventNumber=eventNumber;
   }
 }
-
-

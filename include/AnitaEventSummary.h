@@ -84,10 +84,14 @@ class AnitaEventSummary : public TObject
     Bool_t masked; /// was this in a masked phi sector?
     Bool_t masked_xpol; /// was this in a masked phi xpol sector?
 
-    // Resolution utility functions
+    // Most basic resolution utility functions in payload coordinates relative to ADU5-aft-fore line
     double dPhi(double phi) const;
     double dTheta(double theta, bool different_sign_conventions = false) const;
+
+    // Peak direction relative to north (N->E->S->W)
     double bearing() const;
+
+    // Find angle from stored source hypotheses
     double dPhiWais() const;
     double dThetaWais() const;
     double dPhiSun() const;
@@ -98,6 +102,15 @@ class AnitaEventSummary : public TObject
     double dThetaMC() const;
     double dPhiTagged() const;    /// See AnitaEventSummary::sourceFromTag()
     double dThetaTagged() const;  /// See AnitaEventSummary::sourceFromTag()
+
+    // Are you within this theta/phi of a stored hypothesis?
+    Bool_t closeToMC(double deltaPhiDeg, double deltaThetaDeg) const;
+    Bool_t closeToWais(double deltaPhiDeg, double deltaThetaDeg) const;
+    Bool_t closeToLDB(double deltaPhiDeg, double deltaThetaDeg) const;
+    Bool_t closeToSun(double deltaPhiDeg, double deltaThetaDeg) const;
+    Bool_t closeToTagged(double deltaPhiDeg, double deltaThetaDeg) const;
+
+    // peak direction relative to trigger information
     double minAbsHwAngle() const;
     Bool_t absHwAngleLessThanAbsHwAngleXPol() const;
 
@@ -408,14 +421,14 @@ class AnitaEventSummary : public TObject
   const WaveformInfo& highestDeconvolvedFiltered() const;
 
   inline double weight(){return mc.weight > 0 ? mc.weight : 1;} /// Return the weight of the event, always returns 1 for data, the weight from MCTruth otherwise
-  AnitaPol::AnitaPol_t mcPol() const;
-  int mcPolAsInt() const;
-  int mcPeakInd() const;
-  const PointingHypothesis& mcPeak() const;
-  const WaveformInfo& mcCoherent() const;
-  const WaveformInfo& mcDeconvolved() const;
-  const WaveformInfo& mcCoherentFiltered() const;
-  const WaveformInfo& mcDeconvolvedFiltered() const;
+  AnitaPol::AnitaPol_t trainingPol() const;
+  int trainingPolAsInt() const;
+  int trainingPeakInd() const;
+  const PointingHypothesis& trainingPeak() const;
+  const WaveformInfo& trainingCoherent() const;
+  const WaveformInfo& trainingDeconvolved() const;
+  const WaveformInfo& trainingCoherentFiltered() const;
+  const WaveformInfo& trainingDeconvolvedFiltered() const;
 
   //------------------------------------------------------------------------------------
  private:
@@ -427,15 +440,15 @@ class AnitaEventSummary : public TObject
   // The //! comment initializer means ROOT does not store these variables when writing to files.
   // We want to keep it this way, since they are only used to cache the results of the utility
   // funtions to find the highest peak and peak nearest the monte carlo truth info.
-  mutable Int_t                fHighestPeakIndex; //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding highest peak
-  mutable AnitaPol::AnitaPol_t fHighestPol;       //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding highest peak
-  mutable Int_t                fMCPeakIndex;      //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak nearest MC
-  mutable AnitaPol::AnitaPol_t fMCPol;            //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak nearest MC
-  mutable UInt_t               fLastEventNumber;  //! DOES NOT PERSIST IN ROOT! To check for stale caching variables
+  mutable Int_t                fHighestPeakIndex;  //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding highest peak
+  mutable AnitaPol::AnitaPol_t fHighestPol;        //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding highest peak
+  mutable Int_t                fTrainingPeakIndex; //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak training peak (pulser/mc peak)
+  mutable AnitaPol::AnitaPol_t fTrainingPol;       //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak training peak (pulser/mc peak)
+  mutable UInt_t               fLastEventNumber;   //! DOES NOT PERSIST IN ROOT! To check for stale caching variables
 
 
   void findHighestPeak() const;
-  void findMC() const;
+  void findTrainingPeak() const;
   void resetNonPersistent() const;
   const SourceHypothesis* sourceFromTag() const;
 
