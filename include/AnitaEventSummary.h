@@ -421,6 +421,15 @@ class AnitaEventSummary : public TObject
   const WaveformInfo& highestDeconvolved() const;
   const WaveformInfo& highestCoherentFiltered() const;
   const WaveformInfo& highestDeconvolvedFiltered() const;
+	
+	AnitaPol::AnitaPol_t mostImpulsivePol() const;
+  Int_t mostImpulsivePolAsInt() const;
+  Int_t mostImpulsiveInd() const;
+  const PointingHypothesis& mostImpulsivePeak() const;
+  const WaveformInfo& mostImpulsiveCoherent() const;
+  const WaveformInfo& mostImpulsiveDeconvolved() const;
+  const WaveformInfo& mostImpulsiveCoherentFiltered() const;
+  const WaveformInfo& mostImpulsiveDeconvolvedFiltered() const;
 
   inline Double_t weight(){return mc.weight > 0 ? mc.weight : 1;} /// Return the weight of the event, always returns 1 for data, the weight from MCTruth otherwise
   AnitaPol::AnitaPol_t trainingPol() const;
@@ -446,11 +455,14 @@ class AnitaEventSummary : public TObject
   mutable AnitaPol::AnitaPol_t fHighestPol;        //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding highest peak
   mutable Int_t                fTrainingPeakIndex; //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak training peak (pulser/mc peak)
   mutable AnitaPol::AnitaPol_t fTrainingPol;       //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak training peak (pulser/mc peak)
+  mutable Int_t                fMostImpulsiveIndex; //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding most impulsive waveform
+  mutable AnitaPol::AnitaPol_t fMostImpulsivePol;       //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding most impulsive waveform
   mutable UInt_t               fLastEventNumber;   //! DOES NOT PERSIST IN ROOT! To check for stale caching variables
 
 
   void findHighestPeak() const;
   void findTrainingPeak() const;
+  void findMostImpulsive() const;
   void resetNonPersistent() const;
   const SourceHypothesis* sourceFromTag() const;
 

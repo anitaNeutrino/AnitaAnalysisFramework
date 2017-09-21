@@ -215,6 +215,104 @@ const AnitaEventSummary::WaveformInfo& AnitaEventSummary::highestDeconvolvedFilt
   return deconvolved_filtered[fHighestPol][fHighestPeakIndex];
 }
 
+/** 
+ * Utility function to get the polarisation of the most impulsive deconvolved coherently summed wf
+ * Useful for TTree::Draw() 
+ * 
+ * @return the polarisation of the most impulsive deconvolved coherently summed wf
+ */
+AnitaPol::AnitaPol_t AnitaEventSummary::mostImpulsivePol() const{
+  findMostImpulsive();
+  return fMostImpulsivePol;
+}
+
+
+/** 
+ * Utility function to get the polarisation of the most impulsive deconvolved wf
+ * Useful for TTree::Draw()
+ * 
+ * @return the polarisation of the most impulsive deconvolved wf
+ */
+int AnitaEventSummary::mostImpulsivePolAsInt() const{
+  findMostImpulsive();
+  return int(fMostImpulsivePol);
+}
+
+
+/** 
+ * Utility function to get the index of the most impulsive deconvolved wf
+ * Useful for TTree::Draw()
+ * 
+ * @return the index of the most impulsive deconvolved wf
+ */
+int AnitaEventSummary::mostImpulsiveInd() const{
+  findMostImpulsive();
+  return fMostImpulsiveIndex;
+}
+
+
+
+/** 
+ * Utility function to return a const reference to the map peak corresponding to the most impulsive deconvolved wf
+ * Useful for TTree::Draw() 
+ * 
+ * @return the peak with most impulsive deconvolved wf
+ */
+const AnitaEventSummary::PointingHypothesis& AnitaEventSummary::mostImpulsivePeak() const{
+  findMostImpulsive();
+  return peak[fMostImpulsivePol][fMostImpulsiveIndex];
+}
+
+
+/** 
+ * Utility function to return a const reference to the the unfiltered coherently summed waveform info of the polarisation of the most impulsive deconvolved wf
+ * Useful for TTree::Draw() 
+ * 
+ * @return the unfiltered coherently summed waveform info corresponding to the most impulsive deconvolved wf
+ */
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mostImpulsiveCoherent() const{
+  findMostImpulsive();
+  return coherent[fMostImpulsivePol][fMostImpulsiveIndex];
+}
+
+
+/** 
+ * Utility function to return a const reference to the the most impulsive unfiltered, deconvolved coherently summed waveform info
+ * Useful for TTree::Draw() 
+ * 
+ * @return the most impulsive unfiltered, deconvolved coherently summed waveform info
+ */
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mostImpulsiveDeconvolved() const{
+  findMostImpulsive();
+  return deconvolved[fMostImpulsivePol][fMostImpulsiveIndex];
+}
+
+
+
+
+/** 
+ * Utility function to return a const reference to the the filtered coherently summed waveform info of the polarisation of the most impulsive deconvolved wf
+ * Useful for TTree::Draw() 
+ * 
+ * @return the filtered coherently summed waveform info corresponding to the most impulsive deconvolved wf
+ */
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mostImpulsiveCoherentFiltered() const{
+  findMostImpulsive();
+  return coherent_filtered[fMostImpulsivePol][fMostImpulsiveIndex];
+}
+
+
+/** 
+ * Utility function to return a const reference to the the filtered, deconvolved coherently summed waveform info of the polarisation of the most impulsive deconvolved wf
+ * Useful for TTree::Draw() 
+ * 
+ * @return the filtered, deconvolved coherently summed waveform info corresponding to the most impulsive deconvolved wf
+ */
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mostImpulsiveDeconvolvedFiltered() const{
+  findMostImpulsive();
+  return deconvolved_filtered[fMostImpulsivePol][fMostImpulsiveIndex];
+}
+
 
 
 
@@ -827,6 +925,23 @@ void AnitaEventSummary::findHighestPeak() const {
   }
 }
 
+void AnitaEventSummary::findMostImpulsive() const {
+  resetNonPersistent();
+  if(fMostImpulsiveIndex < 0){ // then we've not done this before
+    double highestVal = -1e99;
+    for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
+      AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
+      for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
+        if(deconvolved[polInd][peakInd].impulsivityMeasure > highestVal){
+          highestVal = deconvolved[polInd][peakInd].impulsivityMeasure;
+          fMostImpulsiveIndex = peakInd;
+          fMostImpulsivePol = pol;
+        }
+      }
+    }
+  }
+}
+
 
 /** 
  * Looks at the calPulser tags in the eventSummary, and MC truth information
@@ -914,6 +1029,8 @@ void AnitaEventSummary::resetNonPersistent() const{
   if(fLastEventNumber!=eventNumber){
     fHighestPeakIndex = -1;
     fHighestPol = AnitaPol::kNotAPol;
+    fMostImpulsiveIndex = -1;
+    fMostImpulsivePol = AnitaPol::kNotAPol;
     fTrainingPeakIndex = -1;
     fTrainingPol = AnitaPol::kNotAPol;
     for(Int_t polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
