@@ -328,18 +328,23 @@ void AnitaEventSummary::MCTruth::reset()
 void AnitaEventSummary::WaveformInfo::cacheQuantitiesDerivedFromNarrowestWidths() const{
   if(!(fContainer && fContainer->eventNumber == fLastEventNumberCache)){
 
+    double fracPowerWindow[numFracPowerWindows];
+    for(int i=0; i < numFracPowerWindows; i++){
+      fracPowerWindow[i] = fracPowerWindowEnds[i] - fracPowerWindowBegins[i];
+    }
+
     // first do the mean
-    nwMeanCache = TMath::Mean(5, narrowestWidths);
+    nwMeanCache = TMath::Mean(numFracPowerWindows, fracPowerWindow);
 
     // then the gradient
-    // The power fractions x[5] = {0.1, 0.2, 0.3, 0.4, 0.5} (sum = 1.5, mean = 0.3)
-    // the widths are y[5] = narrowestWidths
+    // The power fractions x[numFracPowerWindows] = {0.1, 0.2, 0.3, 0.4, 0.5} (sum = 1.5, mean = 0.3)
+    // the widths are y[numFracPowerWindows] = fracPowerWindow
     // want least squres gradient = sum over (x - xbar)(y - ybar) / ((x - xbar)^{2})
     const double gradDenom = 0.1; //0.04 + 0.01 + 0 + 0.01 + 0.04 = sum over (x[i] - mean_x)^{2}
 
     // gradNumerator = sum over (x[i] - mean_x)*(y[i] - mean_y), skip third term since x[i] - mean_x  = 0
-    double gradNumerator = - 0.2*(narrowestWidths[0] - nwMeanCache) + -0.1*(narrowestWidths[1] - nwMeanCache)
-                           + 0.1*(narrowestWidths[3] - nwMeanCache) + 0.2*(narrowestWidths[4] - nwMeanCache);
+    double gradNumerator = - 0.2*(fracPowerWindow[0] - nwMeanCache) + -0.1*(fracPowerWindow[1] - nwMeanCache)
+                           + 0.1*(fracPowerWindow[3] - nwMeanCache) + 0.2*(fracPowerWindow[4] - nwMeanCache);
     nwGradCache = gradNumerator/gradDenom;
 
 
@@ -348,10 +353,10 @@ void AnitaEventSummary::WaveformInfo::cacheQuantitiesDerivedFromNarrowestWidths(
 
     // finally the chisquare
     nwChisquareCache = 0;
-    for(int i=0; i < 5; i++){
+    for(int i=0; i < numFracPowerWindows; i++){
       double f = 0.1*(i+1);
       double y = nwGradCache*f + nwInterceptCache;
-      double dy = (y - narrowestWidths[i]);
+      double dy = (y - fracPowerWindow[i]);
       nwChisquareCache += dy*dy;
     }
   }
@@ -361,9 +366,9 @@ void AnitaEventSummary::WaveformInfo::cacheQuantitiesDerivedFromNarrowestWidths(
 /** 
  * Get the mean of the of the narrowest widths array
  * 
- * @return mean of narrowestWidths[5]
+ * @return mean of fracPowerWindow[numFracPowerWindows]
  */
-double AnitaEventSummary::WaveformInfo::narrowestWidthsMean() const{
+double AnitaEventSummary::WaveformInfo::fracPowerWindowMean() const{
   cacheQuantitiesDerivedFromNarrowestWidths();
   return nwMeanCache;
 }
@@ -372,9 +377,9 @@ double AnitaEventSummary::WaveformInfo::narrowestWidthsMean() const{
  * Get the gradient of the narrowest width array
  * (Note: assumes the power fractions go 0.1, 0.2, 0.3, 0.4, 0.5)
  * 
- * @return meangradient of narrowestWidths[5]
+ * @return meangradient of fracPowerWindow[numFracPowerWindows]
  */
-double AnitaEventSummary::WaveformInfo::narrowestWidthsGradient() const {
+double AnitaEventSummary::WaveformInfo::fracPowerWindowGradient() const {
   cacheQuantitiesDerivedFromNarrowestWidths();
   return nwGradCache;
 }
@@ -383,9 +388,9 @@ double AnitaEventSummary::WaveformInfo::narrowestWidthsGradient() const {
  *  The intercept of a linear fit of the narrowest widths array
  * (Note: assumes the power fractions go 0.1, 0.2, 0.3, 0.4, 0.5)
  * 
- * @return interecpt of linear fit to narrowestWiths[5]
+ * @return interecpt of linear fit to narrowestWiths[numFracPowerWindows]
  */
-double AnitaEventSummary::WaveformInfo::narrowestWidthsIntercept() const {
+double AnitaEventSummary::WaveformInfo::fracPowerWindowIntercept() const {
   cacheQuantitiesDerivedFromNarrowestWidths();
   return nwInterceptCache;
 }
@@ -394,9 +399,9 @@ double AnitaEventSummary::WaveformInfo::narrowestWidthsIntercept() const {
 /** 
  * Get the chisquare of the of the linear fit to the narrowest width array
  * 
- * @return chisquare of the linear fit (gradient + intercept) to narrowestWidths
+ * @return chisquare of the linear fit (gradient + intercept) to fracPowerWindow
  */
-double AnitaEventSummary::WaveformInfo::narrowestWidthsChisquare() const {
+double AnitaEventSummary::WaveformInfo::fracPowerWindowChisquare() const {
   cacheQuantitiesDerivedFromNarrowestWidths();
   return nwChisquareCache;
 }
@@ -866,22 +871,32 @@ void AnitaEventSummary::findTrainingPeak() const {
     // return the peak closest to that source...
     const SourceHypothesis* peakOfInterest = sourceFromTag();
     if(peakOfInterest){
-      double minDeltaAngleSq = 1e99;
+
+      // Add a factor of 1./(peakValue*peakValue) since just finding the nearest peak
+      // was picking out the wrong polarisation of WAIS some fraction of the time
+      // presumably this was happening for MC too...
+
+      // double minWeightedDeltaAngleSq = 1e99;
+      double highestClosePeakVal = -1;
       for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
         AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
         for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
-          double dPhi = peak[polInd][peakInd].dPhiSource(*peakOfInterest);
-          double dTheta = peak[polInd][peakInd].dThetaSource(*peakOfInterest);
-          double deltaAngleSq = dPhi*dPhi + dTheta*dTheta;
-          if(deltaAngleSq < minDeltaAngleSq){
-            minDeltaAngleSq = deltaAngleSq;
+          // double dPhi = peak[polInd][peakInd].dPhiSource(*peakOfInterest);
+          // double dTheta = peak[polInd][peakInd].dThetaSource(*peakOfInterest);
+          // double weightedDeltaAngleSq = (dPhi*dPhi + dTheta*dTheta)/(peak[polInd][peakInd].value*peak[polInd][peakInd].value);
+          const double dPhiClose = 5.5;
+          const double dThetaClose = 3.5;
+          if(peak[polInd][peakInd].closeToTagged(dPhiClose, dThetaClose) && peak[polInd][peakInd].value > highestClosePeakVal){
+            highestClosePeakVal = peak[polInd][peakInd].value;
             fTrainingPeakIndex = peakInd;
             fTrainingPol = pol;
           }
         }
       }
     }
-    else{ // otherwise, just do highest peak in map
+    if(fTrainingPeakIndex < 0){
+      // didn't find one or no tagged source
+      // so, just do highest peak in map
       findHighestPeak();
       fTrainingPeakIndex = fHighestPeakIndex;
       fTrainingPol = fHighestPol;
