@@ -257,10 +257,11 @@ class AnitaEventSummary : public TObject
     enum CalPulser
     {
       NONE,
-      WAIS,
+      WAIS,  // is actually Hpol wais in both A3 and A4
       LDB,
       SIPLE,
-      TD
+      TD,
+      WAIS_V // the Vpol wais in A4
     };
 
     Int_t isGood;
@@ -300,7 +301,7 @@ class AnitaEventSummary : public TObject
     /** The fraction of nearby events that are payload blasts */
     Double_t blastFraction;
 
-    ClassDefNV(EventFlags,10);
+    ClassDefNV(EventFlags,11);
   };
 
 
@@ -466,7 +467,7 @@ class AnitaEventSummary : public TObject
   void resetNonPersistent() const;
   const SourceHypothesis* sourceFromTag() const;
 
-  ClassDefNV(AnitaEventSummary, 30);
+  ClassDefNV(AnitaEventSummary, 31);
 };
 
 #endif
