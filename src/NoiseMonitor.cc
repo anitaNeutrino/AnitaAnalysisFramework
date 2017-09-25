@@ -92,7 +92,7 @@ void NoiseMonitor::makeProfiles(int run){
 
   TString fileName = getFileName(run);
 
-  std::cout << "Info in " << __PRETTY_FUNCTION__ << ", generating RMS profiles for run " << run << " in file " << fileName << std::endl;
+  std::cout << "Info in " << __PRETTY_FUNCTION__ << ", generating minimim bias RMS profiles for run " << run << " in file " << fileName << std::endl;
   TFile* f = TFile::Open(fileName, "recreate");
 
   AnitaDataset d(run);
@@ -130,8 +130,9 @@ void NoiseMonitor::makeProfiles(int run){
     profs.at(pol) = new TProfile2D(name, title, NUM_SEAVEYS, -0.5, NUM_SEAVEYS-0.5, nBin, startTime, endTime);
   }
 
-  const int printEvery = n/100;
-  int nextPrint = 0;
+  const double deltaPrint = double(n)/1000;
+  double nextPrint = 0;
+
   for(int entry=0; entry < n; entry++){
     d.getEntry(entry);
     header = d.header();
@@ -149,14 +150,26 @@ void NoiseMonitor::makeProfiles(int run){
         }
       }
     }
-    if(entry == nextPrint){
-      std::cerr << "\r" << 100*(entry+1)/n << "% ";
-      nextPrint += printEvery;
-      nextPrint = nextPrint >= n ? n - 1 : nextPrint;
-      if(entry==n-1){
-        std::cerr << std::endl;
-      }
+    if(entry >= nextPrint){
+      const int nm = 50;
+      int m = nm*nextPrint/n;
+      fprintf(stderr, "\r%4.2f %% complete", 100*nextPrint/n);
+      std::cerr << "[";
+      for(int i=0; i < m; i++) std::cerr << "=";
+      for(int i=m; i < nm; i++) std::cerr << " ";
+      std::cerr << "]";
+      nextPrint += deltaPrint;
+      if(nextPrint >= n){std::cerr << std::endl;}      
     }
+    
+    // if(entry == nextPrint){
+    //   std::cerr << "\r" << 100*(entry+1)/n << "% ";
+    //   nextPrint += printEvery;
+    //   nextPrint = nextPrint >= n ? n - 1 : nextPrint;
+    //   if(entry==n-1){
+    //     std::cerr << std::endl;
+    //   }
+    // }
   }
 
   // turn the outputs back on, if they were on
