@@ -951,7 +951,7 @@ void AnitaEventSummary::findMostImpulsive() const {
  */
 const AnitaEventSummary::SourceHypothesis* AnitaEventSummary::sourceFromTag() const {
   switch(flags.pulser){
-    case EventFlags::WAIS:
+    case EventFlags::WAIS or EventFlags::WAIS_V:
       // std::cerr << "wais" << std::endl;
       return &wais;
     case EventFlags::LDB:  
