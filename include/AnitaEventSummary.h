@@ -89,6 +89,7 @@ class AnitaEventSummary : public TObject
 
     // Peak direction relative to north (N->E->S->W)
     Double_t bearing() const;
+    Double_t dPhiNorth() const;
 
     // Find angle from stored source hypotheses
     Double_t dPhiWais() const;

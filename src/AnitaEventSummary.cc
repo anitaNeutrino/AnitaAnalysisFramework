@@ -347,7 +347,6 @@ void AnitaEventSummary::WaveformInfo::cacheQuantitiesDerivedFromNarrowestWidths(
                            + 0.1*(fracPowerWindow[3] - nwMeanCache) + 0.2*(fracPowerWindow[4] - nwMeanCache);
     nwGradCache = gradNumerator/gradDenom;
 
-
     // then the intercept
     nwInterceptCache = nwMeanCache - nwGradCache*0.3; // 0.3 = mean power fraction
 
@@ -659,6 +658,18 @@ double AnitaEventSummary::PointingHypothesis::bearing() const{
   }
   return bearing;
 }
+
+/** 
+ * Wraps the bearing() function, to the range -180 -> 180 from north.
+ * 
+ * @return the phi direction relative to north
+ */
+double AnitaEventSummary::PointingHypothesis::dPhiNorth() const{
+  // heading increases clockwise, payload phi increases anti-clockwise so we subtract it from heading.
+  Double_t b = bearing();
+  return  b > 180 ? b - 360 : b;
+}
+
 
 
 /** 
