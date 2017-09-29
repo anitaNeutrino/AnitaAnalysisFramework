@@ -139,18 +139,22 @@ class AnitaTemplateSummary
   public:
     SingleTemplateResult() {; }
     //impulse response
-    Double_t impulse;
-    Double_t impulse_loc;
-    
+    Double_t impulse; //peak
+    Double_t impulse_loc; //location
+    bool impulse_pol; //max(1) or min(0)
+
     //one for the WAIS template too
     Double_t wais;
     Double_t wais_loc;
+    bool wais_pol;
     
     //and for the bigger multi-coherence-angle one
     Double_t cRay[numCRTemplates];
     Double_t cRay_loc[numCRTemplates];
+    bool cRay_pol[numCRTemplates];
     
-    ClassDefNV(SingleTemplateResult,2);
+
+    ClassDefNV(SingleTemplateResult,3);
   };
 
   
@@ -162,7 +166,7 @@ class AnitaTemplateSummary
   void zeroInternals();
     
  private:
-  ClassDefNV(AnitaTemplateSummary, 2); 
+  ClassDefNV(AnitaTemplateSummary, 3); 
 };
 
 

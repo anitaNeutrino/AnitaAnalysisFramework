@@ -321,6 +321,7 @@ void AnitaTemplateMachine::doTemplateAnalysis(const AnalysisWaveform *waveform, 
 
   //set up variables for calculating
   double maxValue,minValue,value,value_loc;
+  bool value_pol;
   double *dCorr;
     
   //Impulse Response
@@ -330,13 +331,16 @@ void AnitaTemplateMachine::doTemplateAnalysis(const AnalysisWaveform *waveform, 
   if (TMath::Max(maxValue,minValue) == maxValue) {
     value = maxValue;
     value_loc = TMath::LocMax(length,dCorr);
+    value_pol = true;
   }
   else {
     value = minValue;
     value_loc = TMath::LocMin(length,dCorr);
+    value_pol = false;
   }
   templateSummary->coherent[poli][dir].impulse  = value;
   templateSummary->coherent[poli][dir].impulse_loc = value_loc;
+  templateSummary->coherent[poli][dir].impulse_pol = value_pol;
 
   delete[] dCorr;
 
@@ -347,13 +351,16 @@ void AnitaTemplateMachine::doTemplateAnalysis(const AnalysisWaveform *waveform, 
   if (TMath::Max(maxValue,minValue) == maxValue) {
     value = maxValue;
     value_loc = TMath::LocMax(length,dCorr);
+    value_pol = true;
   }
   else {
     value = minValue;
     value_loc = TMath::LocMin(length,dCorr);
+    value_pol = false;
   }
   templateSummary->coherent[poli][dir].wais  = value;
   templateSummary->coherent[poli][dir].wais_loc = value_loc;
+  templateSummary->coherent[poli][dir].wais_pol = value_pol;
 
   delete[] dCorr;
 
@@ -366,13 +373,16 @@ void AnitaTemplateMachine::doTemplateAnalysis(const AnalysisWaveform *waveform, 
     if (TMath::Max(maxValue,minValue) == maxValue) {
       value = maxValue;
       value_loc = TMath::LocMax(length,dCorr);
+      value_pol = true;
     }
     else {
       value = minValue;
       value_loc = TMath::LocMin(length,dCorr);
+      value_pol = false;
     }
     templateSummary->coherent[poli][dir].cRay[i] = value;
     templateSummary->coherent[poli][dir].cRay_loc[i] = value_loc;
+    templateSummary->coherent[poli][dir].cRay_pol[i] = value_pol;
 
     delete[] dCorr;
   }
@@ -417,6 +427,7 @@ void AnitaTemplateMachine::doDeconvolvedTemplateAnalysis(const AnalysisWaveform 
 
   //set up variables for calculating
   double maxValue,minValue,value,value_loc;
+  bool value_pol;
   double *dCorr;
     
   //Impulse Response
@@ -426,13 +437,16 @@ void AnitaTemplateMachine::doDeconvolvedTemplateAnalysis(const AnalysisWaveform 
   if (TMath::Max(maxValue,minValue) == maxValue) {
     value = maxValue;
     value_loc = TMath::LocMax(length,dCorr);
+    value_pol = true;
   }
   else {
     value = minValue;
     value_loc = TMath::LocMin(length,dCorr);
+    value_pol = false;
   }
   templateSummary->deconvolved[poli][dir].impulse  = value;
   templateSummary->deconvolved[poli][dir].impulse_loc = value_loc;
+  templateSummary->deconvolved[poli][dir].impulse_pol = value_pol;
 
   delete[] dCorr;
 
@@ -443,13 +457,16 @@ void AnitaTemplateMachine::doDeconvolvedTemplateAnalysis(const AnalysisWaveform 
   if (TMath::Max(maxValue,minValue) == maxValue) {
     value = maxValue;
     value_loc = TMath::LocMax(length,dCorr);
+    value_pol = true;
   }
   else {
     value = minValue;
     value_loc = TMath::LocMin(length,dCorr);
+    value_pol = false;
   }
   templateSummary->deconvolved[poli][dir].wais  = value;
   templateSummary->deconvolved[poli][dir].wais_loc = value_loc;
+  templateSummary->deconvolved[poli][dir].wais_pol = value_pol;
 
   delete[] dCorr;
 
@@ -461,13 +478,16 @@ void AnitaTemplateMachine::doDeconvolvedTemplateAnalysis(const AnalysisWaveform 
     if (TMath::Max(maxValue,minValue) == maxValue) {
       value = maxValue;
       value_loc = TMath::LocMax(length,dCorr);
+      value_pol = true;
     }
     else {
       value = minValue;
       value_loc = TMath::LocMin(length,dCorr);
+      value_pol = false;
     }
     templateSummary->deconvolved[poli][dir].cRay[i]  = value;
-    templateSummary->deconvolved[poli][dir].cRay[i] = value_loc;
+    templateSummary->deconvolved[poli][dir].cRay_loc[i] = value_loc;
+    templateSummary->deconvolved[poli][dir].cRay_pol[i] = value_pol;
 
     delete[] dCorr;
   }
