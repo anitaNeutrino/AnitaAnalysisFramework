@@ -182,6 +182,42 @@ class ALFAButterworthFilter : public FilterOperation
 
 };
 
+
+
+/** Removes glitches */
+
+class DeglitchFilter : public UniformFilterOperation
+{
+  public:
+
+    enum RemoveAction { DELETE, AVERAGE} ; 
+    /** 
+     * Construct the filter. 
+     * @param threshold_above_neighbors the minimum abs(v) threshold above neigbhors to be considered a glitch
+     * @param n_neighbors number of neighbors (on both sides, so up to 2 * n_neighbors + 1 are considered 
+     * @param action What to do when removing a point. If DELETE is used, will function on uneven waveform. AVERAGE will function on even waveform. 
+     * @param max_remove The maximum number of points to remove. If more than this are attempted, None are removed (since probably something silly is going on)
+     *
+     * */
+    DeglitchFilter(double threshold_above_neighbors = 100, int n_neighbors = 9, RemoveAction action = DELETE, int max_remove = 10); 
+    virtual ~DeglitchFilter() {;}
+    virtual void processOne(AnalysisWaveform *wf); 
+    const char * tag() const { return "DeglitchFilter"; } 
+    const char * description() const { return descStr.Data(); } 
+       
+  private: 
+  TString descStr; 
+  RemoveAction action; 
+  double thresh; 
+  int neighbors; 
+  int nremoved; 
+  int max_remove;
+
+
+
+}; 
+
+
 namespace AnitaResponse{
 class DeconvolveFilter : public FilterOperation
 {

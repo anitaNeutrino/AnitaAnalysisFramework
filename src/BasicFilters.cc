@@ -157,8 +157,84 @@ void AnitaResponse::DeconvolveFilter::process(FilteredAnitaEvent * ev)
     AnitaPol::AnitaPol_t pol = AnitaPol::AnitaPol_t( i %2); 
     int ant = i /2; 
     rm->response(pol,ant)->deconvolveInPlace(getWf(ev,ant,pol), dm); 
-
   }
 }
+
+
+
+DeglitchFilter::DeglitchFilter(double th, int n, RemoveAction ac,int mr) 
+   :action(ac), thresh(th), neighbors(n), nremoved(0), max_remove(mr) 
+{
+  descStr.Form("DeglitchFilter with thresh=%g, n_neighbors=%d, action = %s, max_remove = %d", thresh, neighbors, action == DELETE ? "DELETE" : "AVERAGE", max_remove); 
+}
+
+static double max_abs(int n, const double * y) 
+{
+  double max = 0; 
+
+  for (int i =0; i < n; i++)
+  {
+    if (fabs(y[i]) > max) max = fabs(y[i]); 
+  }
+  return max; 
+}
+
+void DeglitchFilter::processOne(AnalysisWaveform * wf) 
+{
+
+  TGraphAligned * g = action == DELETE ? wf->updateUneven() : wf->updateEven(); 
+
+  //circular buffer of values, initialize with first
+  int ndelete = 0; 
+  int delete_list[max_remove]; // only delete up to 10 values 
+
+  for (int i = 0; i < g->GetN(); i++)
+  {
+    double max = 0; 
+
+    if (i > 0)
+    {
+      int start = TMath::Max(0, i - neighbors); 
+      int end = i-1; 
+      max = max_abs(end-start+1, g->GetY() + start); 
+    }
+
+    if (i < g->GetN()-1)
+    {
+      int start = i+1; 
+      int end = TMath::Min(g->GetN()-1, i+neighbors); 
+      max = TMath::Max(max,max_abs(end-start+1, g->GetY() + start)); 
+    }
+
+    if (g->GetY()[i] > max + thresh)
+    {
+      if (ndelete > max_remove) 
+      {
+        fprintf(stderr,"DeglitchFilter: ALREADY REMOVED MORE THAN %d points in his waveform. Giving up.\n", max_remove); 
+        return; 
+      }
+
+      delete_list[ndelete++] = i; 
+    }
+  }
+
+  nremoved+=ndelete; 
+
+  for (int i = 0; i < ndelete; i++)
+  {
+    if (action == DELETE) 
+    {
+      g->RemovePoint(delete_list[i]-ndelete); 
+    }
+    else
+    {
+      g->GetY()[delete_list[i]] =  delete_list[i] == 0 ? g->GetY()[1] : 
+                                  delete_list[i] == g->GetN()-1 ? g->GetY()[g->GetN()-2] : 
+                                  0.5 * g->GetY()[delete_list[i]-1] + 0.5 * g->GetY()[delete_list[i] +1]; 
+    }
+  }
+}
+
+
 
 
