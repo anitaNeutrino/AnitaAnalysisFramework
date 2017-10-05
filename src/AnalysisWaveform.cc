@@ -411,9 +411,12 @@ void AnalysisWaveform::calculateEvenFromUneven()  const
 
 
   const TGraphAligned * g = uneven(); 
-    int npoints = (g->GetX()[g->GetN()-1] - g->GetX()[0]) / dt; 
+  int npoints = (g->GetX()[g->GetN()-1] - g->GetX()[0]) / dt; 
   g_even.Set(force_even_size ? force_even_size : npoints); 
-  // force_even_size = 0; 
+
+  // this has been applied so we can forget about it now 
+  force_even_size = 0; 
+
   double t0 = g->GetX()[0]; 
   for (int i = 0; i < g_even.GetN(); i++) 
   {
@@ -474,7 +477,7 @@ void AnalysisWaveform::calculateEvenFromFreq() const
   if (force_even_size) 
   {
     setNewSize(&g_even, force_even_size); 
-    // force_even_size = 0; 
+    force_even_size = 0; //applied so we can forget about it now. 
   }
   if (g_even.GetX()[1] - t0 != dt) 
   {

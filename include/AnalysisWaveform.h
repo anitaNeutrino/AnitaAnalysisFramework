@@ -207,7 +207,9 @@ class AnalysisWaveform
     /** Return the spacing between frequencies in the frequency domain*/ 
     double deltaF() const { return df ; }
 
-    /** Forces the even waveform to be a particular size. It may be truncated or zero-filled */
+    /** Forces the even waveform to be a particular size. This is equivalent to 
+     * updateEven()->Set() (with padding) with the exception that it may be deferred
+     * if even waveform needs to be (re)calculated.*/
     void forceEvenSize(int size); 
 
     // drawers since drawing is non-const (and we don't care about silly things like axes for constness)
