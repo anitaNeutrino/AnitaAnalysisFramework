@@ -41,6 +41,7 @@
 #pragma link C++ class DigitalFilterOperation+;
 #pragma link C++ class GeometricFilter+;
 #pragma link C++ class GaussianTaper; 
+#pragma link C++ class DeglitchFilter+; 
 
 #pragma link C++ namespace AnitaResponse+;
 #pragma link C++ namespace impulsivity+;
