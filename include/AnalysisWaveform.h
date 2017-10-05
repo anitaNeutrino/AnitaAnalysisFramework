@@ -53,6 +53,10 @@ class AnalysisWaveform
     /** Enable (or disable) a bunch of debugging crap. Only possible with ANITA_ANALYSIS_DEBUG defined to avoid slow branches */
     static void enableDebug(bool enable);  
 
+    /** Enable (or disable) conversion from even to uneven. The default is that it's not allowed, which means
+     * that as soon as some transformation is done on the evenly-sampled waveform or in the frequency domain, the uneven waveform
+     * is set equal to the even waveform. */ 
+    static void allowEvenToUnevenConversion(bool allow); 
 
     /** The interpolation method used to transform in between evenly-sampled and unevenly-sampled waveforms */ 
     enum InterpolationType

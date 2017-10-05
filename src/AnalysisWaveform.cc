@@ -35,6 +35,10 @@ void AnalysisWaveform::enableDebug(bool debug) { fprintf(stderr, "enableDebug(%d
 #endif 
 
 
+static bool ALLOW_EVEN_TO_UNEVEN = false; 
+void AnalysisWaveform::allowEvenToUnevenConversion( bool allow) { ALLOW_EVEN_TO_UNEVEN = allow; }
+
+
 static __thread bool nag_if_not_zero_padded = true; 
 
 
@@ -205,9 +209,16 @@ const TGraphAligned * AnalysisWaveform::uneven() const
 
   if (uneven_equals_even) return even(); 
 
-  if (must_update_uneven) 
+  if (must_update_uneven)
   {
-    calculateUnevenFromEven(); 
+    if (ALLOW_EVEN_TO_UNEVEN) 
+    {
+      calculateUnevenFromEven(); 
+    }
+    else
+    {
+      return even(); 
+    }
   }
 
   return &g_uneven; 
