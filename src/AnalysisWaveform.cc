@@ -82,7 +82,7 @@ static void setNewSize(TGraphAligned * g, int size )
   double dt = g->GetX()[1] - g->GetX()[0]; 
   if (size > old_size)
   {
-    fillEven(size-old_size, g->GetX() + old_size, dt, g->GetX()[old_size-1]); 
+    fillEven(size-old_size, g->GetX() + old_size, dt, g->GetX()[old_size-1] + dt); 
   }
 }
 
