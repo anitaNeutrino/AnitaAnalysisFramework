@@ -3,9 +3,9 @@
 
 #include "TObject.h"
 #include "AnitaConventions.h"
+#include "Adu5Pat.h"
 #include <iostream>
 
-class Adu5Pat;
 class UsefulAdu5Pat;
 class RawAnitaHeader;
 class TruthAnitaEvent;
@@ -371,6 +371,19 @@ class AnitaEventSummary : public TObject
 
     void reset() { latitude = -999; longitude = -999; altitude = -999; heading = -999; prevHeading = -999;};
     void update(const Adu5Pat* pat); /// Copy the data from the pat into the object
+
+    /**
+     * Convert to an Adu5Pat, (mostly to then instantiate a Adu5Pat)
+     * @return an Adu5Pat only with location information
+     */
+    Adu5Pat pat () const {
+      Adu5Pat pat;
+      pat.longitude = longitude;
+      pat.latitude = latitude;
+      pat.altitude = altitude;
+      pat.heading = heading;
+      return pat;
+    }
 
     ClassDefNV(PayloadLocation,2);
   };
