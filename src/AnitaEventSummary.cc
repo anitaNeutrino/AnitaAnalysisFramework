@@ -943,8 +943,8 @@ void AnitaEventSummary::findMostImpulsive() const {
     for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
       AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
       for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
-        if(deconvolved[polInd][peakInd].impulsivityMeasure > highestVal){
-          highestVal = deconvolved[polInd][peakInd].impulsivityMeasure;
+        if(deconvolved_filtered[polInd][peakInd].impulsivityMeasure > highestVal){
+          highestVal = deconvolved_filtered[polInd][peakInd].impulsivityMeasure;
           fMostImpulsiveIndex = peakInd;
           fMostImpulsivePol = pol;
         }
