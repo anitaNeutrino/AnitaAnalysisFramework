@@ -209,18 +209,6 @@ const TGraphAligned * AnalysisWaveform::uneven() const
 
   if (uneven_equals_even) return even(); 
 
-  if (must_update_uneven)
-  {
-    if (ALLOW_EVEN_TO_UNEVEN) 
-    {
-      calculateUnevenFromEven(); 
-    }
-    else
-    {
-      return even(); 
-    }
-  }
-
   return &g_uneven; 
 }
 
@@ -277,6 +265,7 @@ void AnalysisWaveform::updateEven(const TGraph * replace)
   g_even.Set(replace->GetN()); 
   memcpy(g_even.GetX(), replace->GetX(), replace->GetN() * sizeof(double)); 
   memcpy(g_even.GetY(), replace->GetY(), replace->GetN() * sizeof(double)); 
+  if (!ALLOW_EVEN_TO_UNEVEN) uneven_equals_even = true; 
   must_update_uneven = !uneven_equals_even; 
   must_update_freq = true; 
   must_update_even = false; 
@@ -296,6 +285,7 @@ TGraphAligned * AnalysisWaveform::updateEven()
 #endif 
 
   TGraphAligned * ev = (TGraphAligned *) even(); 
+  if (!ALLOW_EVEN_TO_UNEVEN) uneven_equals_even = true; 
   must_update_uneven = !uneven_equals_even; 
   must_update_freq = true; 
   even_akima_interpolator_dirty = true; 
@@ -341,6 +331,7 @@ FFTWComplex * AnalysisWaveform::updateFreq()
 
   even_akima_interpolator_dirty = true; 
   must_update_even = true; 
+  if (!ALLOW_EVEN_TO_UNEVEN) uneven_equals_even = true; 
   must_update_uneven = !uneven_equals_even; 
 
   return fr; 
@@ -565,6 +556,7 @@ void AnalysisWaveform::updateFreq(int new_N, const FFTWComplex * new_fft, double
 
   must_update_freq = false; 
   must_update_even = true; 
+  if (!ALLOW_EVEN_TO_UNEVEN) uneven_equals_even = true; 
   must_update_uneven = !uneven_equals_even; 
   hilbert_dirty = true; 
   hilbert_envelope_dirty = true; 

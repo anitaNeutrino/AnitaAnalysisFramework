@@ -346,7 +346,7 @@ void AnitaResponse::AbstractResponse::deconvolveInPlace(AnalysisWaveform * wf,  
 {
 //  printf("method: %p\n", method); 
   int old_size = wf->Neven(); 
-  wf->padEven(1); 
+  wf->padEven(1,0); 
   int nf = wf->Nfreq();
   double df = wf->deltaF(); 
   if (!cache_response || cache_Nf != nf || cache_df != df || !cache_V || cache_angle != off_axis_angle) 
@@ -360,7 +360,6 @@ void AnitaResponse::AbstractResponse::deconvolveInPlace(AnalysisWaveform * wf,  
   }
     
   method->deconvolve(nf,df, wf->updateFreq(), cache_V); 
-
-  wf->updateEven()->Set(old_size); 
+//  wf->updateEven()->Set(old_size); 
 
 }

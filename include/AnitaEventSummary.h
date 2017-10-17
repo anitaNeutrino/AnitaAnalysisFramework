@@ -134,6 +134,7 @@ class AnitaEventSummary : public TObject
    * @class WaveformInfo
    * @brief Stores information about a coherently summed waveform (filtered/unfiltered/deconvolved)
    * The coherent summing of the waveform corresponds to a direction stored in a PointingHypothesis
+   * Units are assumed to be in mV, ns,and GHz. 
    */
   class WaveformInfo
   {
@@ -141,11 +142,11 @@ class AnitaEventSummary : public TObject
    public:
     WaveformInfo() : fContainer(NULL), fLastEventNumberCache(0), nwMeanCache(-1),
                      nwGradCache(-1), nwInterceptCache(-1), nwChisquareCache(-1) {; }
-    Double_t snr; /// Signal to Noise of waveform
-    Double_t peakHilbert; /// peak of hilbert envelope
-    Double_t peakVal;  /// peak value
-    Double_t xPolPeakVal;  /// Peak of xpol trace
-    Double_t xPolPeakHilbert;  /// Peak of xpol hilbert Envelope
+    Double_t snr; //[0,100,16]  /// Signal to Noise of waveform
+    Double_t peakHilbert;//[0,4096,21]  /// peak of hilbert envelope
+    Double_t peakVal;  //[0,4096,21] /// peak value
+    Double_t xPolPeakVal; //[0,4096,21]  /// Peak of xpol trace
+    Double_t xPolPeakHilbert; //[0,4096,21]  /// Peak of xpol hilbert Envelope
 
     Double_t I,Q,U,V;  // Stokes Parameters
 
@@ -154,35 +155,35 @@ class AnitaEventSummary : public TObject
     Double_t totalPowerXpol;  /// Total power in xPol waveform
 
     //spectrum info
-    Double_t bandwidth[peaksPerSpectrum];  /// bandwidth of each peak (implementation defined, may not be comparable between analyses)
-    Double_t peakFrequency[peaksPerSpectrum]; /// peak frequency of power spectrum
+    Double_t bandwidth[peaksPerSpectrum]; //[0,2,16] /// bandwidth of each peak (implementation defined, may not be comparable between analyses)
+    Double_t peakFrequency[peaksPerSpectrum]; //[0,2,16] /// peak frequency of power spectrum
     Double_t peakPower[peaksPerSpectrum]; //power within +/- bandwidth of each peak
-    Double_t spectrumSlope;  ///  Slope of line fit to spectrum (in log-space, so this is spectral-index)
-    Double_t spectrumIntercept; /// Intercept of line fit to spectrum (in log-space)
+    Double_t spectrumSlope; // [-100,100,16] ///  Slope of line fit to spectrum (in log-space, so this is spectral-index)
+    Double_t spectrumIntercept; // [-200,200,16] /// Intercept of line fit to spectrum (in log-space)
 
     //Shape parameters, computed using hilbert envelope
     // This should probably taken out into its own class
-    Double_t riseTime_10_90;  /// Rise time of hilbert env from 10% to 90% of peak
-    Double_t riseTime_10_50;  /// Rise time of hilbert env from 10% to 50% of peak
-    Double_t fallTime_90_10;  /// Fall time of hilbert env from 90% to 10% of peak
-    Double_t fallTime_50_10;  /// Fall time of hilbert env from 50% to 10% of peak
-    Double_t width_50_50;   /// Width from first envelope crossing of 50 percent of peak to last
-    Double_t width_10_10;  /// Width from first envelope crossing of 10 percent of peak to last
+    Double_t riseTime_10_90; //[0,128,16]  /// Rise time of hilbert env from 10% to 90% of peak
+    Double_t riseTime_10_50; //[0,128,16] /// Rise time of hilbert env from 10% to 50% of peak
+    Double_t fallTime_90_10; //[0,128,16]/// Fall time of hilbert env from 90% to 10% of peak
+    Double_t fallTime_50_10; //[0,128,16] /// Fall time of hilbert env from 50% to 10% of peak
+    Double_t width_50_50;  //[0,128,16] /// Width from first envelope crossing of 50 percent of peak to last
+    Double_t width_10_10;  //[0,128,16]/// Width from first envelope crossing of 10 percent of peak to last
     Double_t power_10_10;  /// Power enclosed within 10_10 width
     Double_t power_50_50;  /// Power enclosed within 50_50 width
-    Double_t peakTime;  // Time that peak hilbert env occurs
-    Double_t peakMoments[5];  // moments about Peak  (1st - 5th moments)
+    Double_t peakTime;  //[-128,384,18] /// Time that peak hilbert env occurs
+    Double_t peakMoments[5];  /// moments about Peak  (1st - 5th moments)
 
-    Double_t impulsivityMeasure; /// A number that has something to do with how impulsive it is
-    Double_t fracPowerWindowBegins[numFracPowerWindows]; /// Narrowest width containing {10%, 20%, 30%, 40%, 50%} of the total power
-    Double_t fracPowerWindowEnds[numFracPowerWindows]; /// Narrowest width containing {10%, 20%, 30%, 40%, 50%} of the total power
+    Double_t impulsivityMeasure; //[-1,1, 16]  /// A number that has something to do with how impulsive it is
+    Double_t fracPowerWindowBegins[numFracPowerWindows]; //[0,128,16] /// Narrowest width containing {10%, 20%, 30%, 40%, 50%} of the total power
+    Double_t fracPowerWindowEnds[numFracPowerWindows]; //[0,128,16] /// Narrowest width containing {10%, 20%, 30%, 40%, 50%} of the total power
 
     Int_t numAntennasInCoherent; /// Number of antennas used to make this
 
-    Double_t localMaxToMin; /// Largest value of local max to neighbouring local min (see Acclaim::RootTools::getLocalMaxToMin)
-    Double_t localMaxToMinTime; /// Time between local maxima and minima +ve means max is before min, -ve means min is before max
-    Double_t globalMaxToMin; /// Difference between maximum and minimum voltage
-    Double_t globalMaxToMinTime; /// Time between maximum and minimum volts, +ve means max is before min, -ve means min is before max
+    Double_t localMaxToMin; //[0,4096,21] /// Largest value of local max to neighbouring local min (see Acclaim::RootTools::getLocalMaxToMin)
+    Double_t localMaxToMinTime; //[0,100,16] /// Time between local maxima and minima +ve means max is before min, -ve means min is before max
+    Double_t globalMaxToMin; //[0,4096,21] /// Difference between maximum and minimum voltage
+    Double_t globalMaxToMinTime; //[0,128,16] /// Time between maximum and minimum volts, +ve means max is before min, -ve means min is before max
 
 
     //some utilities for polarization info
@@ -200,7 +201,7 @@ class AnitaEventSummary : public TObject
     Double_t fracPowerWindowIntercept() const;
     Double_t fracPowerWindowChisquare() const;
 
-    ClassDefNV(WaveformInfo, 12);
+    ClassDefNV(WaveformInfo, 13);
 
    private:
     friend class AnitaEventSummary;
@@ -224,10 +225,10 @@ class AnitaEventSummary : public TObject
     /// Correct indices are set in the AnitaEventSummary constructor
     ChannelInfo() : pol(AnitaPol::kNotAPol), ant(-1) {; }
 
-    Double_t rms;
+    Double_t rms; //[0,1024,20]
     Double_t avgPower;
-    Double_t snr; /// Signal to Noise of waveform
-    Double_t peakHilbert; /// peak of hilbert envelope
+    Double_t snr; //[0,100,16]/// Signal to Noise of waveform
+    Double_t peakHilbert;//[0,4096,21]  /// peak of hilbert envelope
 
     Double_t getPhi() const;
     inline Int_t getAnt() const {return ant;}                // could add some errors on -1 here...
@@ -242,7 +243,7 @@ class AnitaEventSummary : public TObject
     AnitaPol::AnitaPol_t     pol; //! DOES NOT PERSIST IN ROOT! the polarization
     Int_t                    ant; //! DOES NOT PERSIST IN ROOT! the antenna
 
-    ClassDefNV(ChannelInfo, 4);
+    ClassDefNV(ChannelInfo, 5);
   };
 
 
@@ -481,7 +482,7 @@ class AnitaEventSummary : public TObject
   void resetNonPersistent() const;
   const SourceHypothesis* sourceFromTag() const;
 
-  ClassDefNV(AnitaEventSummary, 31);
+  ClassDefNV(AnitaEventSummary, 32);
 };
 
 #endif
