@@ -32,7 +32,7 @@ class GeometricFilter : public FilterOperation
 
     // process an event
     virtual void process(FilteredAnitaEvent * event);
-    virtual void processOne(AnalysisWaveform* wf); 
+    virtual void processOne(AnalysisWaveform* wf, const RawAnitaHeader * header = 0, int ant = 0, int pol = 0); 
     void setDbCut(double dB) {dbCut = dB;}
     const char * tag() const { return "GeomFilter"; } 
     const char * description() const { return descStr.Data(); } 

@@ -60,6 +60,11 @@ void ConditionalFilterOperation::process(FilteredAnitaEvent * ev)
   }
 }
 
+void ConditionalFilterOperation::processOne(AnalysisWaveform* awf, const RawAnitaHeader* header, int ant, int pol) 
+{
+	printf("processOne not implemented yet, sorry!\n");
+}
+
 void UniformFilterOperation::process(FilteredAnitaEvent * ev) 
 {
 #ifdef USE_OMP

@@ -4,6 +4,7 @@
 class FilteredAnitaEvent; 
 class AnalysisWaveform; 
 #include "AnitaConventions.h" 
+#include "RawAnitaHeader.h"
 
 /** A FilteredOperation does things to the waveforms inside a FilteredAnitaEvent 
  *
@@ -22,6 +23,9 @@ class FilterOperation
  
     /**  operate on the FilteredAnitaEvent */ 
     virtual void process(FilteredAnitaEvent * event)= 0; 
+    
+		/**  operate on one waveform (ABL added moved this from UniformFitlerOperation so that FilterStrategy could call its this on single waveforms, and the weird argument structure is just so it matches ad sinsub) */ 
+    virtual void processOne(AnalysisWaveform* awf, const RawAnitaHeader * header = 0, int ant = 0, int pol = 0)= 0; 
 
 
     // If you want to output stuff to trees, define the output here 
@@ -57,10 +61,8 @@ class UniformFilterOperation : public FilterOperation
   public: 
     /** Processes an event, calling processOne on each waveform */ 
     virtual void process(FilteredAnitaEvent * event) ; 
+    virtual void processOne(AnalysisWaveform* awf, const RawAnitaHeader * header = 0, int ant = 0, int pol = 0)=0; 
     virtual ~UniformFilterOperation() {; } 
-
-    /** You only need to implement this method */ 
-    virtual void processOne(AnalysisWaveform * g) = 0; 
 
 }; 
 
@@ -88,6 +90,7 @@ class ConditionalFilterOperation : public FilterOperation
 
     virtual ~ConditionalFilterOperation(); 
     virtual void process(FilteredAnitaEvent * event); 
+    virtual void processOne(AnalysisWaveform* awf, const RawAnitaHeader * header = 0, int ant = 0, int pol = 0); 
 
   protected:
     bool (*fn)(FilteredAnitaEvent *, int, AnitaPol::AnitaPol_t);

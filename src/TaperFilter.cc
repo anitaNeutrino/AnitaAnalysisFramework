@@ -2,7 +2,7 @@
 #include "TMath.h" 
 #include "AnalysisWaveform.h" 
 
-void GaussianTaper::processOne(AnalysisWaveform* g) 
+void GaussianTaper::processOne(AnalysisWaveform* g, const RawAnitaHeader * header = 0, int ant = 0, int pol = 0) 
 {
 
 

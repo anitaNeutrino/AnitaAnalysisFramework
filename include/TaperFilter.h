@@ -23,7 +23,7 @@ class GaussianTaper : public UniformFilterOperation
                                   distance_ns,nsigma); 
     }
 
-    virtual void processOne(AnalysisWaveform *) ;
+    virtual void processOne(AnalysisWaveform *, const RawAnitaHeader *, int, int) ;
 
   private: 
     TString descStr; 
