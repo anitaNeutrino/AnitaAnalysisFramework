@@ -136,6 +136,7 @@ class CorrelationSummaryAnita4: public TObject
   double secondCorVals[NUM_CORRELATIONS_ANITA4][2]; ///< The peak of the next highest correlation values (tore both left and right vals).
   double secondCorTimes[NUM_CORRELATIONS_ANITA4][2]; ///< The time of the next highest correlation values (tore both left and right vals).
 
+  double expectedDeltaT[NUM_CORRELATIONS_ANITA4];/// The expected time delay for a pair of ants.
   //Time Thingies
   //  double deltaT[NUM_CORRELATIONS_ANITA4]; is maxCorTimes
   double deltaTErr[NUM_CORRELATIONS_ANITA4]; ///< The error on each of the 49 deltaTs (no idea right now what this means).
