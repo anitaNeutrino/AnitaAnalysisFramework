@@ -972,8 +972,11 @@ void AnitaEventSummary::findMostImpulsive(int whichMetric) const {
 	// select which impulsivity measure to use...
 	// 0 -> Cosmin's impulsivityMeasure
 	// 1 -> Ben's fracPowerWindowGradient()
- 	double val = whichMetric <= 0 ? wave.impulsivityMeasure : wave.fracPowerWindowGradient();
 	
+                                                                  // VERY IMPORTANT FACTOR OF -1 HERE
+                                                                  // as lower == better for this metric
+ 	double val = whichMetric <= 0 ? wave.impulsivityMeasure : -1*wave.fracPowerWindowGradient();
+
 	if(val > highestVal){
 	  highestVal = val;
 	  fMostImpulsiveIndex = peakInd;
