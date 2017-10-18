@@ -438,14 +438,14 @@ class AnitaEventSummary : public TObject
   const WaveformInfo& highestCoherentFiltered() const;
   const WaveformInfo& highestDeconvolvedFiltered() const;
 	
-	AnitaPol::AnitaPol_t mostImpulsivePol() const;
-  Int_t mostImpulsivePolAsInt() const;
-  Int_t mostImpulsiveInd() const;
-  const PointingHypothesis& mostImpulsivePeak() const;
-  const WaveformInfo& mostImpulsiveCoherent() const;
-  const WaveformInfo& mostImpulsiveDeconvolved() const;
-  const WaveformInfo& mostImpulsiveCoherentFiltered() const;
-  const WaveformInfo& mostImpulsiveDeconvolvedFiltered() const;
+  AnitaPol::AnitaPol_t mostImpulsivePol(int whichMetric=0) const;
+  Int_t mostImpulsivePolAsInt(int whichMetric=0) const;
+  Int_t mostImpulsiveInd(int whichMetric=0) const;
+  const PointingHypothesis& mostImpulsivePeak(int whichMetric=0) const;
+  const WaveformInfo& mostImpulsiveCoherent(int whichMetric=0) const;
+  const WaveformInfo& mostImpulsiveDeconvolved(int whichMetric=0) const;
+  const WaveformInfo& mostImpulsiveCoherentFiltered(int whichMetric=0) const;
+  const WaveformInfo& mostImpulsiveDeconvolvedFiltered(int whichMetric=0) const;
 
   inline Double_t weight(){return mc.weight > 0 ? mc.weight : 1;} /// Return the weight of the event, always returns 1 for data, the weight from MCTruth otherwise
   AnitaPol::AnitaPol_t trainingPol() const;
@@ -478,7 +478,7 @@ class AnitaEventSummary : public TObject
 
   void findHighestPeak() const;
   void findTrainingPeak() const;
-  void findMostImpulsive() const;
+  void findMostImpulsive(int whichMetric) const;
   void resetNonPersistent() const;
   const SourceHypothesis* sourceFromTag() const;
 
