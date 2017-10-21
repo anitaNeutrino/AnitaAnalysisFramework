@@ -203,7 +203,7 @@ int AnitaTMVA::evaluateTMVA(TTree * tree, const AnitaTMVA::MVAVarSet & vars, con
       {
         mem[i].f = mem[i].i; 
       }
-      if (isnan(mem[i].f)) 
+      if (std::isnan(mem[i].f)) 
       {
         printf("%s is nan in entry %d\n", vars.at(i).name, j); 
         found_a_nan = true; 
