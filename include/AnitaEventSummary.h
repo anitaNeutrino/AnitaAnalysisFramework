@@ -148,8 +148,8 @@ class AnitaEventSummary : public TObject
     Double32_t xPolPeakVal; //[0,4096,21]  /// Peak of xpol trace
     Double32_t xPolPeakHilbert; //[0,4096,21]  /// Peak of xpol hilbert Envelope
 
-    Double32_t I,Q,U,V;  // Stokes Parameters
-
+    Double32_t I,Q,U,V;  /// Integral Stokes Parameters (over the entire waveform) 
+    Double_t max_dI,max_dQ,max_dU,max_dV; /// instantanteous stokes parameters (computed at max_dI). If max_dI is too small, these will probably be nonsense. 
 
     Double32_t totalPower;  /// Total power in waveform
     Double32_t totalPowerXpol;  /// Total power in xPol waveform
@@ -201,7 +201,7 @@ class AnitaEventSummary : public TObject
     Double_t fracPowerWindowIntercept() const;
     Double_t fracPowerWindowChisquare() const;
 
-    ClassDefNV(WaveformInfo, 13);
+    ClassDefNV(WaveformInfo, 14);
 
    private:
     friend class AnitaEventSummary;
@@ -482,7 +482,7 @@ class AnitaEventSummary : public TObject
   void resetNonPersistent() const;
   const SourceHypothesis* sourceFromTag() const;
 
-  ClassDefNV(AnitaEventSummary, 32);
+  ClassDefNV(AnitaEventSummary, 33);
 };
 
 #endif
