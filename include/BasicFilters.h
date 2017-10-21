@@ -4,6 +4,7 @@
 #include "FilterOperation.h"
 #include "TString.h"
 #include "SystemResponse.h"
+#include "RawAnitaHeader.h"
 
 /** A set of basic filter operations that serve as examples and also should be quite useful */ 
 
@@ -40,7 +41,7 @@ class SimplePassBandFilter : public UniformFilterOperation
         descStr = TString::Format("SimplePassbandFilter(%g,%g)", low,high); 
     }
 
-    virtual void processOne(AnalysisWaveform *) ;
+    virtual void processOne(AnalysisWaveform *, const RawAnitaHeader * = 0, int = 0, int pol = 0) ;
 
   private: 
     TString descStr; 
@@ -63,7 +64,7 @@ class SimpleNotchFilter : public UniformFilterOperation
 
     const char * tag() const { return "SimpleNotchFilter"; } 
     const char * description() const { return desc.Data(); } 
-    virtual void processOne(AnalysisWaveform *); 
+    virtual void processOne(AnalysisWaveform *, const RawAnitaHeader * = 0, int = 0, int pol = 0); 
   private: 
     TString desc;  
     double min,max; 
@@ -83,10 +84,11 @@ class ALFASincFilter : public FilterOperation
     {
       if (AnitaVersion::get()!=3) return; 
 
-      pb.processOne( getWf(event, 4, AnitaPol::kHorizontal) ); 
+      pb.processOne( getWf(event, 4, AnitaPol::kHorizontal)); 
       //cross talk is strong in this one 
-      pb.processOne( getWf(event, 12, AnitaPol::kHorizontal) ); 
+      pb.processOne( getWf(event, 12, AnitaPol::kHorizontal)); 
     }
+		virtual void processOne(AnalysisWaveform * awf, const RawAnitaHeader * header=0, int ant=0, int pol = 0);
 
 
     const char * tag() const { return "ALFAFilter"; } 
@@ -137,7 +139,7 @@ class DigitalFilterOperation : public UniformFilterOperation
                           double delay_min_freq = 0.18/1.3, double delay_max_freq = 1); 
     const char * tag () const { return "DigitalFilter"; } 
     const char * description () const { return "DigitalFilter"; } 
-    virtual void processOne(AnalysisWaveform* wf); 
+    virtual void processOne(AnalysisWaveform* wf, const RawAnitaHeader * = 0, int ant = 0, int pol = 0); 
 
   private: 
     const FFTtools::DigitalFilter * digi; 
@@ -154,6 +156,7 @@ class ALFALanczosFilter : public FilterOperation
     const char * tag() const { return "ALFAFilter"; } 
     const char * description() const { return descStr.Data(); } 
     virtual void process(FilteredAnitaEvent * event) ; 
+		virtual void processOne(AnalysisWaveform * awf, const RawAnitaHeader * header=0, int ant=0, int pol = 0);
 
   private: 
     DigitalFilterOperation *pb; 
@@ -169,6 +172,7 @@ class ALFAButterworthFilter : public FilterOperation
     virtual ~ALFAButterworthFilter(); 
 
     virtual void process(FilteredAnitaEvent * event) ; 
+		virtual void processOne(AnalysisWaveform * awf, const RawAnitaHeader * header=0, int ant=0, int pol = 0);
 
     const char * tag() const { return "ALFAFilter"; } 
     const char * description() const { return descStr.Data(); } 
@@ -201,7 +205,7 @@ class DeglitchFilter : public UniformFilterOperation
      * */
     DeglitchFilter(double threshold_above_neighbors = 100, int n_neighbors = 9, RemoveAction action = DELETE, int max_remove = 10); 
     virtual ~DeglitchFilter() {;}
-    virtual void processOne(AnalysisWaveform *wf); 
+    virtual void processOne(AnalysisWaveform *wf, const RawAnitaHeader * = 0, int ant = 0, int pol = 0); 
     const char * tag() const { return "DeglitchFilter"; } 
     const char * description() const { return descStr.Data(); } 
        
@@ -233,6 +237,7 @@ class DeconvolveFilter : public FilterOperation
   virtual const char * description() const { return "DeconvolveFilter"; } 
 
   virtual void process(FilteredAnitaEvent * ev); 
+	virtual void processOne(AnalysisWaveform * awf, const RawAnitaHeader * header=0, int ant=0, int pol = 0);
       
 
  private: 

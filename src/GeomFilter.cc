@@ -69,7 +69,7 @@ void GeometricFilter::process(FilteredAnitaEvent* event) {
 
 }
 
-void GeometricFilter::processOne(AnalysisWaveform* wf) {
+void GeometricFilter::processOne(AnalysisWaveform* wf, const RawAnitaHeader * header, int ant, int pol) {
   printf("GeomFilter::processOne -- not implemented \n");
 }
 

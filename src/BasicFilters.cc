@@ -4,7 +4,7 @@
 #include "FFTWComplex.h"
 #include "ResponseManager.h"
 
-void SimplePassBandFilter::processOne(AnalysisWaveform* g) 
+void SimplePassBandFilter::processOne(AnalysisWaveform* g, const RawAnitaHeader * header, int ant, int pol) 
 {
   int nfreq = g->Nfreq(); 
   double df = g->deltaF(); 
@@ -22,7 +22,7 @@ void SimplePassBandFilter::processOne(AnalysisWaveform* g)
 }
 
 
-void SimpleNotchFilter::processOne(AnalysisWaveform* g) 
+void SimpleNotchFilter::processOne(AnalysisWaveform* g, const RawAnitaHeader * header, int ant, int pol) 
 {
 //  printf("SimpleNotchFilter::processOne!\n"); 
   int nfreq = g->Nfreq(); 
@@ -74,7 +74,7 @@ DigitalFilterOperation::DigitalFilterOperation(const FFTtools::DigitalFilter * d
 
 }
 
-void DigitalFilterOperation::processOne(AnalysisWaveform * wf) 
+void DigitalFilterOperation::processOne(AnalysisWaveform * wf, const RawAnitaHeader * header, int ant, int pol) 
 {
   TGraphAligned * g = wf->updateEven(); 
 
@@ -110,6 +110,11 @@ void ALFAButterworthFilter::process(FilteredAnitaEvent *event)
    pb->processOne( getWf(event, 12, AnitaPol::kHorizontal) ); 
 }
 
+void ALFAButterworthFilter::processOne(AnalysisWaveform* awf, const RawAnitaHeader* header, int ant, int pol)
+{
+	printf("processOne not implemented for this yet, sorry!\n");
+}
+
 
 ALFAButterworthFilter::~ALFAButterworthFilter()
 {
@@ -135,11 +140,21 @@ void ALFALanczosFilter::process(FilteredAnitaEvent *event)
    pb->processOne( getWf(event, 12, AnitaPol::kHorizontal) ); 
 }
 
+void ALFALanczosFilter::processOne(AnalysisWaveform* awf, const RawAnitaHeader* header, int ant, int pol)
+{
+	printf("processOne not implemented for this yet, sorry!\n");
+}
+
 
 ALFALanczosFilter::~ALFALanczosFilter()
 {
   delete pb; 
   delete filt;
+}
+
+void ALFASincFilter::processOne(AnalysisWaveform* awf, const RawAnitaHeader* header, int ant, int pol)
+{
+	printf("processOne not implemented for this yet, sorry!\n");
 }
 
 
@@ -158,6 +173,11 @@ void AnitaResponse::DeconvolveFilter::process(FilteredAnitaEvent * ev)
     int ant = i /2; 
     rm->response(pol,ant)->deconvolveInPlace(getWf(ev,ant,pol), dm); 
   }
+}
+
+void AnitaResponse::DeconvolveFilter::processOne(AnalysisWaveform* awf, const RawAnitaHeader* header, int ant, int pol)
+{
+	printf("processOne not implemented for this yet, sorry!\n");
 }
 
 
@@ -179,7 +199,7 @@ static double max_abs(int n, const double * y)
   return max; 
 }
 
-void DeglitchFilter::processOne(AnalysisWaveform * wf) 
+void DeglitchFilter::processOne(AnalysisWaveform * wf, const RawAnitaHeader * header, int ant, int pol) 
 {
 
   TGraphAligned * g = action == DELETE ? wf->updateUneven() : wf->updateEven(); 

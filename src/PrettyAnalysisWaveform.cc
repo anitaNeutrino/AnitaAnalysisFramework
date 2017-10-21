@@ -733,6 +733,11 @@ CorrelationSummaryAnita4 *PrettyAnalysisWaveform::getCorrelationSummaryAnita4(In
 //    	     << "\t" << istat << std::endl;
    theSum->setFitResults(phiWave,thetaWave,phiWaveErr,thetaWaveErr,fmin);
 
+   for(int corInd=0;corInd<NUM_CORRELATIONS_ANITA4;corInd++) {
+      //fill the expected Time delay
+      theSum->expectedDeltaT[corInd] = theSum->getDeltaTExpected(phiWave, thetaWave, corInd);
+    }
+
 
 
    return theSum;

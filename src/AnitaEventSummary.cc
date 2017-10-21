@@ -215,14 +215,23 @@ const AnitaEventSummary::WaveformInfo& AnitaEventSummary::highestDeconvolvedFilt
   return deconvolved_filtered[fHighestPol][fHighestPeakIndex];
 }
 
+
+
+
+
+
+
+
+
 /** 
  * Utility function to get the polarisation of the most impulsive deconvolved coherently summed wf
  * Useful for TTree::Draw() 
+ * @param param whichMetric 0 for Cosmin's impulsivityMeasure, 1 for Ben's fracPowerWindowGradient() (default = 0)
  * 
  * @return the polarisation of the most impulsive deconvolved coherently summed wf
  */
-AnitaPol::AnitaPol_t AnitaEventSummary::mostImpulsivePol() const{
-  findMostImpulsive();
+AnitaPol::AnitaPol_t AnitaEventSummary::mostImpulsivePol(int whichMetric) const{
+  findMostImpulsive(whichMetric);
   return fMostImpulsivePol;
 }
 
@@ -230,11 +239,12 @@ AnitaPol::AnitaPol_t AnitaEventSummary::mostImpulsivePol() const{
 /** 
  * Utility function to get the polarisation of the most impulsive deconvolved wf
  * Useful for TTree::Draw()
+ * @param param whichMetric 0 for Cosmin's impulsivityMeasure, 1 for Ben's fracPowerWindowGradient() (default = 0)
  * 
  * @return the polarisation of the most impulsive deconvolved wf
  */
-int AnitaEventSummary::mostImpulsivePolAsInt() const{
-  findMostImpulsive();
+int AnitaEventSummary::mostImpulsivePolAsInt(int whichMetric) const{
+  findMostImpulsive(whichMetric);
   return int(fMostImpulsivePol);
 }
 
@@ -242,11 +252,12 @@ int AnitaEventSummary::mostImpulsivePolAsInt() const{
 /** 
  * Utility function to get the index of the most impulsive deconvolved wf
  * Useful for TTree::Draw()
+ * @param param whichMetric 0 for Cosmin's impulsivityMeasure, 1 for Ben's fracPowerWindowGradient() (default = 0)
  * 
  * @return the index of the most impulsive deconvolved wf
  */
-int AnitaEventSummary::mostImpulsiveInd() const{
-  findMostImpulsive();
+int AnitaEventSummary::mostImpulsiveInd(int whichMetric) const{
+  findMostImpulsive(whichMetric);
   return fMostImpulsiveIndex;
 }
 
@@ -255,11 +266,12 @@ int AnitaEventSummary::mostImpulsiveInd() const{
 /** 
  * Utility function to return a const reference to the map peak corresponding to the most impulsive deconvolved wf
  * Useful for TTree::Draw() 
+ * @param param whichMetric 0 for Cosmin's impulsivityMeasure, 1 for Ben's fracPowerWindowGradient() (default = 0)
  * 
  * @return the peak with most impulsive deconvolved wf
  */
-const AnitaEventSummary::PointingHypothesis& AnitaEventSummary::mostImpulsivePeak() const{
-  findMostImpulsive();
+const AnitaEventSummary::PointingHypothesis& AnitaEventSummary::mostImpulsivePeak(int whichMetric) const{
+  findMostImpulsive(whichMetric);
   return peak[fMostImpulsivePol][fMostImpulsiveIndex];
 }
 
@@ -267,11 +279,12 @@ const AnitaEventSummary::PointingHypothesis& AnitaEventSummary::mostImpulsivePea
 /** 
  * Utility function to return a const reference to the the unfiltered coherently summed waveform info of the polarisation of the most impulsive deconvolved wf
  * Useful for TTree::Draw() 
+ * @param param whichMetric 0 for Cosmin's impulsivityMeasure, 1 for Ben's fracPowerWindowGradient() (default = 0)
  * 
  * @return the unfiltered coherently summed waveform info corresponding to the most impulsive deconvolved wf
  */
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mostImpulsiveCoherent() const{
-  findMostImpulsive();
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mostImpulsiveCoherent(int whichMetric) const{
+  findMostImpulsive(whichMetric);
   return coherent[fMostImpulsivePol][fMostImpulsiveIndex];
 }
 
@@ -279,11 +292,12 @@ const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mostImpulsiveCoherent(
 /** 
  * Utility function to return a const reference to the the most impulsive unfiltered, deconvolved coherently summed waveform info
  * Useful for TTree::Draw() 
+ * @param param whichMetric 0 for Cosmin's impulsivityMeasure, 1 for Ben's fracPowerWindowGradient() (default = 0)
  * 
  * @return the most impulsive unfiltered, deconvolved coherently summed waveform info
  */
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mostImpulsiveDeconvolved() const{
-  findMostImpulsive();
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mostImpulsiveDeconvolved(int whichMetric) const{
+  findMostImpulsive(whichMetric);
   return deconvolved[fMostImpulsivePol][fMostImpulsiveIndex];
 }
 
@@ -293,11 +307,12 @@ const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mostImpulsiveDeconvolv
 /** 
  * Utility function to return a const reference to the the filtered coherently summed waveform info of the polarisation of the most impulsive deconvolved wf
  * Useful for TTree::Draw() 
+ * @param param whichMetric 0 for Cosmin's impulsivityMeasure, 1 for Ben's fracPowerWindowGradient() (default = 0)
  * 
  * @return the filtered coherently summed waveform info corresponding to the most impulsive deconvolved wf
  */
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mostImpulsiveCoherentFiltered() const{
-  findMostImpulsive();
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mostImpulsiveCoherentFiltered(int whichMetric) const{
+  findMostImpulsive(whichMetric);
   return coherent_filtered[fMostImpulsivePol][fMostImpulsiveIndex];
 }
 
@@ -305,11 +320,12 @@ const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mostImpulsiveCoherentF
 /** 
  * Utility function to return a const reference to the the filtered, deconvolved coherently summed waveform info of the polarisation of the most impulsive deconvolved wf
  * Useful for TTree::Draw() 
+ * @param param whichMetric 0 for Cosmin's impulsivityMeasure, 1 for Ben's fracPowerWindowGradient() (default = 0)
  * 
  * @return the filtered, deconvolved coherently summed waveform info corresponding to the most impulsive deconvolved wf
  */
-const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mostImpulsiveDeconvolvedFiltered() const{
-  findMostImpulsive();
+const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mostImpulsiveDeconvolvedFiltered(int whichMetric) const{
+  findMostImpulsive(whichMetric);
   return deconvolved_filtered[fMostImpulsivePol][fMostImpulsiveIndex];
 }
 
@@ -936,21 +952,39 @@ void AnitaEventSummary::findHighestPeak() const {
   }
 }
 
-void AnitaEventSummary::findMostImpulsive() const {
+
+/** 
+ * Find the most impulsive peak candidate direction, choose impusivity metric with whichMetric
+ * 
+ * @param whichMetric 0 for Cosmin's impulsivityMeasure, 1 for Ben's fracPowerWindowGradient() (default = 0)
+ */
+void AnitaEventSummary::findMostImpulsive(int whichMetric) const {
   resetNonPersistent();
   if(fMostImpulsiveIndex < 0){ // then we've not done this before
     double highestVal = -1e99;
+
     for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
       AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
       for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
-        if(deconvolved[polInd][peakInd].impulsivityMeasure > highestVal){
-          highestVal = deconvolved[polInd][peakInd].impulsivityMeasure;
-          fMostImpulsiveIndex = peakInd;
-          fMostImpulsivePol = pol;
-        }
+
+	const WaveformInfo& wave = deconvolved_filtered[polInd][peakInd];
+
+	// select which impulsivity measure to use...
+	// 0 -> Cosmin's impulsivityMeasure
+	// 1 -> Ben's fracPowerWindowGradient()
+	
+                                                                  // VERY IMPORTANT FACTOR OF -1 HERE
+                                                                  // as lower == better for this metric
+ 	double val = whichMetric <= 0 ? wave.impulsivityMeasure : -1*wave.fracPowerWindowGradient();
+
+	if(val > highestVal){
+	  highestVal = val;
+	  fMostImpulsiveIndex = peakInd;
+	  fMostImpulsivePol = pol;
+	}
       }
     }
-  }
+  }  
 }
 
 
