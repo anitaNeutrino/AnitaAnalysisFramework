@@ -171,17 +171,19 @@ int AnitaTMVA::evaluateTMVA(TTree * tree, const AnitaTMVA::MVAVarSet & vars, con
       return 1; 
     }
 
-    if (vars.at(i).spectator) continue; 
+//    if (vars.at(i).spectator) continue; 
 
+    int tmp; 
     switch(vars.at(i).type)
     {
       case 'I':
          tree->SetBranchAddress(vars.at(i).name, &mem[i].i); 
-         reader.AddVariable(vars.at(i).name, &mem[i].f); //ugh ??!? 
+         vars.at(i).spectator ? reader.AddSpectator(vars.at(i).name, &mem[i].f) : reader.AddVariable(vars.at(i).name, &mem[i].f);
+         break; 
       case 'F':
       default:
          tree->SetBranchAddress(vars.at(i).name, &mem[i].f); 
-         reader.AddVariable(vars.at(i).name, &mem[i].f); 
+         vars.at(i).spectator ? reader.AddSpectator(vars.at(i).name, &mem[i].f) : reader.AddVariable(vars.at(i).name, &mem[i].f); //ugh ??!? 
          break;
     }
   }
@@ -193,11 +195,21 @@ int AnitaTMVA::evaluateTMVA(TTree * tree, const AnitaTMVA::MVAVarSet & vars, con
   for (int j = 0; j < tree->GetEntries(); j++) 
   {
     tree->GetEntry(j); 
-    if (vars.at(j).type == 'I') 
+    bool found_a_nan = false; 
+    for (int i = 0; i < vars.N(); i++) 
     {
-      mem[j].f = mem[j].i; 
+      if (vars.at(i).type == 'I') 
+      {
+        mem[i].f = mem[i].i; 
+      }
+      if (isnan(mem[i].f)) 
+      {
+        printf("%s is nan in entry %d\n", vars.at(i).name, j); 
+        found_a_nan = true; 
+      }
     }
-    value = reader.EvaluateMVA(branch_name,aux); 
+
+    value = found_a_nan ? -999 : reader.EvaluateMVA(branch_name,aux); 
     b->Fill(); 
   }
 
