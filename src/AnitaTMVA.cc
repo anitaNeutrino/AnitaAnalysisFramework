@@ -5,7 +5,7 @@
 #include "TString.h" 
 #include <stdlib.h> 
 #include <sstream>
-#include <math.h> 
+#include <cmath> 
 
 
 
