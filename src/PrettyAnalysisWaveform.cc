@@ -28,6 +28,7 @@ void CorSumFCNanita4(Int_t& npar, Double_t*gin,
 PrettyAnalysisWaveform::PrettyAnalysisWaveform(UsefulAnitaEvent* uae, FilterStrategy* strategy, Adu5Pat* pat, RawAnitaHeader* header):FilteredAnitaEvent(uae, strategy, pat, header) {
 fPassBandFilter=0;
 fNotchFilter=0;
+fPat = pat;
 }
 
 AnalysisWaveform* PrettyAnalysisWaveform::getCorrelation(int chanIndex1, int chanIndex2) 
@@ -692,46 +693,57 @@ CorrelationSummaryAnita4 *PrettyAnalysisWaveform::getCorrelationSummaryAnita4(In
 			delete grCor;
 			delete wfCorr;
    }
-
-   //Will add a call to
+    
+   // //Will add a call to
    theSum->fillErrorsAndFit();
 
-   //Set up MINUIT for the fit
-   static int firstTime=1;
-   if(firstTime) {
-      gMinuit = new TMinuit(2);
-      firstTime=0;
-   }
-   gMinuit->SetObjectFit(theSum);  
-   gMinuit->SetFCN(CorSumFCNanita4);
-   double par[2]={theSum->fAntPhi[1][0],0};               // the start values
-   double stepSize[2]={0.01,0.01};          // step sizes 
-   double minVal[2]={0,-1*TMath::PiOver2()};            // minimum bound on parameter 
-   double maxVal[2]={TMath::TwoPi(),TMath::PiOver2()};            // maximum bound on parameter
-   char parName[2][20];
-   sprintf(parName[0],"phiWave");
-   sprintf(parName[1],"thetaWave");
-   for (int i=0; i<2; i++){
-      gMinuit->DefineParameter(i, parName[i], par[i], stepSize[i], minVal[i], maxVal[i]);
-   }
+
+// comment out by peng, because this thetaWave phiWave is calculated from a too simple minimization funciton(not a interferometric map). 
+//So the result is useless.
+   // //Set up MINUIT for the fit
+   // static int firstTime=1;
+   // if(firstTime) {
+   //    gMinuit = new TMinuit(2);
+   //    firstTime=0;
+   // }
+   // gMinuit->SetObjectFit(theSum);  
+   // gMinuit->SetFCN(CorSumFCNanita4);
+   // double par[2]={theSum->fAntPhi[1][0],0};               // the start values
+   // double stepSize[2]={0.01,0.01};          // step sizes 
+   // double minVal[2]={0,-1*TMath::PiOver2()};            // minimum bound on parameter 
+   // double maxVal[2]={TMath::TwoPi(),TMath::PiOver2()};            // maximum bound on parameter
+   // char parName[2][20];
+   // sprintf(parName[0],"phiWave");
+   // sprintf(parName[1],"thetaWave");
+   // for (int i=0; i<2; i++){
+   //    gMinuit->DefineParameter(i, parName[i], par[i], stepSize[i], minVal[i], maxVal[i]);
+   // }
    
-   Double_t phiWave,thetaWave;
-   Double_t phiWaveErr,thetaWaveErr;
-   //do the fit and get the answers
-   gMinuit->SetPrintLevel(-1);
+   // Double_t phiWave,thetaWave;
+   // Double_t phiWaveErr,thetaWaveErr;
+   // //do the fit and get the answers
+   // gMinuit->SetPrintLevel(-1);
 
-   gMinuit->Migrad();       // Minuit's best minimization algorithm   
+   // gMinuit->Migrad();       // Minuit's best minimization algorithm   
 
-   gMinuit->GetParameter(0,phiWave,phiWaveErr);
-   gMinuit->GetParameter(1,thetaWave,thetaWaveErr);
+   // gMinuit->GetParameter(0,phiWave,phiWaveErr);
+   // gMinuit->GetParameter(1,thetaWave,thetaWaveErr);
 
+//    Int_t npari,nparx,istat;
+//    Double_t fmin,fedm,errdef;
+//    gMinuit->mnstat(fmin,fedm,errdef,npari,nparx,istat);
+// //    std::cout << fmin << "\t" << fedm << "\t" << npari << "\t" << nparx 
+// //    	     << "\t" << istat << std::endl;
+//    theSum->setFitResults(phiWave,thetaWave,phiWaveErr,thetaWaveErr,fmin);
 
-   Int_t npari,nparx,istat;
-   Double_t fmin,fedm,errdef;
-   gMinuit->mnstat(fmin,fedm,errdef,npari,nparx,istat);
-//    std::cout << fmin << "\t" << fedm << "\t" << npari << "\t" << nparx 
-//    	     << "\t" << istat << std::endl;
-   theSum->setFitResults(phiWave,thetaWave,phiWaveErr,thetaWaveErr,fmin);
+///comment out ended.
+
+   // The better way is just use adu5 and get expected Wais theta and phi.
+  Double_t phiWave,thetaWave;
+  UsefulAdu5Pat* usefulPat = new UsefulAdu5Pat(fPat);
+  usefulPat->getThetaAndPhiWave(AnitaLocations::LONGITUDE_WAIS_A4, AnitaLocations::LATITUDE_WAIS_A4, AnitaLocations::ALTITUDE_WAIS_A4, thetaWave, phiWave);
+  theSum->thetaWave = thetaWave;
+  theSum->phiWave = phiWave;
 
    for(int corInd=0;corInd<NUM_CORRELATIONS_ANITA4;corInd++) {
       //fill the expected Time delay

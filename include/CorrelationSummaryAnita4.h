@@ -155,8 +155,6 @@ class CorrelationSummaryAnita4: public TObject
   Double_t fAntZ[NUM_CORRELATIONS_ANITA4][2]; ///< A lookup table for antenna postions.
   
   
-
-
   ClassDef(CorrelationSummaryAnita4,4); ///< One of ROOT's magic macros.
 };
 

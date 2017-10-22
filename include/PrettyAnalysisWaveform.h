@@ -3,6 +3,7 @@
 #ifndef PRETTYANALYSISWAVEFORM_H
 #define PRETTYANALYSISWAVEFORM_H
 #include "UsefulAnitaEvent.h"
+#include "UsefulAdu5Pat.h"
 #include "CorrelationSummary.h"
 #include "CorrelationSummaryAnita4.h"
 #include "AnalysisWaveform.h"
@@ -113,6 +114,7 @@ class PrettyAnalysisWaveform: public FilteredAnitaEvent
 
  private:
 
+  Adu5Pat* fPat;  ///< a pointer to the gps information.
   Double_t fDeltaT; ///< The interpolated sampling rate.
   Double_t fWaveOffset; ///< The difference in T0 of two channels.
   Int_t fPassBandFilter; ///< Whether or not to pass band filter the interpolated waves;
