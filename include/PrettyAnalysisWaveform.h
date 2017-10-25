@@ -6,6 +6,7 @@
 #include "UsefulAdu5Pat.h"
 #include "CorrelationSummary.h"
 #include "CorrelationSummaryAnita4.h"
+#include "AllCorrelationSummaryAnita4.h"
 #include "AnalysisWaveform.h"
 #include "AnitaGeomTool.h"
 #include "AnitaConventions.h"
@@ -86,6 +87,7 @@ class PrettyAnalysisWaveform: public FilteredAnitaEvent
     \return A pointer to the CorrelationSummaryAnita3 object that is created.
   */  
   CorrelationSummaryAnita4 *getCorrelationSummaryAnita4(Int_t centreAnt,AnitaPol::AnitaPol_t pol,Int_t deltaT, Int_t eventNumber);
+  AllCorrelationSummaryAnita4 *getAllCorrelationSummaryAnita4(Int_t centreAnt,AnitaPol::AnitaPol_t pol, Int_t deltaT, Int_t eventNumber);
 
 
   AnalysisWaveform *getCorrelation(int chanIndex1, int chanIndex2); ///< Wrapper around FFTtools::getCorrelationGraph

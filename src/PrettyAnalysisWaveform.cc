@@ -16,12 +16,16 @@ ClassImp(PrettyAnalysisWaveform);
 void CorSumFCNanita4(Int_t& npar, Double_t*gin,
                        Double_t&f, Double_t* par, Int_t flag)
 {
+  return;
    //par[0] is phiWave
    //par[1] is thetaWave
    //par[2] is numAnts (11 or 19)
 
-  CorrelationSummaryAnita4* myDodgyCorSumPtr = dynamic_cast<CorrelationSummaryAnita4*>(gMinuit->GetObjectFit());
-  f=myDodgyCorSumPtr->getChiSquared(par[0],par[1],11);
+  // CorrelationSummaryAnita4* myDodgyCorSumPtr = dynamic_cast<CorrelationSummaryAnita4*>(gMinuit->GetObjectFit());
+  // f=myDodgyCorSumPtr->getChiSquared(par[0],par[1],11);
+
+  //  AllCorrelationSummaryAnita4* myAllCorSumPtr = dynamic_cast<AllCorrelationSummaryAnita4*>(gMinuit->GetObjectFit());
+  // f=myAllCorSumPtr->getChiSquared(par[0],par[1],11);
   //  std::cout << par[0] << "\t" << par[1] << "\t" << f << std::endl;
 }
 
@@ -508,126 +512,8 @@ CorrelationSummaryAnita4 *PrettyAnalysisWaveform::getCorrelationSummaryAnita4(In
    for(int i=0;i<6;i++)
       theSum->nextSixAnts[i]=nextSixAnts[i];
 
-
-   //Now need to make correlation index pairs
-   //Top-Bottom first
-   theSum->firstAnt[0]=nineAnts[0];
-   theSum->secondAnt[0]=nineAnts[3];
-   theSum->firstAnt[1]=nineAnts[1];
-   theSum->secondAnt[1]=nineAnts[4];
-   theSum->firstAnt[2]=nineAnts[2];
-   theSum->secondAnt[2]=nineAnts[5];
-   theSum->firstAnt[3]=nineAnts[3];
-   theSum->secondAnt[3]=nineAnts[6];
-   theSum->firstAnt[4]=nineAnts[4];
-   theSum->secondAnt[4]=nineAnts[7];
-   theSum->firstAnt[5]=nineAnts[5];
-   theSum->secondAnt[5]=nineAnts[8];
-   //Now Left-Right
-   theSum->firstAnt[6]=nineAnts[0];
-   theSum->secondAnt[6]=nineAnts[1];
-   theSum->firstAnt[7]=nineAnts[1];
-   theSum->secondAnt[7]=nineAnts[2];
-   theSum->firstAnt[8]=nineAnts[3];
-   theSum->secondAnt[8]=nineAnts[4];
-   theSum->firstAnt[9]=nineAnts[4];
-   theSum->secondAnt[9]=nineAnts[5];
-   theSum->firstAnt[10]=nineAnts[6];
-   theSum->secondAnt[10]=nineAnts[7];
-   theSum->firstAnt[11]=nineAnts[7];
-   theSum->secondAnt[11]=nineAnts[8];
-   //Now Diagonal
-   theSum->firstAnt[12]=nineAnts[0];
-   theSum->secondAnt[12]=nineAnts[4];
-   theSum->firstAnt[13]=nineAnts[2];
-   theSum->secondAnt[13]=nineAnts[4];
-   theSum->firstAnt[14]=nineAnts[6];
-   theSum->secondAnt[14]=nineAnts[4];
-   theSum->firstAnt[15]=nineAnts[8];
-   theSum->secondAnt[15]=nineAnts[4];
-   theSum->firstAnt[16]=nineAnts[1];
-   theSum->secondAnt[16]=nineAnts[3];
-   theSum->firstAnt[17]=nineAnts[1];
-   theSum->secondAnt[17]=nineAnts[5];
-   theSum->firstAnt[18]=nineAnts[3];
-   theSum->secondAnt[18]=nineAnts[7];
-   theSum->firstAnt[19]=nineAnts[7];
-   theSum->secondAnt[19]=nineAnts[5];
-   //Now Leftmost - centre or centre - rightmost 
-   theSum->firstAnt[20]=nextSixAnts[0];
-   theSum->secondAnt[20]=nineAnts[1];
-   theSum->firstAnt[21]=nineAnts[1];
-   theSum->secondAnt[21]=nextSixAnts[1];
-   theSum->firstAnt[22]=nextSixAnts[2];
-   theSum->secondAnt[22]=nineAnts[4];
-   theSum->firstAnt[23]=nineAnts[4];
-   theSum->secondAnt[23]=nextSixAnts[3];
-   theSum->firstAnt[24]=nextSixAnts[4];
-   theSum->secondAnt[24]=nineAnts[7];
-   theSum->firstAnt[25]=nineAnts[7];
-   theSum->secondAnt[25]=nextSixAnts[5];
-   //Now Leftmost - left or right-rightmost
-   theSum->firstAnt[26]=nextSixAnts[0];
-   theSum->secondAnt[26]=nineAnts[0];
-   theSum->firstAnt[27]=nineAnts[2];
-   theSum->secondAnt[27]=nextSixAnts[1];
-   theSum->firstAnt[28]=nextSixAnts[2];
-   theSum->secondAnt[28]=nineAnts[3];
-   theSum->firstAnt[29]=nineAnts[5];
-   theSum->secondAnt[29]=nextSixAnts[3];
-   theSum->firstAnt[30]=nextSixAnts[4];
-   theSum->secondAnt[30]=nineAnts[6];
-   theSum->firstAnt[31]=nineAnts[8];
-   theSum->secondAnt[31]=nextSixAnts[5];
-   // Now diagonals to LM and RM
-   theSum->firstAnt[32]=nextSixAnts[0];
-   theSum->secondAnt[32]=nineAnts[3];
-   theSum->firstAnt[33]=nextSixAnts[4];
-   theSum->secondAnt[33]=nineAnts[3];
-   theSum->firstAnt[34]=nextSixAnts[1];
-   theSum->secondAnt[34]=nineAnts[5];
-   theSum->firstAnt[35]=nextSixAnts[5];
-   theSum->secondAnt[35]=nineAnts[5];
-   // Now bottom to top
-   theSum->firstAnt[36]=nextSixAnts[0];
-   theSum->secondAnt[36]=nextSixAnts[4];
-   theSum->firstAnt[37]=nineAnts[0];
-   theSum->secondAnt[37]=nineAnts[6];
-   theSum->firstAnt[38]=nineAnts[1];
-   theSum->secondAnt[38]=nineAnts[7];
-   theSum->firstAnt[39]=nineAnts[2];
-   theSum->secondAnt[39]=nineAnts[8];
-   theSum->firstAnt[40]=nextSixAnts[1];
-   theSum->secondAnt[40]=nextSixAnts[5];
-   // Now top to bottom displaced right
-   theSum->firstAnt[41]=nextSixAnts[0];
-   theSum->secondAnt[41]=nineAnts[6];
-   theSum->firstAnt[42]=nineAnts[0];
-   theSum->secondAnt[42]=nineAnts[7];
-   theSum->firstAnt[43]=nineAnts[1];
-   theSum->secondAnt[43]=nineAnts[8];
-   theSum->firstAnt[44]=nineAnts[2];
-   theSum->secondAnt[44]=nextSixAnts[5];
-   // Now top to bottom displaced left
-   theSum->firstAnt[45]=nineAnts[0];
-   theSum->secondAnt[45]=nextSixAnts[4];
-   theSum->firstAnt[46]=nineAnts[1];
-   theSum->secondAnt[46]=nineAnts[6];
-   theSum->firstAnt[47]=nineAnts[2];
-   theSum->secondAnt[47]=nineAnts[7];
-   theSum->firstAnt[48]=nextSixAnts[1];
-   theSum->secondAnt[48]=nineAnts[8];
-   // horizontal across center
-   theSum->firstAnt[49]  = nineAnts[0];
-   theSum->secondAnt[49] = nineAnts[2];
-   theSum->firstAnt[50]  = nineAnts[3];
-   theSum->secondAnt[50] = nineAnts[5];
-   theSum->firstAnt[51]  = nineAnts[6];
-   theSum->secondAnt[51] = nineAnts[8];
-   
-
    //Now can make correlations and find max, rms, etc.
-   for(int corInd=0;corInd<NUM_CORRELATIONS_ANITA4;corInd++) {
+   for(int corInd=0;corInd<NUM_ALLCORRELATIONS_ANITA4;corInd++) {
       //      std::cout << corInd << "\t" << theSum->firstAnt[corInd] << "\t" << theSum->secondAnt[corInd] << "\n";
       Int_t ci1=AnitaGeomTool::getChanIndexFromAntPol(theSum->firstAnt[corInd],pol);
       Int_t ci2=AnitaGeomTool::getChanIndexFromAntPol(theSum->secondAnt[corInd],pol);
@@ -745,7 +631,7 @@ CorrelationSummaryAnita4 *PrettyAnalysisWaveform::getCorrelationSummaryAnita4(In
   theSum->thetaWave = thetaWave;
   theSum->phiWave = phiWave;
 
-   for(int corInd=0;corInd<NUM_CORRELATIONS_ANITA4;corInd++) {
+   for(int corInd=0;corInd<NUM_ALLCORRELATIONS_ANITA4;corInd++) {
       //fill the expected Time delay
       theSum->expectedDeltaT[corInd] = theSum->getDeltaTExpected(phiWave, thetaWave, corInd);
     }
@@ -754,4 +640,56 @@ CorrelationSummaryAnita4 *PrettyAnalysisWaveform::getCorrelationSummaryAnita4(In
 
    return theSum;
 }
+
+
+AllCorrelationSummaryAnita4 *PrettyAnalysisWaveform::getAllCorrelationSummaryAnita4(Int_t centreAnt,AnitaPol::AnitaPol_t pol, Int_t deltaT, Int_t eventNumber)
+{
+  if(centreAnt<0) centreAnt=getMaxAntenna(pol);
+   AllCorrelationSummaryAnita4 *theSum = new AllCorrelationSummaryAnita4(eventNumber, centreAnt);
+   // fill the thetaWave and phiWave
+  Double_t phiWave,thetaWave;
+  UsefulAdu5Pat* usefulPat = new UsefulAdu5Pat(fPat);
+  usefulPat->getThetaAndPhiWave(AnitaLocations::LONGITUDE_WAIS_A4, AnitaLocations::LATITUDE_WAIS_A4, AnitaLocations::ALTITUDE_WAIS_A4, thetaWave, phiWave);
+  theSum->thetaWave = thetaWave;
+  theSum->phiWave = phiWave;
+  int corInd = 0;
+   //Now we can make correlations an
+  for(int i = 0; i < 14; i++){
+    for(int j = i + 1; j < 15; j++){
+      int ant1 = theSum->fifteenAnts[i];
+      int ant2 = theSum->fifteenAnts[j];
+      if((ant2-ant1+16+2)%16>4){  // do not consider ant pair that separate larger than 2 phi sectors
+        continue;
+      } 
+      // start filling the pair
+      Int_t ci1=AnitaGeomTool::getChanIndexFromAntPol(ant1,pol);
+      Int_t ci2=AnitaGeomTool::getChanIndexFromAntPol(ant2,pol);
+      AnalysisWaveform* wfCorr=getCorrelationInterpolated(ant1, ant2, pol, deltaT);
+      TGraph* grCor = new TGraph(wfCorr->even()->GetN(), wfCorr->even()->GetX(), wfCorr->even()->GetY());
+      double *theTimes = grCor->GetX();
+      double *theValues = grCor->GetY();
+      int numPoints=grCor->GetN();
+      double rmsVal=TMath::RMS(numPoints,theValues);
+      int maxIndex=TMath::LocMax(numPoints,theValues);
+      theSum->maxCorVals[corInd]=theValues[maxIndex];
+      theSum->maxCorTimes[corInd]=theTimes[maxIndex];
+      
+      theSum->firstAnt[corInd] = ant1;
+      theSum->secondAnt[corInd] = ant2;
+      corInd++;
+      delete grCor;
+      delete wfCorr;
+    }
+  }
+  theSum->fillAntPositions();
+  for(int corInd=0; corInd<78; corInd++){
+    theSum->expectedDeltaT[corInd] = theSum->getDeltaTExpected(phiWave, thetaWave, corInd);
+  }
+  return theSum;
+}
+    
+
+ 
+
+
 

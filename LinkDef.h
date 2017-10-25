@@ -20,6 +20,7 @@
 #pragma link C++ class PrettyAnalysisWaveform+;
 #pragma link C++ class TGraphAligned+;
 #pragma link C++ class CorrelationSummaryAnita4+;
+#pragma link C++ class AllCorrelationSummaryAnita4+;
 
 #pragma link C++ class AnitaTemplateSummary+;
 #pragma link C++ class AnitaTemplateSummary::SingleTemplateResult+;
