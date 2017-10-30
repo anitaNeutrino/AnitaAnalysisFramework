@@ -438,6 +438,7 @@ class AnitaEventSummary : public TObject
   const WaveformInfo& highestCoherentFiltered() const;
   const WaveformInfo& highestDeconvolvedFiltered() const;
 	
+	static void setThresholdForMostImpulsive(double threshold); /// value between 0 and 1, will find the brightest peak that is within threshold as impulsive as the most impulsive peak
   AnitaPol::AnitaPol_t mostImpulsivePol(int whichMetric=0) const;
   Int_t mostImpulsivePolAsInt(int whichMetric=0) const;
   Int_t mostImpulsiveInd(int whichMetric=0) const;
