@@ -136,6 +136,10 @@ class AnalysisWaveform
     /** Copy constructor. Will not blindly copy everything (like it won't bother copying anything that will have to be recalculated on its next access */ 
     AnalysisWaveform(const AnalysisWaveform & other);  
 
+
+    AnalysisWaveform & operator=(const AnalysisWaveform & other); 
+
+
     /** Computes the (circular) correlation (in the frequency domain) of the two waveforms as a new waveform. Note that if you want to
      * correlate two traces, they should be padded first. This does not pad them for you, but will complain if they are not! To turn off the nagging, see below function. It is also assumed the two are of the same length.
      *

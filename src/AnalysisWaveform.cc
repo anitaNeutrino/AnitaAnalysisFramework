@@ -905,6 +905,54 @@ double AnalysisWaveform::evalEven(double t, EvenEvaluationType typ)  const
   return 0; 
 }
 
+AnalysisWaveform & AnalysisWaveform::operator=(const AnalysisWaveform & other) 
+{
+  if (this != &other) 
+  {
+    g_uneven.adopt(&other.g_uneven); 
+    g_even.adopt(&other.g_even); 
+    
+    dt = other.dt; 
+    df = other.df; 
+    interpolation_type = other.interpolation_type; 
+    interpolation_options = other.interpolation_options; 
+
+    uneven_equals_even = other.uneven_equals_even; 
+    must_update_even = other.must_update_even; 
+    must_update_freq = other.must_update_freq; 
+    must_update_uneven = other.must_update_uneven; 
+    just_padded = other.just_padded; 
+    force_even_size = other.force_even_size; 
+  //  printf("%d\n", force_even_size); 
+
+
+    //don't bother copying these, they can be regenerated if needed
+    power_dirty = true; 
+    power_db_dirty = true; 
+    phase_dirty = true; 
+    group_delay_dirty = true; 
+    hilbert_dirty = true; 
+    hilbert_envelope_dirty = true; 
+    hilbert_transform = 0; 
+
+    
+    fft_len = g_even.GetN()/2+1;
+
+    if (!must_update_freq)
+    {
+      int ret = posix_memalign( (void**) &fft, ALIGNMENT, sizeof(FFTWComplex) * fft_len);
+      assert(!ret);
+      memcpy(fft, other.fft, fft_len * sizeof(FFTWComplex)); 
+    }
+    else
+    {
+      fft = 0; 
+    }
+  }
+
+  return *this; 
+}
+
 AnalysisWaveform::AnalysisWaveform(const AnalysisWaveform & other) 
   :
   g_uneven(other.uneven_equals_even ? 0 : other.g_uneven.GetN()), 
