@@ -12,7 +12,7 @@
 
 
 const double C_IN_M_NS = 0.299792;
-static double impulsivityThreshold = -1; //modifies behavior of mostImpulsive() set of utils
+static double impulsivityFractionThreshold = -1; //modifies behavior of mostImpulsive() set of utils
 
 
 //---------------------------------------------------------------------------------------------------------
@@ -987,24 +987,27 @@ void AnitaEventSummary::findMostImpulsive(int whichMetric) const {
     }
   }
 
-	if(impulsivityThreshold > 0. && impulsivityThreshold < 1.)
+	if(impulsivityFractionThreshold > 0. && impulsivityFractionThreshold < 1.)
 	{
-		int polInd = int(fMostImpulsivePol);
-		int tempInd = fMostImpulsiveIndex;
-		const WaveformInfo& wave = deconvolved_filtered[polInd][tempInd];
+		int prevPol = int(fMostImpulsivePol);
+		int prevInd = fMostImpulsiveIndex;
+		const WaveformInfo& wave = deconvolved_filtered[prevPol][prevInd];
 		double highestVal = whichMetric <= 0 ? wave.impulsivityMeasure : -1*wave.fracPowerWindowGradient();
-		double tempVal = highestVal;
-		double bright = peak[polInd][tempInd].value;
-		for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++)
-		{
-			if(peakInd == tempInd) continue;
-			const WaveformInfo& wave2 = deconvolved_filtered[polInd][peakInd];
-			double val = whichMetric <= 0 ? wave2.impulsivityMeasure : -1*wave2.fracPowerWindowGradient();
-			if(val/highestVal < impulsivityThreshold) continue;
-			if(bright < peak[polInd][peakInd].value)
+		double bright = peak[prevPol][prevInd].value;
+    for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
+      AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
+			for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++)
 			{
-				bright = peak[polInd][peakInd].value;
-				fMostImpulsiveIndex = peakInd;
+				if((peakInd == prevInd) && (prevPol == polInd)) continue;
+				const WaveformInfo& wave2 = deconvolved_filtered[polInd][peakInd];
+				double val = whichMetric <= 0 ? wave2.impulsivityMeasure : -1*wave2.fracPowerWindowGradient();
+				if(val/highestVal < impulsivityFractionThreshold) continue;
+				if(bright < peak[polInd][peakInd].value)
+				{
+					bright = peak[polInd][peakInd].value;
+					fMostImpulsiveIndex = peakInd;
+					fMostImpulsivePol = pol;
+				}	
 			}
 		}
 	}
@@ -1116,5 +1119,5 @@ void AnitaEventSummary::resetNonPersistent() const{
 
 void AnitaEventSummary::setThresholdForMostImpulsive(double threshold)
 {
-	impulsivityThreshold = threshold;
+	impulsivityFractionThreshold = threshold;
 }
