@@ -58,13 +58,13 @@ class AnitaEventFaker
 
     /** This is just a helper function to make a pure noise event, where each channel is populated with random noise 
      *
-     * @param rms  The RMS of the noise
+     * @param rms  The RMS of the noise, in pre-response units 
      * @param victim If non-zero, this event will be filled with noise instead of constructing a new event. 
      *
      * */  
 
 
-    UsefulAnitaEvent * makePureNoiseEvent(double rms, UsefulAnitaEvent * victim = 0) const; 
+    UsefulAnitaEvent * makePureNoiseEvent(double rms = 0.1, UsefulAnitaEvent * victim = 0) const; 
 
 
 

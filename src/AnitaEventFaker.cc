@@ -113,7 +113,7 @@ void AnitaEventFaker::setSignalFromMagnitudeResponse(const TGraph& mag_response,
 
 UsefulAnitaEvent * AnitaEventFaker::makePureNoiseEvent(double rms, UsefulAnitaEvent * victim) const
 {
-  fprintf(stderr,"WARNING: makePureNoiseEvent() probably doesn't work yet\n"); 
+//  fprintf(stderr,"WARNING: makePureNoiseEvent() probably doesn't work yet\n"); 
   UsefulAnitaEvent * u = victim; 
 
   //if we don't have a model event, generate a fake time base for this one 
@@ -157,13 +157,13 @@ UsefulAnitaEvent * AnitaEventFaker::makePureNoiseEvent(double rms, UsefulAnitaEv
     double df = wf.deltaF(); 
     FFTWComplex * G = wf.updateFreq(); 
     
-    for (int i = 0; i < N; i++) 
+    for (int i = 0; i < N/2+1; i++) 
     {
       G[i] *= manager.response(pol, ant)->getResponse(i * df); 
     }
 
     //upsample a bunch
-    wf.padFreq(8); 
+    wf.padFreq(4); 
 
     //evaluate at the times
     wf.evalEven(u->fNumPoints[ch], u->fTimes[ch], u->fVolts[ch]); 
