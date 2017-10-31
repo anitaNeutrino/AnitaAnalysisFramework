@@ -113,6 +113,7 @@ void AnitaEventFaker::setSignalFromMagnitudeResponse(const TGraph& mag_response,
 
 UsefulAnitaEvent * AnitaEventFaker::makePureNoiseEvent(double rms, UsefulAnitaEvent * victim) const
 {
+  fprintf(stderr,"WARNING: makePureNoiseEvent() probably doesn't work yet\n"); 
   UsefulAnitaEvent * u = victim; 
 
   //if we don't have a model event, generate a fake time base for this one 
