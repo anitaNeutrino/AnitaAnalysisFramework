@@ -60,6 +60,8 @@
 #pragma link C++ class AnitaResponse::ImpulseResponseXCorr+; 
 #pragma link C++ class AnitaResponse::DeconvolutionMethod+;
 
+#pragma link C++ class AnitaEventFaker+; 
+
 
 #endif
 
