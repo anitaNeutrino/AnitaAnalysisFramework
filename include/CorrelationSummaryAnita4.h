@@ -5,6 +5,7 @@
 #include "TGraph.h"
 
 
+
 #define NUM_CORRELATIONS_ANITA4 52 ///< The number of correlations from 15 antennas (5 phi-sectors) in ANITA-4.
 
 
@@ -48,7 +49,7 @@ class CorrelationSummaryAnita4: public TObject
     \return The expected deltaT for this plane wave and this pair of antennas.
   */
   Double_t getDeltaTExpected(Double_t tPhiWave, Double_t tThetaWave, Int_t pairInd);
-  
+
   void setFitResults(Double_t tPhi, Double_t tTheta, Double_t tPhiErr, Double_t tThetaErr, Double_t tChiSq); ///< Sets the result of an external fit.
 
 	void setSnr(Double_t s) {snr = s; }
