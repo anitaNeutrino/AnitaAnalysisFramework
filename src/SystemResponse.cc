@@ -271,6 +271,7 @@ FFTWComplex AnitaResponse::Response::getResponse(double f, double angle ) const
   lock.UnLock(); 
 
 //  printf("%f %f %f %f %f %f\n", f, angle, real.GetXaxis()->GetXmin(), real.GetXaxis()->GetXmax(), real.GetYaxis()->GetXmin(), real.GetYaxis()->GetXmax()); 
+  if ( f > real.GetXaxis()->GetXmax() || f > imag.GetXaxis()->GetXmax()) return FFTWComplex(0,0); 
   double re = real.Interpolate(f,angle); 
   double im = imag.Interpolate(f,angle); 
 //  printf("%f %f %f\n", f, re, im); 
