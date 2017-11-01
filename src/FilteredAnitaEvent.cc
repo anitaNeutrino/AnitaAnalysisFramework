@@ -461,6 +461,17 @@ int FilteredAnitaEvent::checkStepFunction(Int_t lab, AnitaRing::AnitaRing_t ring
 	return 1;
 }
 
+int FilteredAnitaEvent::checkSurfForGlitch(Int_t surf, Int_t lab)  const {
+	if((lab > -1) && (useful->getLabChip(0) != lab)) return 0;
+	for (int i = 0; i < NUM_CHAN; i++)
+  {
+		int ant;
+		AnitaPol::AnitaPol_t pol;
+		AnitaGeomTool::getAntPolFromSurfChan(surf, i, ant, pol);
+		if(abs(rawGraphsByAntPol[pol][ant]->uneven()->peakVal(0,0,-1,true)) > 800) return 1;
+  }
+	return 0;
+}
 
 
 const AnalysisWaveform *FilteredAnitaEvent::getRawGraph(UInt_t phi,

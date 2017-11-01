@@ -84,6 +84,7 @@ class FilteredAnitaEvent
    int checkSaturation(ULong64_t *save_hsat  =0, ULong64_t* save_vsat = 0, double threshold=1500) const; 
    
 	 int checkStepFunction(Int_t lab = 1, AnitaRing::AnitaRing_t ring = AnitaRing::kMiddleRing, Int_t phiSector = 8, AnitaPol::AnitaPol_t pol = AnitaPol::kVertical) const; 
+	 int checkSurfForGlitch(Int_t surf = 0, Int_t lab = -1) const; 
 
    /** Various calculations. Don't necessarily have to be in this class. */
    void getAverageSpectrum (TGraph * target, AnitaPol::AnitaPol_t pol = AnitaPol::kNotAPol ) const;
