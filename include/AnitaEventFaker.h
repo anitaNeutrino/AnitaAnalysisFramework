@@ -22,6 +22,10 @@ class UsefulAnitaEvent;
 class AnitaEventFaker 
 {
   public: 
+
+    /** Retrieves the default magnitude response used. */
+    static const TF1 & getDefaultMagResponse(); 
+
     AnitaEventFaker(const char * responseDir, const TF1 & mag_response = getDefaultMagResponse(), 
                     double delay = 30, double signal_dt = 5e-2); 
 
@@ -50,11 +54,14 @@ class AnitaEventFaker
      * @param theta_deg the degrees theta (with positive coming from below) for the signal , in payload coordinates
      * @param phi_deg   the degrees phi of the signal , in payload coordinates
      * @param A         a scale factor for the signal
-     * @param rel_Q     double lin_pol_angle 
-     *
+     * @param jones_H   complex Jones H-pol coefficient
+     * @param jones_V   complex Jones V-pol coefficient
      */ 
     void addSignal(UsefulAnitaEvent * event, double theta_deg, double phi_deg, 
-                   double A = 10,  std::complex<double> jones_H = std::complex<double>( 1,0),  std::complex<double> jones_V = std::complex<double>(0,0) ) const; 
+                   double A = 10,  
+                   std::complex<double> jones_H = std::complex<double>(1,0), 
+                   std::complex<double> jones_V = std::complex<double>(0,0)
+                   ) const; 
 
     /** This is just a helper function to make a pure noise event, where each channel is populated with random noise 
      *
@@ -62,7 +69,6 @@ class AnitaEventFaker
      * @param victim If non-zero, this event will be filled with noise instead of constructing a new event. 
      *
      * */  
-
 
     UsefulAnitaEvent * makePureNoiseEvent(double rms = 0.1, UsefulAnitaEvent * victim = 0) const; 
 
@@ -80,9 +86,6 @@ class AnitaEventFaker
     void setHPolAntennaGainParameterization(const TF2 & f) { offAxisGain_hpol = f; } 
     void setVPolAntennaGainParameterization(const TF2 & f) { offAxisGain_vpol = f; } 
     void setOffAxisDelay(const TF2 & f) { offAxisDelay = f; } 
-
-    /** Retrieves the default magnitude response used. */
-    static const TF1 & getDefaultMagResponse(); 
 
     static const TF2 & getDefaultHPolAntennaGain(); 
     static const TF2 & getDefaultVPolAntennaGain(); 
