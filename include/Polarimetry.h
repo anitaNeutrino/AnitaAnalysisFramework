@@ -34,12 +34,23 @@ namespace polarimetry
       TGraph  & cumuU() { return *cU; } 
       TGraph  & cumuV() { return *cV; } 
 
+      double getAvgI() const { return avgI; } 
+      double getAvgQ() const { return avgQ; } 
+      double getAvgU() const { return avgU; } 
+      double getAvgV() const { return avgV; } 
+
+      void getAvgs(double * I, double * Q, double * U, double * V) const
+      {
+        *I = avgI; *Q=avgQ; *U=avgU; *V=avgV;
+      }
+
       TMultiGraph & instGraphs() { return instantaneous; } 
       TMultiGraph & cumuGraphs() { return cumulative; } 
 
     private: 
       TGraph * dI, *dQ, *dU, *dV; 
       TGraph * cI, *cQ, *cU, *cV; 
+      double avgI, avgQ, avgU, avgV; 
       TMultiGraph instantaneous; 
       TMultiGraph cumulative; 
 

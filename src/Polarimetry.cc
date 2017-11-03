@@ -55,7 +55,7 @@ polarimetry::StokesAnalysis::StokesAnalysis(const AnalysisWaveform * H, const An
 
   FFTtools::stokesParameters(N, H->even()->GetY(), H->hilbertTransform()->even()->GetY(), 
                                 V->even()->GetY(), V->hilbertTransform()->even()->GetY(),
-                                0,0,0,0, 
+                                &avgI,&avgQ,&avgU,&avgV, 
                                 dI->GetY(), dQ->GetY(), dU->GetY(), dV->GetY(), 
                                 false); 
 
@@ -82,13 +82,13 @@ polarimetry::StokesAnalysis::StokesAnalysis(const AnalysisWaveform * H, const An
  instantaneous.Add(dQ,"lp"); 
  instantaneous.Add(dU,"lp"); 
  instantaneous.Add(dV,"lp"); 
- instantaneous.SetTitle("Instantaneous Stokes; ns; mv^2"); 
+ instantaneous.SetTitle("Instantaneous Stokes; Time (ns); Powerish"); 
 
  cumulative.Add(cI,"lp"); 
  cumulative.Add(cQ,"lp"); 
  cumulative.Add(cU,"lp"); 
  cumulative.Add(cV,"lp"); 
- cumulative.SetTitle("Cumulative Stokes; ns; mv^2"); 
+ cumulative.SetTitle("Cumulative Stokes; Time (ns);Powerish"); 
 
  if (Hre) delete Hre; 
  if (Vre) delete Vre; 
