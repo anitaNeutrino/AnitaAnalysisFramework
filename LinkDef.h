@@ -46,6 +46,9 @@
 #pragma link C++ namespace AnitaResponse+;
 #pragma link C++ namespace impulsivity+;
 
+#pragma link C++ namespace polarimetry+;
+#pragma link C++ class polarimetry::StokesAnalysis;
+
 #pragma link C++ class AnitaResponse::DeconvolutionMethod+;
 #pragma link C++ class AnitaResponse::NaiveDeconvolution+;
 #pragma link C++ class AnitaResponse::BandLimitedDeconvolution+;
