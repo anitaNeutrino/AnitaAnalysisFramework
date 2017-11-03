@@ -408,9 +408,17 @@ void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat, const TruthAnit
 
   if (truth) 
   {
-    pat->getThetaAndPhiWave(truth->sourceLon, truth->sourceLat, truth->sourceAlt, mc.theta,mc.phi);
-    mc.theta*=TMath::RadToDeg();
-    mc.phi*=TMath::RadToDeg();
+    if (truth->payloadPhi >=-999 ) 
+    {
+      mc.theta = truth->payloadTheta; 
+      mc.phi = truth->payloadPhi; 
+    }
+    else
+    {
+      pat->getThetaAndPhiWave(truth->sourceLon, truth->sourceLat, truth->sourceAlt, mc.theta,mc.phi);
+      mc.theta*=TMath::RadToDeg();
+      mc.phi*=TMath::RadToDeg();
+    }
     mc.weight = truth->weight; 
     mc.distance = pat->getTriggerTimeNsFromSource(truth->sourceLat, truth->sourceLon, truth->sourceAlt);
     mc.energy = truth->nuMom; // I guess this won't be true if icemc ever simulates non-relativistic neutrinos :P
