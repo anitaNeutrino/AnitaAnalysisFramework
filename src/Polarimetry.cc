@@ -2,6 +2,7 @@
 #include "AnalysisWaveform.h" 
 
 #include "TMultiGraph.h" 
+#include "TAxis.h" 
 #include "FFTtools.h" 
 
 
@@ -77,15 +78,17 @@ polarimetry::StokesAnalysis::StokesAnalysis(const AnalysisWaveform * H, const An
  }
   
 
- instantaneous.Add(dI); 
- instantaneous.Add(dQ); 
- instantaneous.Add(dU); 
- instantaneous.Add(dV); 
+ instantaneous.Add(dI,"lp"); 
+ instantaneous.Add(dQ,"lp"); 
+ instantaneous.Add(dU,"lp"); 
+ instantaneous.Add(dV,"lp"); 
+ instantaneous.SetTitle("Instantaneous Stokes; ns; mv^2"); 
 
- cumulative.Add(cI); 
- cumulative.Add(cQ); 
- cumulative.Add(cU); 
- cumulative.Add(cV); 
+ cumulative.Add(cI,"lp"); 
+ cumulative.Add(cQ,"lp"); 
+ cumulative.Add(cU,"lp"); 
+ cumulative.Add(cV,"lp"); 
+ cumulative.SetTitle("Cumulative Stokes; ns; mv^2"); 
 
  if (Hre) delete Hre; 
  if (Vre) delete Vre; 
@@ -97,7 +100,7 @@ int polarimetry::StokesAnalysis::computeWindowedAverage(double Ifrac, double *I,
 {
   int Imax = TMath::LocMax(dI->GetN(), dI->GetY()); 
 
-  double thresh = Imax * Ifrac; 
+  double thresh = dI->GetY()[Imax] * Ifrac; 
 
   double Isum = 0; 
   double Qsum = 0; 
@@ -109,9 +112,9 @@ int polarimetry::StokesAnalysis::computeWindowedAverage(double Ifrac, double *I,
   {
     if (dI->GetY()[i] < thresh) break; 
     Isum += dI->GetY()[i]; 
-    Qsum += dI->GetY()[i]; 
-    Usum += dI->GetY()[i]; 
-    Vsum += dI->GetY()[i]; 
+    Qsum += dQ->GetY()[i]; 
+    Usum += dU->GetY()[i]; 
+    Vsum += dV->GetY()[i]; 
     n++;
   }
 
@@ -119,9 +122,9 @@ int polarimetry::StokesAnalysis::computeWindowedAverage(double Ifrac, double *I,
   {
     if (dI->GetY()[i] < thresh) break; 
     Isum += dI->GetY()[i]; 
-    Qsum += dI->GetY()[i]; 
-    Usum += dI->GetY()[i]; 
-    Vsum += dI->GetY()[i]; 
+    Qsum += dQ->GetY()[i]; 
+    Usum += dU->GetY()[i]; 
+    Vsum += dV->GetY()[i]; 
     n++;
   }
 
