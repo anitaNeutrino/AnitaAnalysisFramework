@@ -82,6 +82,7 @@ class AnitaEventSummary : public TObject
     Bool_t triggered_xpol; /// was this in a triggered xpol phi sector?
     Bool_t masked; /// was this in a masked phi sector?
     Bool_t masked_xpol; /// was this in a masked phi xpol sector?
+    Double_t antennaPeakAverage; /// the average of channel peaks in this direction 
 
     // Most basic resolution utility functions in payload coordinates relative to ADU5-aft-fore line
     Double_t dPhi(Double_t phi) const;
@@ -127,7 +128,7 @@ class AnitaEventSummary : public TObject
     void printEvent() const;
     friend class AnitaEventSummary;
 
-    ClassDefNV(PointingHypothesis,14);
+    ClassDefNV(PointingHypothesis,15);
   };
 
   /**
@@ -484,7 +485,7 @@ class AnitaEventSummary : public TObject
   void resetNonPersistent() const;
   const SourceHypothesis* sourceFromTag() const;
 
-  ClassDefNV(AnitaEventSummary, 35);
+  ClassDefNV(AnitaEventSummary, 36);
 };
 
 #endif
