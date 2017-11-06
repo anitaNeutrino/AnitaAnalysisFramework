@@ -408,7 +408,7 @@ void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat, const TruthAnit
 
   if (truth) 
   {
-    if (truth->payloadPhi >=-999 ) 
+    if (truth->payloadPhi > -999 ) 
     {
       mc.theta = truth->payloadTheta; 
       mc.phi = truth->payloadPhi; 
