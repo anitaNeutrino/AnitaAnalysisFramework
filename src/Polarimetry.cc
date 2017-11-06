@@ -18,7 +18,7 @@ polarimetry::StokesAnalysis::StokesAnalysis(const AnalysisWaveform * H, const An
   //we need to resample both onto the same base 
   if (V->deltaT() != H->deltaT()
       ||  H->even()->GetX()[0] != V->even()->GetX()[0] 
-      ||  H->Neven() != V->Neven() )
+     )
   {
 
     double dt = TMath::Min(H->deltaT(), V->deltaT()); 
@@ -40,18 +40,18 @@ polarimetry::StokesAnalysis::StokesAnalysis(const AnalysisWaveform * H, const An
     V = Vre; 
   }
 
+  int N = TMath::Min(H->Neven(), V->Neven()); 
   
 
-  dI = new TGraph(H->Neven(), H->even()->GetX(), H->even()->GetY()); 
+  dI = new TGraph(N, H->even()->GetX(), H->even()->GetY()); 
   dI->SetTitle("Instantaneous I"); 
-  dQ = new TGraph(H->Neven(), H->even()->GetX(), H->even()->GetY()); 
+  dQ = new TGraph(N, H->even()->GetX(), H->even()->GetY()); 
   dQ->SetTitle("Instantaneous Q"); 
-  dU = new TGraph(H->Neven(), H->even()->GetX(), H->even()->GetY()); 
+  dU = new TGraph(N, H->even()->GetX(), H->even()->GetY()); 
   dU->SetTitle("Instantaneous U"); 
-  dV = new TGraph(H->Neven(), H->even()->GetX(), H->even()->GetY()); 
+  dV = new TGraph(N, H->even()->GetX(), H->even()->GetY()); 
   dV->SetTitle("Instantaneous V"); 
 
-  int N = H->Neven(); 
 
   FFTtools::stokesParameters(N, H->even()->GetY(), H->hilbertTransform()->even()->GetY(), 
                                 V->even()->GetY(), V->hilbertTransform()->even()->GetY(),
