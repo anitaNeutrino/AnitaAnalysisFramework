@@ -23,9 +23,9 @@ class AllCorrelationSummaryAnita4: public TObject
    
   //! Assignment constructor.
   AllCorrelationSummaryAnita4(int teventNumber, int tcentreAnt);
-  void fillAntPositions();
+  void fillAntPositions(AnitaPol::AnitaPol_t pol);
   void setFifteenAnts(int tcentreAnt);
-  double getDeltaTExpected(Double_t tPhiWave, Double_t tThetaWave, Int_t pairInd);
+  double getDeltaTExpected(Double_t tPhiWave, Double_t tThetaWave, Int_t pairInd, AnitaPol::AnitaPol_t pol);
   //Simple Event Characteristics
   int eventNumber; ///< The eventNumber.
   int centreAntenna;
@@ -37,9 +37,9 @@ class AllCorrelationSummaryAnita4: public TObject
   int fifteenAnts[15];
   int firstAnt[NUM_ALLCORRELATIONS_ANITA4];
   int secondAnt[NUM_ALLCORRELATIONS_ANITA4];
-  double fAntPhi[NUM_ALLCORRELATIONS_ANITA4][2];
-  double fAntR[NUM_ALLCORRELATIONS_ANITA4][2];
-  double fAntZ[NUM_ALLCORRELATIONS_ANITA4][2];
+  double fAntPhi[NUM_ALLCORRELATIONS_ANITA4][2][2];// [#ofCorrelaitons][firstOrSecondAnt][pol]
+  double fAntR[NUM_ALLCORRELATIONS_ANITA4][2][2];// [#ofCorrelaitons][firstOrSecondAnt][pol]
+  double fAntZ[NUM_ALLCORRELATIONS_ANITA4][2][2];// [#ofCorrelaitons][firstOrSecondAnt][pol]
   ClassDef(AllCorrelationSummaryAnita4,1); ///< One of ROOT's magic macros.
 
 private:

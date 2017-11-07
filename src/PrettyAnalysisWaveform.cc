@@ -681,9 +681,9 @@ AllCorrelationSummaryAnita4 *PrettyAnalysisWaveform::getAllCorrelationSummaryAni
       delete wfCorr;
     }
   }
-  theSum->fillAntPositions();
+  theSum->fillAntPositions(pol);
   for(int corInd=0; corInd<78; corInd++){
-    theSum->expectedDeltaT[corInd] = theSum->getDeltaTExpected(phiWave, thetaWave, corInd);
+    theSum->expectedDeltaT[corInd] = theSum->getDeltaTExpected(phiWave, thetaWave, corInd, pol);
   }
   return theSum;
 }
