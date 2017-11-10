@@ -41,8 +41,8 @@ CorrelationSummaryAnita4::~CorrelationSummaryAnita4( )
 {
 
 }
-CorrelationSummaryAnita4::CorrelationSummaryAnita4( int teventNumber, int tcentreAnt, int tnineAnts[], int dt)
-   : eventNumber(teventNumber),centreAntenna(tcentreAnt),deltaT(dt)
+CorrelationSummaryAnita4::CorrelationSummaryAnita4( int teventNumber, int tcentreAnt, int tnineAnts[], int dt, AnitaPol::AnitaPol_t tpol)
+   : eventNumber(teventNumber),centreAntenna(tcentreAnt),deltaT(dt), pol(tpol)
 {
   for(int i=0;i<9;i++) 
     nineAnts[i]=tnineAnts[i];
@@ -64,12 +64,12 @@ void CorrelationSummaryAnita4::fillErrorsAndFit()
 
   //Now fill the antenna postions (these might become member variables)
    for(int i=0;i< NUM_CORRELATIONS_ANITA4;i++) {
-      fAntPhi[i][0]=fCSGeomToolAnita4->getAntPhiPositionRelToAftFore(firstAnt[i]);
-      fAntPhi[i][1]=fCSGeomToolAnita4->getAntPhiPositionRelToAftFore(secondAnt[i]);
-      fAntR[i][0]=fCSGeomToolAnita4->getAntR(firstAnt[i]);
-      fAntR[i][1]=fCSGeomToolAnita4->getAntR(secondAnt[i]);
-      fAntZ[i][0]=fCSGeomToolAnita4->getAntZ(firstAnt[i]);
-      fAntZ[i][1]=fCSGeomToolAnita4->getAntZ(secondAnt[i]);
+      fAntPhi[i][0]=fCSGeomToolAnita4->getAntPhiPositionRelToAftFore(firstAnt[i], pol);
+      fAntPhi[i][1]=fCSGeomToolAnita4->getAntPhiPositionRelToAftFore(secondAnt[i], pol);
+      fAntR[i][0]=fCSGeomToolAnita4->getAntR(firstAnt[i], pol);
+      fAntR[i][1]=fCSGeomToolAnita4->getAntR(secondAnt[i], pol);
+      fAntZ[i][0]=fCSGeomToolAnita4->getAntZ(firstAnt[i], pol);
+      fAntZ[i][1]=fCSGeomToolAnita4->getAntZ(secondAnt[i], pol);
    }
    
 

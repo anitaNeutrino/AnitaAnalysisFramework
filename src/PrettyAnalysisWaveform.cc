@@ -502,7 +502,7 @@ CorrelationSummaryAnita4 *PrettyAnalysisWaveform::getCorrelationSummaryAnita4(In
   int nextSixAnts[6];
   fillNextSixAntArrays(centreAnt,nextSixAnts);
 
-   CorrelationSummaryAnita4 *theSum = new CorrelationSummaryAnita4(eventNumber, centreAnt, nineAnts,deltaT);
+   CorrelationSummaryAnita4 *theSum = new CorrelationSummaryAnita4(eventNumber, centreAnt, nineAnts,deltaT, pol);
 	 theSum->setSnr(getHighestSnr(centreAnt));
 
    for(int i=0;i<6;i++)
