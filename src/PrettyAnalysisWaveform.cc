@@ -645,7 +645,7 @@ CorrelationSummaryAnita4 *PrettyAnalysisWaveform::getCorrelationSummaryAnita4(In
 AllCorrelationSummaryAnita4 *PrettyAnalysisWaveform::getAllCorrelationSummaryAnita4(Int_t centreAnt,AnitaPol::AnitaPol_t pol, Int_t deltaT, Int_t eventNumber)
 {
   if(centreAnt<0) centreAnt=getMaxAntenna(pol);
-   AllCorrelationSummaryAnita4 *theSum = new AllCorrelationSummaryAnita4(eventNumber, centreAnt);
+   AllCorrelationSummaryAnita4 *theSum = new AllCorrelationSummaryAnita4(eventNumber, centreAnt, pol);
    // fill the thetaWave and phiWave
   Double_t phiWave,thetaWave;
   UsefulAdu5Pat* usefulPat = new UsefulAdu5Pat(fPat);
@@ -681,9 +681,9 @@ AllCorrelationSummaryAnita4 *PrettyAnalysisWaveform::getAllCorrelationSummaryAni
       delete wfCorr;
     }
   }
-  theSum->fillAntPositions(pol);
+  theSum->fillAntPositions();
   for(int corInd=0; corInd<78; corInd++){
-    theSum->expectedDeltaT[corInd] = theSum->getDeltaTExpected(phiWave, thetaWave, corInd, pol);
+    theSum->expectedDeltaT[corInd] = theSum->getDeltaTExpected(phiWave, thetaWave, corInd);
   }
   return theSum;
 }

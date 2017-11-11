@@ -34,8 +34,8 @@ AllCorrelationSummaryAnita4::~AllCorrelationSummaryAnita4( )
 {
 
 }
-AllCorrelationSummaryAnita4::AllCorrelationSummaryAnita4( int teventNumber, int tcentreAnt)
-   : eventNumber(teventNumber),centreAntenna(tcentreAnt)
+AllCorrelationSummaryAnita4::AllCorrelationSummaryAnita4( int teventNumber, int tcentreAnt, AnitaPol::AnitaPol_t tpol)
+   : eventNumber(teventNumber),centreAntenna(tcentreAnt),pol(tpol)
 {
    setFifteenAnts(tcentreAnt);
    if(!fGeomToolAnita4)
@@ -43,30 +43,24 @@ AllCorrelationSummaryAnita4::AllCorrelationSummaryAnita4( int teventNumber, int 
 }
 
 
-void AllCorrelationSummaryAnita4::fillAntPositions(AnitaPol::AnitaPol_t pol)
+void AllCorrelationSummaryAnita4::fillAntPositions()
 {
   //Now fill the antenna postions (these might become member variables)
-   int _pol = int(pol);
-
    for(int i=0;i< NUM_ALLCORRELATIONS_ANITA4;i++) {
-      fAntPhi[i][0][_pol]=fGeomToolAnita4->getAntPhiPositionRelToAftFore(firstAnt[i], pol);
-      fAntPhi[i][1][_pol]=fGeomToolAnita4->getAntPhiPositionRelToAftFore(secondAnt[i], pol);
-      fAntR[i][0][_pol]=fGeomToolAnita4->getAntR(firstAnt[i], pol);
-      fAntR[i][1][_pol]=fGeomToolAnita4->getAntR(secondAnt[i], pol);
-      fAntZ[i][0][_pol]=fGeomToolAnita4->getAntZ(firstAnt[i], pol);
-      fAntZ[i][1][_pol]=fGeomToolAnita4->getAntZ(secondAnt[i], pol);
+      fAntPhi[i][0]=fGeomToolAnita4->getAntPhiPositionRelToAftFore(firstAnt[i], pol);
+      fAntPhi[i][1]=fGeomToolAnita4->getAntPhiPositionRelToAftFore(secondAnt[i], pol);
+      fAntR[i][0]=fGeomToolAnita4->getAntR(firstAnt[i], pol);
+      fAntR[i][1]=fGeomToolAnita4->getAntR(secondAnt[i], pol);
+      fAntZ[i][0]=fGeomToolAnita4->getAntZ(firstAnt[i], pol);
+      fAntZ[i][1]=fGeomToolAnita4->getAntZ(secondAnt[i], pol);
    }
-   
-
 }
 
-Double_t AllCorrelationSummaryAnita4::getDeltaTExpected(Double_t tPhiWave, Double_t tThetaWave, Int_t pairInd, AnitaPol::AnitaPol_t pol)
+Double_t AllCorrelationSummaryAnita4::getDeltaTExpected(Double_t tPhiWave, Double_t tThetaWave, Int_t pairInd)
 {
-   int _pol = int(pol);
-
    Double_t tanThetaW=TMath::Tan(tThetaWave);
-   Double_t part1=fAntZ[pairInd][0][_pol]*tanThetaW - fAntR[pairInd][0][_pol] * TMath::Cos(tPhiWave-fAntPhi[pairInd][0][_pol]);
-   Double_t part2=fAntZ[pairInd][1][_pol]*tanThetaW - fAntR[pairInd][1][_pol] * TMath::Cos(tPhiWave-fAntPhi[pairInd][1][_pol]);
+   Double_t part1=fAntZ[pairInd][0]*tanThetaW - fAntR[pairInd][0] * TMath::Cos(tPhiWave-fAntPhi[pairInd][0]);
+   Double_t part2=fAntZ[pairInd][1]*tanThetaW - fAntR[pairInd][1] * TMath::Cos(tPhiWave-fAntPhi[pairInd][1]);
    return  1e9*((TMath::Cos(tThetaWave) * (part1 - part2))/C_LIGHT);    //returns time in ns
 }
 
