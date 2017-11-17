@@ -3,6 +3,8 @@
 
 #include "TObject.h"
 #include "TGraph.h"
+#include "AnitaConventions.h"
+
 
 
 #define NUM_CORRELATIONS_ANITA4 52 ///< The number of correlations from 15 antennas (5 phi-sectors) in ANITA-4.
@@ -28,7 +30,7 @@ class CorrelationSummaryAnita4: public TObject
     \param nineAnts An array of the nine antennas used.
     \param deltaT The sampling period used in the interpolation (or zero)    
   */
-  CorrelationSummaryAnita4(int teventNumber, int tcentreAnt, int nineAnts[6], int deltaT=0);
+  CorrelationSummaryAnita4(int teventNumber, int tcentreAnt, int nineAnts[6], int deltaT=0, AnitaPol::AnitaPol_t pol = AnitaPol::kVertical);
   void fillErrorsAndFit(); ///< The worker function that actually does the fitting.
 
   //! Tests a given plane wave hypothesis using a either six or ten antennas.
@@ -60,6 +62,7 @@ class CorrelationSummaryAnita4: public TObject
   int nineAnts[9]; ///< The numbers of the nine central antennas.
   int nextSixAnts[6]; ///< The numbers of the six outside antennas.
   int deltaT; ///< The sampling period used.
+  AnitaPol::AnitaPol_t  pol; ///< The polarization.  // added by peng, since phase center is relavent to the pol.
 	double snr;
 
 
@@ -155,7 +158,7 @@ class CorrelationSummaryAnita4: public TObject
   Double_t fAntZ[NUM_CORRELATIONS_ANITA4][2]; ///< A lookup table for antenna postions.
   
   
-  ClassDef(CorrelationSummaryAnita4,4); ///< One of ROOT's magic macros.
+  ClassDef(CorrelationSummaryAnita4,5); ///< One of ROOT's magic macros.
 };
 
 
