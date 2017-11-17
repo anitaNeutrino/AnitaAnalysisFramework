@@ -45,6 +45,7 @@
 
 #pragma link C++ namespace AnitaResponse+;
 #pragma link C++ namespace impulsivity+;
+#pragma link C++ namespace bandwidth+;
 
 #pragma link C++ namespace polarimetry+;
 #pragma link C++ class polarimetry::StokesAnalysis;
