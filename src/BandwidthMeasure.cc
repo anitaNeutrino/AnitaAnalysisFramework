@@ -39,3 +39,40 @@ double bandwidth::bandwidthMeasure(const AnalysisWaveform * wf, TGraph* testGrap
   cdf = fabs(cdf-1)*2;
   return cdf;
 }
+
+double bandwidth::alternateBandwidthMeasure(const AnalysisWaveform * wf, double powerThreshold, TGraph* testGraph) 
+{
+  const TGraphAligned* powdb = wf->power();
+  std::vector<double> powers;
+  double norm = 0;
+  for(int i = 0; i < powdb->GetN(); i++)
+  {
+    if(powdb->GetX()[i] < .180 || powdb->GetX()[i] > 1.1) continue;
+    if(.240 <= powdb->GetX()[i] <= .280) continue; //dont look at TUFFs (may make this smarter later)
+    if(.355 <= powdb->GetX()[i] <= .395) continue;
+    if(.440 <= powdb->GetX()[i] <= .480) continue;
+    powers.push_back(powdb->GetY()[i]);
+    norm += powdb->GetY()[i];
+  }
+  int N = powers.size();
+
+  std::sort(powers.begin(), powers.end(), [](double a, double b) { 
+      return b < a;
+      });
+
+  if(testGraph)
+  {
+    testGraph->Set(N);
+    for(int i = 0; i < N; i++) testGraph->SetPoint(i, i, powers[i]/norm);
+  }
+  int nbins = -1;
+  double integratedPower = 0;
+  while(integratedPower < powerThreshold)
+  {
+    nbins++;
+    integratedPower += powers[nbins]/norm;
+  }
+  powers.clear();
+  double val = double(nbins)/double(N) * 1./powerThreshold;
+  return val;
+}
