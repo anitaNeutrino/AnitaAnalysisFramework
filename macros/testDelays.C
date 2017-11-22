@@ -3,7 +3,7 @@
 /* This is a toy sweep of delays to see what it does to instantaneous stokes parameters */ 
 
 
-int testDelays (int ndelays = 25, double min = -2, double max = 2,double Vamp = 0.1)
+int testDelays (int ndelays = 25, double min = -2, double max = 2,double Vamp = 0.2)
 {
 
 
@@ -33,7 +33,7 @@ int testDelays (int ndelays = 25, double min = -2, double max = 2,double Vamp = 
 
     //make a copy so that I can change the title 
     TGraph * plotH = new TGraph(H->even()->GetN(), H->even()->GetX(), H->even()->GetY() ); 
-    plotH->SetTitle(TString::Format("Delay = %g ns\n", delay)); 
+    plotH->SetTitle(TString::Format("Delay = %g ns", delay)); 
     plotH->GetXaxis()->SetTitle("ns"); 
     plotH->GetYaxis()->SetTitle("A"); 
 
@@ -50,7 +50,13 @@ int testDelays (int ndelays = 25, double min = -2, double max = 2,double Vamp = 
     V->drawEven("same"); 
     polarimetry::StokesAnalysis*  stokes = new polarimetry::StokesAnalysis(H,V); 
     c2->cd(idelay+1); 
-    stokes->instGraphs().SetTitle(plotH->GetTitle()); 
+    double windowed_I, windowed_U, windowed_Q, windowed_V; 
+    stokes->computeWindowedAverage(0.25,&windowed_I,&windowed_Q,&windowed_U,&windowed_V); 
+    double angle = 90 / TMath::Pi() * atan2(windowed_U,windowed_Q); 
+    double linpolfraction = sqrt(windowed_Q*windowed_Q + windowed_U * windowed_U)/ windowed_I; 
+    double cpolfraction = abs(windowed_V / windowed_I); 
+
+    stokes->instGraphs().SetTitle(TString::Format("%s, angle=%0.2f deg, linfrac =%g, cfrac = %g", plotH->GetTitle(), angle, linpolfraction, cpolfraction)); 
     stokes->instGraphs().Draw("alp pmc plc"); 
     gPad->BuildLegend(0.6,0.6,0.9,0.9,"","lp" ); 
   }
