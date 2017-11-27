@@ -212,7 +212,7 @@ int AnitaTMVA::evaluateTMVA(TTree * tree, const AnitaTMVA::MVAVarSet & vars, con
     }
 
     value = reader.EvaluateMVA(branch_name,aux); 
-    if (isnan(value)) value = -999; 
+    if (std::isnan(value)) value = -999; 
     b->Fill(); 
   }
 
