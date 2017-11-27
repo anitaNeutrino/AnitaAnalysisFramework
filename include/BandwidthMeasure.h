@@ -15,8 +15,8 @@ class TGraph;
 namespace bandwidth 
 {
 
-  double bandwidthMeasure(const AnalysisWaveform * wf, TGraph* testGraph = 0);
-  double alternateBandwidthMeasure(const AnalysisWaveform * wf, double powerThreshold = .5, TGraph* testGraph = 0);
+  double bandwidthMeasure(const AnalysisWaveform * wf, int timeCheck = 0, TGraph* testGraph = 0);
+  double alternateBandwidthMeasure(const AnalysisWaveform * wf, int timeCheck = 0, double powerThreshold = .5, TGraph* testGraph = 0);
 
 }
 

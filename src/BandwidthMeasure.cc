@@ -1,21 +1,65 @@
 #include "BandwidthMeasure.h" 
+#include "AnitaVersion.h"
 #include "AnalysisWaveform.h" 
 #include "TGraphAligned.h" 
-#include <algorithm> 
+#include <fstream> 
 
-double bandwidth::bandwidthMeasure(const AnalysisWaveform * wf, TGraph* testGraph) 
+double bandwidth::bandwidthMeasure(const AnalysisWaveform * wf, int timeCheck, TGraph* testGraph) 
 {
   const TGraphAligned* powdb = wf->power();
   std::vector<double> powers;
   double norm = 0;
+  std::string notchConfig;
+  double notch0, notch1, notch2;
+  if(AnitaVersion::get() == 4)
+  {
+    TString dir;
+    dir.Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/index.txt", getenv("ANITA_UTIL_INSTALL_DIR"));
+    std::ifstream inf(dir.Data());
+    std::string tempConfig;
+    long notchTime;
+    while(inf >> tempConfig >> notchTime)
+    {
+      if(timeCheck < notchTime) notchConfig = tempConfig;
+    }
+    std::istringstream s(notchConfig);
+    std::getline(s, tempConfig, '_');
+    std::getline(s, tempConfig, '_');
+    notch0 = std::stoi(tempConfig);
+    notch0 /= 1000.;
+    std::getline(s, tempConfig, '_');
+    notch1 = std::stoi(tempConfig);
+    notch1 /= 1000.;
+    std::getline(s, tempConfig, '_');
+    notch2 = std::stoi(tempConfig);
+    notch2 /= 1000.;
+    inf.close();
+  }
+  int skip = 0;
   for(int i = 0; i < powdb->GetN(); i++)
   {
-    if(powdb->GetX()[i] < .180 || powdb->GetX()[i] > 1.1) continue;
-    if(.240 <= powdb->GetX()[i] <= .280) continue; //dont look at TUFFs (may make this smarter later)
-    if(.355 <= powdb->GetX()[i] <= .395) continue;
-    if(.440 <= powdb->GetX()[i] <= .480) continue;
-    powers.push_back(powdb->GetY()[i]);
-    norm += powdb->GetY()[i];
+    skip = 0;
+    if(powdb->GetX()[i] < .180 || powdb->GetX()[i] > 1.1) skip = 1;
+    if(AnitaVersion::get() == 4)
+    {
+      if(notch0 > 0)
+      {
+        if(notch0 - .15 <= powdb->GetX()[i] <= notch0 + .15) skip = 1;
+      }
+      if(notch1 > 0)
+      {
+        if(notch1 - .15 <= powdb->GetX()[i] <= notch1 + .15) skip = 1;
+      }
+      if(notch2 > 0)
+      {
+        if(notch2 - .15 <= powdb->GetX()[i] <= notch2 + .15) skip = 1;
+      }
+    }
+    if(!skip)
+    {
+      powers.push_back(powdb->GetY()[i]);
+      norm += powdb->GetY()[i];
+    }
   }
   int N = powers.size();
 
@@ -40,19 +84,62 @@ double bandwidth::bandwidthMeasure(const AnalysisWaveform * wf, TGraph* testGrap
   return cdf;
 }
 
-double bandwidth::alternateBandwidthMeasure(const AnalysisWaveform * wf, double powerThreshold, TGraph* testGraph) 
+double bandwidth::alternateBandwidthMeasure(const AnalysisWaveform * wf, int timeCheck, double powerThreshold, TGraph* testGraph) 
 {
   const TGraphAligned* powdb = wf->power();
   std::vector<double> powers;
   double norm = 0;
+  std::string notchConfig;
+  double notch0, notch1, notch2;
+  if(AnitaVersion::get() == 4)
+  {
+    TString dir;
+    dir.Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/index.txt", getenv("ANITA_UTIL_INSTALL_DIR"));
+    std::ifstream inf(dir.Data());
+    std::string tempConfig;
+    long notchTime;
+    while(inf >> tempConfig >> notchTime)
+    {
+      if(timeCheck < notchTime) notchConfig = tempConfig;
+    }
+    std::istringstream s(notchConfig);
+    std::getline(s, tempConfig, '_');
+    std::getline(s, tempConfig, '_');
+    notch0 = std::stoi(tempConfig);
+    notch0 /= 1000.;
+    std::getline(s, tempConfig, '_');
+    notch1 = std::stoi(tempConfig);
+    notch1 /= 1000.;
+    std::getline(s, tempConfig, '_');
+    notch2 = std::stoi(tempConfig);
+    notch2 /= 1000.;
+    inf.close();
+  }
+  int skip = 0;
   for(int i = 0; i < powdb->GetN(); i++)
   {
-    if(powdb->GetX()[i] < .180 || powdb->GetX()[i] > 1.1) continue;
-    if(.240 <= powdb->GetX()[i] <= .280) continue; //dont look at TUFFs (may make this smarter later)
-    if(.355 <= powdb->GetX()[i] <= .395) continue;
-    if(.440 <= powdb->GetX()[i] <= .480) continue;
-    powers.push_back(powdb->GetY()[i]);
-    norm += powdb->GetY()[i];
+    skip = 0;
+    if(powdb->GetX()[i] < .180 || powdb->GetX()[i] > 1.1) skip = 1;
+    if(AnitaVersion::get() == 4)
+    {
+      if(notch0 > 0)
+      {
+        if(notch0 - .15 <= powdb->GetX()[i] <= notch0 + .15) skip = 1;
+      }
+      if(notch1 > 0)
+      {
+        if(notch1 - .15 <= powdb->GetX()[i] <= notch1 + .15) skip = 1;
+      }
+      if(notch2 > 0)
+      {
+        if(notch2 - .15 <= powdb->GetX()[i] <= notch2 + .15) skip = 1;
+      }
+    }
+    if(!skip)
+    {
+      powers.push_back(powdb->GetY()[i]);
+      norm += powdb->GetY()[i];
+    }
   }
   int N = powers.size();
 
