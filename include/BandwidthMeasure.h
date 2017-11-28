@@ -1,6 +1,8 @@
 #ifndef BANDWIDTH_MEASURE_H
 #define BANDWIDTH_MEASURE_H
 
+#include <vector>
+
 
 /** 
 
@@ -10,13 +12,19 @@
 */ 
 
 class AnalysisWaveform; 
-class TGraph; 
+class TGraphAligned; 
 
 namespace bandwidth 
 {
 
-  double bandwidthMeasure(const AnalysisWaveform * wf, int timeCheck = 0, TGraph* testGraph = 0);
-  double alternateBandwidthMeasure(const AnalysisWaveform * wf, int timeCheck = 0, double powerThreshold = .5, TGraph* testGraph = 0);
+  void checkNotches(int timeCheck, double& notch0, double& notch1, double& notch2);
+  double fillPowers(const TGraphAligned* powd, std::vector<double> &powers, double notch0, double notch1, double notch2);
+
+  double bandwidthMeasure(const AnalysisWaveform * wf, int timeCheck = 0);
+  double giniIndex(const AnalysisWaveform * wf, int timeCheck = 0);
+  double hooverIndex(const AnalysisWaveform * wf, int timeCheck = 0);
+  double theilIndex(const AnalysisWaveform * wf, int timeCheck = 0);
+  double alternateBandwidthMeasure(const AnalysisWaveform * wf, int timeCheck = 0, double powerThreshold = .5);
 
 }
 
