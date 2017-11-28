@@ -1065,25 +1065,20 @@ void AnitaEventSummary::findTrainingPeak() const {
     // return the peak closest to that source...
     const SourceHypothesis* peakOfInterest = sourceFromTag();
     if(peakOfInterest){
-
-      // Add a factor of 1./(peakValue*peakValue) since just finding the nearest peak
-      // was picking out the wrong polarisation of WAIS some fraction of the time
-      // presumably this was happening for MC too...
-
-      // double minWeightedDeltaAngleSq = 1e99;
-      double highestClosePeakVal = -1;
+      double lowestCloseFracPowWinGrad = DBL_MAX;
+      // double highestClosePeakVal = -1;
       for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
         AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
         for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
-          // double dPhi = peak[polInd][peakInd].dPhiSource(*peakOfInterest);
-          // double dTheta = peak[polInd][peakInd].dThetaSource(*peakOfInterest);
-          // double weightedDeltaAngleSq = (dPhi*dPhi + dTheta*dTheta)/(peak[polInd][peakInd].value*peak[polInd][peakInd].value);
           const double dPhiClose = 5.5;
           const double dThetaClose = 3.5;
-          if(peak[polInd][peakInd].closeToTagged(dPhiClose, dThetaClose) && peak[polInd][peakInd].value > highestClosePeakVal){
-            highestClosePeakVal = peak[polInd][peakInd].value;
-            fTrainingPeakIndex = peakInd;
-            fTrainingPol = pol;
+          if(peak[polInd][peakInd].closeToTagged(dPhiClose, dThetaClose)){
+	    double fpwg = deconvolved_filtered[polInd][peakInd].fracPowerWindowGradient();
+	    if(fpwg  < lowestCloseFracPowWinGrad){
+	      lowestCloseFracPowWinGrad = fpwg;
+	      fTrainingPeakIndex = peakInd;
+	      fTrainingPol = pol;
+	    }
           }
         }
       }
@@ -1091,9 +1086,10 @@ void AnitaEventSummary::findTrainingPeak() const {
     if(fTrainingPeakIndex < 0){
       // didn't find one or no tagged source
       // so, just do highest peak in map
-      findHighestPeak();
-      fTrainingPeakIndex = fHighestPeakIndex;
-      fTrainingPol = fHighestPol;
+      const int metric = 1;
+      findMostImpulsive(metric);
+      fTrainingPeakIndex = fMostImpulsiveIndex;
+      fTrainingPol = fMostImpulsivePol;
     }
   }
 }
