@@ -6,7 +6,7 @@
 
 /** 
 
-  In this file is are a few tries at defining a measure of the bandwidth of a signal
+  In this file are a few tries at defining a measure of the bandwidth of a signal
 	Andrew Ludwig (  abl@uchicago.edu )
 
 */ 
