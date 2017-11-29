@@ -105,16 +105,16 @@ void makeAverage(const char* indir = "", const char* outdir="")
   for(int i = 0; i < n; i++)
   {
     TGraph gTemp(fname[i]);
-    for(int j; j < gOut->GetN(); j++)
+    for(int j=0; j < gOut->GetN(); j++)
     {
       gOut->GetY()[j] += gTemp.GetY()[j];
     }
   }
-  for(int j; j < gOut->GetN(); j++)
+  for(int j=0; j < gOut->GetN(); j++)
   {
     gOut->GetY()[j] /= n;
   }
-	TString oName = Form("data/responses/TUFFs/%s/%s", outdir, indir);
+	TString oName = Form("data/responses/TUFFs/%s/%s.imp", outdir, indir);
 	ofstream outf(oName.Data());
 	for(int i = 0; i < gOut->GetN(); i++)
 	{

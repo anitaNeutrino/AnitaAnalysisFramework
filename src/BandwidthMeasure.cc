@@ -2,6 +2,7 @@
 #include "AnitaVersion.h"
 #include "AnalysisWaveform.h" 
 #include "TGraphAligned.h" 
+#include "FFTtools.h"
 #include <fstream> 
 #include <cmath> 
 
@@ -32,31 +33,30 @@ double bandwidth::bandwidthMeasure(const AnalysisWaveform * wf, int timeCheck)
   return cdf;
 }
 
-double bandwidth::giniIndex(const AnalysisWaveform * wf, int timeCheck) 
+double bandwidth::differenceFromImpulse(const AnalysisWaveform * wf, int timeCheck) 
 {
   const TGraphAligned* gPow = wf->power();
-  std::vector<double> powers;
-  double notch0, notch1, notch2;
-  bandwidth::checkNotches(timeCheck, notch0, notch1, notch2);
-
-  double norm = bandwidth::fillPowers(gPow, powers, notch0, notch1, notch2);
-  std::sort(powers.begin(), powers.end());
-
-  int N = powers.size();
-  
-  TGraph* gTemp = new TGraph(N);
-  gTemp->SetPoint(0, 0, powers[0]/norm);
-  double gini = 1./(double(N)) - gTemp->GetY()[0];
-  for(int i = 1; i < N; i++)
+  TGraph* gImp = bandwidth::loadImpulsePower(timeCheck);
+  TGraph* gImpRe = bandwidth::downsampleImpulse(gImp, gPow);
+  bandwidth::normalizePower(gImpRe);
+  double retVal = 0;
+  double norm = 0;
+  for(int i = 0; i < gPow->GetN(); i++)
   {
-    gTemp->SetPoint(i, i, powers[i]/norm + gTemp->GetY()[i-1]);
-    gini += (1. * (i+1))/double(N) - gTemp->GetY()[i];
+    if(gPow->GetX()[i] < .18 || gPow->GetX()[i] > 1.1) continue;
+    norm+=gPow->GetY()[i];
   }
-  delete gTemp;
-  powers.clear();
-  gini /= double(N);
-  gini = fabs(gini - 1);
-  return gini;
+  for(int i = 0; i < gPow->GetN(); i++)
+  {
+    if(gPow->GetX()[i] < .18 || gPow->GetX()[i] > 1.1) continue;
+    retVal += fabs(gPow->GetY()[i]/norm - gImpRe->GetY()[i]);
+  }
+  delete gImp;
+  delete gImpRe;
+
+  retVal /= 2;
+  retVal = fabs(retVal - 1);
+  return retVal;
 }
 
 double bandwidth::hooverIndex(const AnalysisWaveform * wf, int timeCheck) 
@@ -103,32 +103,6 @@ double bandwidth::theilIndex(const AnalysisWaveform * wf, int timeCheck)
   return theil;
 }
 
-double bandwidth::alternateBandwidthMeasure(const AnalysisWaveform * wf, int timeCheck, double powerThreshold) 
-{
-  const TGraphAligned* gPow = wf->power();
-  std::vector<double> powers;
-  double notch0, notch1, notch2;
-  bandwidth::checkNotches(timeCheck, notch0, notch1, notch2);
-  
-  double norm = bandwidth::fillPowers(gPow, powers, notch0, notch1, notch2);
-  std::sort(powers.begin(), powers.end(), [](double a, double b) { 
-      return b < a;
-      });
-
-  int N = powers.size();
-
-  int nbins = -1;
-  double integratedPower = 0;
-  while(integratedPower < powerThreshold)
-  {
-    nbins++;
-    integratedPower += powers[nbins]/norm;
-  }
-  powers.clear();
-  double val = double(nbins)/double(N) * 1./powerThreshold;
-  return val;
-}
-
 void bandwidth::checkNotches(int timeCheck, double& notch0, double& notch1, double& notch2)
 {
   if(AnitaVersion::get() != 4) return;
@@ -156,6 +130,58 @@ void bandwidth::checkNotches(int timeCheck, double& notch0, double& notch1, doub
   inf.close();
 }
 
+TGraph* bandwidth::loadImpulsePower(int timeCheck)
+{
+  TString dir;
+  if(AnitaVersion::get() != 4)
+  {
+    dir.Form("%s/share/AnitaAnalysisFramework/responses/SingleBRotter/all.imp", getenv("ANITA_UTIL_INSTALL_DIR"));
+    TGraph* g = new TGraph(dir.Data());
+    TGraph* gpow = FFTtools::makePowerSpectrum(g);
+    delete g;
+    return gpow;
+  }
+  else
+  {
+    dir.Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/index.txt", getenv("ANITA_UTIL_INSTALL_DIR"));
+    std::ifstream inf(dir.Data());
+    std::string notchConfig;
+    std::string tempConfig;
+    long notchTime;
+    while(inf >> tempConfig >> notchTime)
+    {
+      if(timeCheck < notchTime) notchConfig = tempConfig;
+    }
+    dir.Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/averages/%s.imp", getenv("ANITA_UTIL_INSTALL_DIR"), notchConfig.c_str());
+    inf.close();
+    TGraph* g = new TGraph(dir.Data());
+    TGraph* gpow = FFTtools::makePowerSpectrum(g);
+    delete g;
+    return gpow;
+  }
+}
+
+TGraph* bandwidth::downsampleImpulse(TGraph* imp, const TGraphAligned* examp)
+{
+  TGraph* theReturn = new TGraph(examp->GetN());
+  for(int i = 0; i < examp->GetN(); i++)
+  {
+    theReturn->SetPoint(i, examp->GetX()[i], imp->Eval(examp->GetX()[i]));
+  }
+  return theReturn;
+}
+
+void bandwidth::normalizePower(TGraph* g)
+{
+  double norm = 0;
+  for(int i = 0; i < g->GetN(); i++)
+  {
+    if(g->GetX()[i] < .18 || g->GetX()[i] > 1.1) continue;
+    norm += g->GetY()[i];
+  }
+  for(int i = 0; i < g->GetN(); i++) g->GetY()[i] = g->GetY()[i]/norm;
+  return;
+}
 
 double bandwidth::fillPowers(const TGraphAligned* powdb, std::vector<double> &powers, double notch0, double notch1, double notch2)
 {
