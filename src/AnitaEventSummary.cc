@@ -1030,7 +1030,8 @@ void AnitaEventSummary::findMostImpulsive(int whichMetric) const {
  */
 const AnitaEventSummary::SourceHypothesis* AnitaEventSummary::sourceFromTag() const {
   switch(flags.pulser){
-    case EventFlags::WAIS or EventFlags::WAIS_V:
+  case EventFlags::WAIS_V:
+  case EventFlags::WAIS:
       // std::cerr << "wais" << std::endl;
       return &wais;
     case EventFlags::LDB:  
@@ -1042,6 +1043,7 @@ const AnitaEventSummary::SourceHypothesis* AnitaEventSummary::sourceFromTag() co
         return &mc;
       }
       else{
+        // std::cerr << "null" << std::endl;
         return NULL;
       }
   }
@@ -1065,17 +1067,20 @@ void AnitaEventSummary::findTrainingPeak() const {
     // return the peak closest to that source...
     const SourceHypothesis* peakOfInterest = sourceFromTag();
     if(peakOfInterest){
-      double lowestCloseFracPowWinGrad = DBL_MAX;
-      // double highestClosePeakVal = -1;
+      // double lowestCloseFracPowWinGrad = DBL_MAX;
+      double highestClosePeakVal = -1;
       for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
         AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
         for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
           const double dPhiClose = 5.5;
           const double dThetaClose = 3.5;
           if(peak[polInd][peakInd].closeToTagged(dPhiClose, dThetaClose)){
-	    double fpwg = deconvolved_filtered[polInd][peakInd].fracPowerWindowGradient();
-	    if(fpwg  < lowestCloseFracPowWinGrad){
-	      lowestCloseFracPowWinGrad = fpwg;
+	    // double fpwg = deconvolved_filtered[polInd][peakInd].fracPowerWindowGradient();
+	    // if(fpwg  < lowestCloseFracPowWinGrad){
+	    double mp = peak[polInd][peakInd].value;
+	    if(mp > highestClosePeakVal){
+	      // lowestCloseFracPowWinGrad = fpwg;
+	      highestClosePeakVal = mp;
 	      fTrainingPeakIndex = peakInd;
 	      fTrainingPol = pol;
 	    }
@@ -1086,10 +1091,15 @@ void AnitaEventSummary::findTrainingPeak() const {
     if(fTrainingPeakIndex < 0){
       // didn't find one or no tagged source
       // so, just do highest peak in map
-      const int metric = 1;
-      findMostImpulsive(metric);
-      fTrainingPeakIndex = fMostImpulsiveIndex;
-      fTrainingPol = fMostImpulsivePol;
+
+      findHighestPeak();
+      fTrainingPeakIndex = fHighestPeakIndex;
+      fTrainingPol = fHighestPol;
+
+      // const int metric = 1;
+      // findMostImpulsive(metric);
+      // fTrainingPeakIndex = fMostImpulsiveIndex;
+      // fTrainingPol = fMostImpulsivePol;
     }
   }
 }
