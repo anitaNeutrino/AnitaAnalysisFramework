@@ -81,6 +81,7 @@ AnitaTMVA::MVAVarSet::MVAVarSet(const char * ifile)
 
 TTree* AnitaTMVA::makeTMVATree(TTree * in, TFile * outf, const char * tree_name, const AnitaTMVA::MVAVarSet & vars , const char * cut) 
 {
+
   return makeTMVATree(1,&in,outf,tree_name,vars,cut); 
 }
 
@@ -210,7 +211,8 @@ int AnitaTMVA::evaluateTMVA(TTree * tree, const AnitaTMVA::MVAVarSet & vars, con
       }
     }
 
-    value = found_a_nan ? -999 : reader.EvaluateMVA(branch_name,aux); 
+    value = reader.EvaluateMVA(branch_name,aux); 
+    if (std::isnan(value)) value = -999; 
     b->Fill(); 
   }
 
