@@ -42,7 +42,11 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
 			hasIndex = true;
 			while(inf >> tempStr >> tempTime)
 			{
-				if(evTime < tempTime) str = tempStr;
+				if(evTime < tempTime)
+        {
+          str = tempStr;
+          break;
+        }
 			}
 			indexF.Form(dir.Data());
 			dir.Form("%s/%s", indexF.Data(), str.c_str());
@@ -63,7 +67,11 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
 				hasIndex = true;
 				while(inf2 >> tempStr >> tempTime)
 				{
-					if(evTime < tempTime) str = tempStr;
+					if(evTime < tempTime)
+          {
+            str = tempStr;
+            break;
+          }
 				}
 				indexF.Form(dir.Data());
 				dir.Form("%s/%s", indexF.Data(), str.c_str());
@@ -83,7 +91,11 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
 					hasIndex = true;
 					while(inf3 >> tempStr >> tempTime)
 					{
-						if(evTime < tempTime) str = tempStr;
+						if(evTime < tempTime)
+            {
+              str = tempStr;
+              break;
+            }
 					}
 					indexF.Form(dir.Data());
 					dir.Form("%s/%s", indexF.Data(), str.c_str());
