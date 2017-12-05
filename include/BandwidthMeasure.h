@@ -25,12 +25,17 @@ namespace bandwidth
   *  This is just so all power in a single frequency gives a bandwidth measure of 0
   *  A flat power spectrum gives a bandwidth measure of 1
   */
-  double bandwidthMeasure(const AnalysisWaveform * wf, int timeCheck = 0);
+  double bandwidthMeasure(const AnalysisWaveform * wf, int timeCheck = 0, TGraph* gTest = 0);
   /** This takes the normalized power spectrum from the input wave form and compares it to the normalized power spectrum of the average impulse response.
    *  Lower number (minimum zero) means more similar to the impulse response.
    *  Also runs from 0->1 with higher being more similar to an impulse response (more broadband)
    */
-  double differenceFromImpulse(const AnalysisWaveform * wf, int timeCheck = 0);
+  double differenceFromImpulse(const AnalysisWaveform * wf, int timeCheck = 0, TGraph* gTest = 0);
+  /** This takes the normalized power spectrum from the input wave form and compares it to the normalized power spectrum of the average impulse response.
+   * Returns the maximum difference from an impulse response.
+   * The idea is to use this to find either strong cw contamination that isnt filtered out or payload blasts
+   */
+  double maxDifferenceFromImpulse(const AnalysisWaveform * wf, int timeCheck = 0, TGraph* gTest = 0);
   /** Returns the Hoover index of a signal.
    *  Also from economics, is basically a k-s test vs a perfectly distributed frequency spectrum.
    *  Between 0 and 1 with 0 less broadband, 1 more so.
