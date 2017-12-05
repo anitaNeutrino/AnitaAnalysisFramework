@@ -6,6 +6,8 @@
 #include "TFile.h"
 #include <fstream> 
 #include <cmath> 
+#include <iostream>
+#include <string>
 
 double bandwidth::bandwidthMeasure(const AnalysisWaveform* wf, int timeCheck, TGraph* gTest) 
 {
