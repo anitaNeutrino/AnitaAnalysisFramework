@@ -843,7 +843,9 @@ const AnitaEventSummary::WaveformInfo& AnitaEventSummary::trainingDeconvolvedFil
 
 
 /** 
- * Print warning if fContainer is NULL as the majority the utility functions that rely on it will print nonsense
+ * Print warning if fContainer is NULL as the majority the utility functions that rely on it will print nonsense.
+ * Note: A new public member update() has been added to force resetNonPersisent(), which sets fContainer, to be called.
+ * If required, this function should be called as the first in a series of cuts.
  * 
  * @param funcName should be the __PRETTY_FUNCTION__ macro for nice debugging info
  * 
@@ -851,9 +853,10 @@ const AnitaEventSummary::WaveformInfo& AnitaEventSummary::trainingDeconvolvedFil
  */
 const AnitaEventSummary* AnitaEventSummary::PointingHypothesis::getContainer(const char* funcName) const{
   if(!fContainer){
-    std::cerr << "Error in " << funcName
-              << " don't have access to AnitaEventSummary that contains me!"
-              << " Was the AnitaEventSummary constructor called?"
+    std::cerr << "Error in " << funcName << ", don't have access to AnitaEventSummary that contains me!\n" 
+	      << "To fix this error, try calling AnitaEventSummary()::update() as the first argument of the cuts in TTree::Draw(),\n"
+	      << "Note: update() always returns true, so TTree::Draw(\"sum.peak[0][0].dPhiWais()\", "
+	      << "\"sum.update() && TMath::Abs(sum.peak[0][0].dPhiWais()) < 5\") will select all events within 5 degrees of phi of WAIS.\n"
               << std::endl;
   }
   return fContainer;

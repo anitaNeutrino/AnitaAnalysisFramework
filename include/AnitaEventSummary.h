@@ -428,7 +428,7 @@ class AnitaEventSummary : public TObject
   void setTriggerInfomation(const RawAnitaHeader* header);
   void setSourceInformation(UsefulAdu5Pat* pat, const TruthAnitaEvent * truth = 0);
   void zeroInternals();
-
+  Bool_t update() const {resetNonPersistent(); return true;}
 
   // Utilities to find interesting entries in AnitaEventSummary
   AnitaPol::AnitaPol_t highestPol() const;
