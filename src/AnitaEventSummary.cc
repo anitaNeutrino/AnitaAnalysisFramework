@@ -843,7 +843,9 @@ const AnitaEventSummary::WaveformInfo& AnitaEventSummary::trainingDeconvolvedFil
 
 
 /** 
- * Print warning if fContainer is NULL as the majority the utility functions that rely on it will print nonsense
+ * Print warning if fContainer is NULL as the majority the utility functions that rely on it will print nonsense.
+ * Note: A new public member update() has been added to force resetNonPersisent(), which sets fContainer, to be called.
+ * If required, this function should be called as the first in a series of cuts.
  * 
  * @param funcName should be the __PRETTY_FUNCTION__ macro for nice debugging info
  * 
@@ -851,9 +853,10 @@ const AnitaEventSummary::WaveformInfo& AnitaEventSummary::trainingDeconvolvedFil
  */
 const AnitaEventSummary* AnitaEventSummary::PointingHypothesis::getContainer(const char* funcName) const{
   if(!fContainer){
-    std::cerr << "Error in " << funcName
-              << " don't have access to AnitaEventSummary that contains me!"
-              << " Was the AnitaEventSummary constructor called?"
+    std::cerr << "Error in " << funcName << ", don't have access to AnitaEventSummary that contains me!\n" 
+	      << "To fix this error, try calling AnitaEventSummary()::update() as the first argument of the cuts in TTree::Draw(),\n"
+	      << "Note: update() always returns true, so TTree::Draw(\"sum.peak[0][0].dPhiWais()\", "
+	      << "\"sum.update() && TMath::Abs(sum.peak[0][0].dPhiWais()) < 5\") will select all events within 5 degrees of phi of WAIS.\n"
               << std::endl;
   }
   return fContainer;
@@ -1045,7 +1048,8 @@ void AnitaEventSummary::findMostImpulsive(int whichMetric) const {
  */
 const AnitaEventSummary::SourceHypothesis* AnitaEventSummary::sourceFromTag() const {
   switch(flags.pulser){
-    case EventFlags::WAIS or EventFlags::WAIS_V:
+  case EventFlags::WAIS_V:
+  case EventFlags::WAIS:
       // std::cerr << "wais" << std::endl;
       return &wais;
     case EventFlags::LDB:  
@@ -1057,6 +1061,7 @@ const AnitaEventSummary::SourceHypothesis* AnitaEventSummary::sourceFromTag() co
         return &mc;
       }
       else{
+        // std::cerr << "null" << std::endl;
         return NULL;
       }
   }
@@ -1080,25 +1085,23 @@ void AnitaEventSummary::findTrainingPeak() const {
     // return the peak closest to that source...
     const SourceHypothesis* peakOfInterest = sourceFromTag();
     if(peakOfInterest){
-
-      // Add a factor of 1./(peakValue*peakValue) since just finding the nearest peak
-      // was picking out the wrong polarisation of WAIS some fraction of the time
-      // presumably this was happening for MC too...
-
-      // double minWeightedDeltaAngleSq = 1e99;
+      // double lowestCloseFracPowWinGrad = DBL_MAX;
       double highestClosePeakVal = -1;
       for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
         AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
         for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
-          // double dPhi = peak[polInd][peakInd].dPhiSource(*peakOfInterest);
-          // double dTheta = peak[polInd][peakInd].dThetaSource(*peakOfInterest);
-          // double weightedDeltaAngleSq = (dPhi*dPhi + dTheta*dTheta)/(peak[polInd][peakInd].value*peak[polInd][peakInd].value);
           const double dPhiClose = 5.5;
           const double dThetaClose = 3.5;
-          if(peak[polInd][peakInd].closeToTagged(dPhiClose, dThetaClose) && peak[polInd][peakInd].value > highestClosePeakVal){
-            highestClosePeakVal = peak[polInd][peakInd].value;
-            fTrainingPeakIndex = peakInd;
-            fTrainingPol = pol;
+          if(peak[polInd][peakInd].closeToTagged(dPhiClose, dThetaClose)){
+	    // double fpwg = deconvolved_filtered[polInd][peakInd].fracPowerWindowGradient();
+	    // if(fpwg  < lowestCloseFracPowWinGrad){
+	    double mp = peak[polInd][peakInd].value;
+	    if(mp > highestClosePeakVal){
+	      // lowestCloseFracPowWinGrad = fpwg;
+	      highestClosePeakVal = mp;
+	      fTrainingPeakIndex = peakInd;
+	      fTrainingPol = pol;
+	    }
           }
         }
       }
@@ -1106,9 +1109,15 @@ void AnitaEventSummary::findTrainingPeak() const {
     if(fTrainingPeakIndex < 0){
       // didn't find one or no tagged source
       // so, just do highest peak in map
+
       findHighestPeak();
       fTrainingPeakIndex = fHighestPeakIndex;
       fTrainingPol = fHighestPol;
+
+      // const int metric = 1;
+      // findMostImpulsive(metric);
+      // fTrainingPeakIndex = fMostImpulsiveIndex;
+      // fTrainingPol = fMostImpulsivePol;
     }
   }
 }

@@ -428,7 +428,7 @@ class AnitaEventSummary : public TObject
   void setTriggerInfomation(const RawAnitaHeader* header);
   void setSourceInformation(UsefulAdu5Pat* pat, const TruthAnitaEvent * truth = 0);
   void zeroInternals();
-
+  Bool_t update() const {resetNonPersistent(); return true;}
 
   // Utilities to find interesting entries in AnitaEventSummary
   AnitaPol::AnitaPol_t highestPol() const;
@@ -440,7 +440,7 @@ class AnitaEventSummary : public TObject
   const WaveformInfo& highestCoherentFiltered() const;
   const WaveformInfo& highestDeconvolvedFiltered() const;
 	
-	static void setThresholdForMostImpulsive(double threshold); /// value between 0 and 1, will find the brightest peak that is within threshold as impulsive as the most impulsive peak
+  static void setThresholdForMostImpulsive(double threshold); /// value between 0 and 1, will find the brightest peak that is within threshold as impulsive as the most impulsive peak
   AnitaPol::AnitaPol_t mostImpulsivePol(int whichMetric=0) const;
   Int_t mostImpulsivePolAsInt(int whichMetric=0) const;
   Int_t mostImpulsiveInd(int whichMetric=0) const;
@@ -474,8 +474,8 @@ class AnitaEventSummary : public TObject
   mutable AnitaPol::AnitaPol_t fHighestPol;        //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding highest peak
   mutable Int_t                fTrainingPeakIndex; //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak training peak (pulser/mc peak)
   mutable AnitaPol::AnitaPol_t fTrainingPol;       //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak training peak (pulser/mc peak)
-  mutable Int_t                fMostImpulsiveIndex; //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding most impulsive waveform
-  mutable AnitaPol::AnitaPol_t fMostImpulsivePol;       //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding most impulsive waveform
+  mutable Int_t                fMostImpulsiveIndex;//! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding most impulsive waveform
+  mutable AnitaPol::AnitaPol_t fMostImpulsivePol;  //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding most impulsive waveform
   mutable UInt_t               fLastEventNumber;   //! DOES NOT PERSIST IN ROOT! To check for stale caching variables
 
 

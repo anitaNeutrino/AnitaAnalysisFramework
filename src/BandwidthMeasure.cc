@@ -8,6 +8,9 @@
 #include <string>
 #include <fstream> 
 #include <cmath> 
+#include <iostream>
+#include <string>
+#include <cstdlib> 
 
 double bandwidth::bandwidthMeasure(const AnalysisWaveform* wf, int timeCheck, TGraph* gTest) 
 {
@@ -152,13 +155,13 @@ void bandwidth::checkNotches(int timeCheck, double& notch0, double& notch1, doub
   std::istringstream s(notchConfig);
   std::getline(s, tempConfig, '_');
   std::getline(s, tempConfig, '_');
-  notch0 = std::stoi(tempConfig);
+  notch0 = atoi(tempConfig.c_str());
   notch0 /= 1000.;
   std::getline(s, tempConfig, '_');
-  notch1 = std::stoi(tempConfig);
+  notch1 = atoi(tempConfig.c_str());
   notch1 /= 1000.;
   std::getline(s, tempConfig, '_');
-  notch2 = std::stoi(tempConfig);
+  notch2 = atoi(tempConfig.c_str());
   notch2 /= 1000.;
   inf.close();
 }
