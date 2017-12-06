@@ -4,8 +4,6 @@
 #include "TGraphAligned.h" 
 #include "FFTtools.h"
 #include "TFile.h"
-#include <iostream>
-#include <string>
 #include <fstream> 
 #include <cmath> 
 #include <iostream>
