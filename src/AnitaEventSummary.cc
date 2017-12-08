@@ -968,7 +968,7 @@ void AnitaEventSummary::findHighestPeak() const {
 /** 
  * Find the most impulsive peak candidate direction, choose impusivity metric with whichMetric
  * 
- * @param whichMetric 0 for Cosmin's impulsivityMeasure, 1 for Ben's fracPowerWindowGradient() (default = 0)
+ * @param whichMetric 0 for Cosmin's impulsivityMeasure, 1 for Ben's fracPowerWindowGradient(), 2 for impulsivityMeasure * peak.value (added by Andrew Ludwig for reasons) (default = 0)
  */
 void AnitaEventSummary::findMostImpulsive(int whichMetric) const {
   resetNonPersistent();
@@ -979,49 +979,64 @@ void AnitaEventSummary::findMostImpulsive(int whichMetric) const {
       AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
       for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
 
-	const WaveformInfo& wave = deconvolved_filtered[polInd][peakInd];
+        const WaveformInfo& wave = deconvolved_filtered[polInd][peakInd];
 
-	// select which impulsivity measure to use...
-	// 0 -> Cosmin's impulsivityMeasure
-	// 1 -> Ben's fracPowerWindowGradient()
+        // select which impulsivity measure to use...
+        // 0 -> Cosmin's impulsivityMeasure
+        // 1 -> Ben's fracPowerWindowGradient()
 	
-                                                                  // VERY IMPORTANT FACTOR OF -1 HERE
-                                                                  // as lower == better for this metric
- 	double val = whichMetric <= 0 ? wave.impulsivityMeasure : -1*wave.fracPowerWindowGradient();
+        // VERY IMPORTANT FACTOR OF -1 HERE
+        // as lower == better for this metric
+        // 2 -> Cosmins's impulsivityMeasure * peak.value 
+        double val;
+        switch (whichMetric)
+        {
+          case 1:
+            val = -1*wave.fracPowerWindowGradient();
+            break;
+          case 2:
+            val = wave.impulsivityMeasure * peak[polInd][peakInd].value;
+            break;
+          case 0:
+          default:
+            val = wave.impulsivityMeasure;
+            break;
+        };
+        if(val > highestVal){
+          highestVal = val;
+          fMostImpulsiveIndex = peakInd;
+          fMostImpulsivePol = pol;
+        }
+      }
+    }
 
-	if(val > highestVal){
-	  highestVal = val;
-	  fMostImpulsiveIndex = peakInd;
-	  fMostImpulsivePol = pol;
-	}
+    if(whichMetric != 2 && impulsivityFractionThreshold > 0. && impulsivityFractionThreshold < 1.)
+    {
+      int prevPol = int(fMostImpulsivePol);
+      int prevInd = fMostImpulsiveIndex;
+      const WaveformInfo& wave = deconvolved_filtered[prevPol][prevInd];
+      double highestVal = whichMetric <= 0 ? wave.impulsivityMeasure : -1*wave.fracPowerWindowGradient();
+      double bright = peak[prevPol][prevInd].value;
+      for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
+        AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
+        for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++)
+        {
+          if((peakInd == prevInd) && (prevPol == polInd)) continue;
+          const WaveformInfo& wave2 = deconvolved_filtered[polInd][peakInd];
+
+          double val = whichMetric <= 0 ? wave.impulsivityMeasure : -1*wave.fracPowerWindowGradient();
+
+          if(val/highestVal < impulsivityFractionThreshold) continue;
+          if(bright < peak[polInd][peakInd].value)
+          {
+            bright = peak[polInd][peakInd].value;
+            fMostImpulsiveIndex = peakInd;
+            fMostImpulsivePol = pol;
+          }	
+        }
       }
     }
   }
-
-	if(impulsivityFractionThreshold > 0. && impulsivityFractionThreshold < 1.)
-	{
-		int prevPol = int(fMostImpulsivePol);
-		int prevInd = fMostImpulsiveIndex;
-		const WaveformInfo& wave = deconvolved_filtered[prevPol][prevInd];
-		double highestVal = whichMetric <= 0 ? wave.impulsivityMeasure : -1*wave.fracPowerWindowGradient();
-		double bright = peak[prevPol][prevInd].value;
-    for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
-      AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
-			for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++)
-			{
-				if((peakInd == prevInd) && (prevPol == polInd)) continue;
-				const WaveformInfo& wave2 = deconvolved_filtered[polInd][peakInd];
-				double val = whichMetric <= 0 ? wave2.impulsivityMeasure : -1*wave2.fracPowerWindowGradient();
-				if(val/highestVal < impulsivityFractionThreshold) continue;
-				if(bright < peak[polInd][peakInd].value)
-				{
-					bright = peak[polInd][peakInd].value;
-					fMostImpulsiveIndex = peakInd;
-					fMostImpulsivePol = pol;
-				}	
-			}
-		}
-	}
 }
 
 
