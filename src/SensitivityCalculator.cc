@@ -1,16 +1,28 @@
 #include "SensitivityCalculator.h" 
 #include "TGraphErrors.h" 
 #include "TAxis.h" 
+
+#ifdef USE_ROOSTATS
 #include "RooStats/FeldmanCousins.h" 
 #include "RooStats/ProfileLikelihoodCalculator.h" 
+#endif
 
 
 
 SensitivityCalculator::SensitivityCalculator(double CL, bool FC) 
+#ifdef USE_ROOSTATS
 : w("w")
+#endif 
 {
   cl = CL;
   use_fc = FC; 
+
+#ifndef USE_ROOSTATS
+
+  fprintf(stderr,"Need to build with USE_ROOSTATS to use Sensitivity Calculator\n"); 
+
+
+#else
 
   w.factory("Poisson::obsModel(nobs[0,0,50], sum(prod(s[1,0,50], eff[0.7,0,1]),banthro[1,0,50],bthermal[1,0,50]))"); 
   w.factory("Poisson::thermalModel(nthermal[1,0,10], prod::taubthermal(bthermal, tauthermal[3,0,10]))");
@@ -34,32 +46,41 @@ SensitivityCalculator::SensitivityCalculator(double CL, bool FC)
   setEfficiency(0.7,0.05); 
   setThermalBackground(1,3); 
   setAnthroBackground(0,0.3); 
+#endif
 
 }  
 
 void SensitivityCalculator::SensitivityCalculator::setThermalBackground(int nobs, double tau)
 {
+#ifdef USE_ROOSTATS
+
   w.var("tauthermal")->setVal(tau); 
   w.var("nthermal")->setVal(nobs); 
+#endif
 }
 
 
 void SensitivityCalculator::SensitivityCalculator::setAnthroBackground(int nobs, double tau)
 {
+#ifdef USE_ROOSTATS
   w.var("tauanthro")->setVal(tau); 
   w.var("nanthro")->setVal(nobs); 
+#endif
 
 }
 
 void SensitivityCalculator::SensitivityCalculator::setEfficiency(double mean, double sigma)
 {
+#ifdef USE_ROOSTATS
   w.var("mean_eff")->setVal(mean); 
   w.var("sigma_eff")->setVal(sigma); 
+#endif
 }
 
 
 void SensitivityCalculator::getLimit(int nobs, double * lower, double * upper) 
 {
+#ifdef USE_ROOSTATS
   w.var("nobs")->setVal(nobs); 
   RooDataSet data("data","",*w.var("nobs")); 
   data.add(*w.var("nobs")); 
@@ -94,6 +115,8 @@ void SensitivityCalculator::getLimit(int nobs, double * lower, double * upper)
     if (upper) *upper=ci->UpperLimit(*w.var("s")); 
     if (lower) *lower=ci->LowerLimit(*w.var("s")); 
   }
+#endif
+
 
 }
 

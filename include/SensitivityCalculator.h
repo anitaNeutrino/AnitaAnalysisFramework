@@ -1,7 +1,11 @@
 #ifndef SENSITIVITY_CALCULATOR_HH
 #define SENSITIVITY_CALCULATOR_HH
 
+#ifdef USE_ROOSTATS
 #include "RooWorkspace.h" 
+#endif 
+ 
+
 class TGraphErrors; 
 
 /** Sensitivity calculator ...
@@ -36,7 +40,9 @@ class SensitivityCalculator
     double cl;
     bool use_fc;
 
+#ifdef USE_ROOSTATS
     RooWorkspace w; 
+#endif
 
 };
 
