@@ -65,6 +65,7 @@
 #pragma link C++ class AnitaResponse::DeconvolutionMethod+;
 
 #pragma link C++ class AnitaEventFaker+; 
+#pragma link C++ class SensitivityCalculator+; 
 
 
 #endif
