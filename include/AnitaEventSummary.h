@@ -40,6 +40,7 @@ class AnitaEventSummary : public TObject
   static const Int_t maxDirectionsPerPol = 5; /// The maximum number of hypotheses storable per polarization */
   static const Int_t peaksPerSpectrum = 3; /// The maximum number of frequency peaks per waveform spectrum
   static const Int_t numFracPowerWindows = 5;
+  static const Int_t numBlastPowerBands = 2;
 
   //------------------------------------------------------------------------------------
   /*************************************************************************************
@@ -299,13 +300,17 @@ class AnitaEventSummary : public TObject
     Double_t minBottomToTopRatio[AnitaPol::kNotAPol];
     Int_t minBottomToTopRatioSector[AnitaPol::kNotAPol];
 
-
     Int_t nSectorsWhereBottomExceedsTop;
 
     /** The fraction of nearby events that are payload blasts */
     Double_t blastFraction;
 
-    ClassDefNV(EventFlags,11);
+    Double_t middleOrBottomPower[numBlastPowerBands];
+    Double_t topPower[numBlastPowerBands];
+    Int_t middleOrBottomAnt[numBlastPowerBands];
+    Int_t middleOrBottomPol[numBlastPowerBands];
+
+    ClassDefNV(EventFlags,13);
   };
 
 
@@ -329,7 +334,7 @@ class AnitaEventSummary : public TObject
 
     void reset(); /// sets all the values to nonsense.  Sorry, mapHistoryVal means this is in source now
 
-    ClassDefNV(SourceHypothesis,3);
+    ClassDef(SourceHypothesis,4);
   };
 
 
@@ -485,7 +490,7 @@ class AnitaEventSummary : public TObject
   void resetNonPersistent() const;
   const SourceHypothesis* sourceFromTag() const;
 
-  ClassDefNV(AnitaEventSummary, 36);
+  ClassDefNV(AnitaEventSummary, 37);
 };
 
 #endif
