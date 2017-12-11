@@ -194,6 +194,12 @@ class AnitaEventSummary : public TObject
     Double_t linearPolAngle() const;
     Double_t circPolFrac() const;
     Double_t totalPolFrac() const;
+    
+    //utilities for instantaneous polarization info
+    Double_t instantaneousLinearPolFrac() const;
+    Double_t instantaneousLinearPolAngle() const;
+    Double_t instantaneousCircPolFrac() const;
+    Double_t instantaneousTotalPolFrac() const;
 
     Double_t standardizedPeakMoment(Int_t i) const;
     inline Double_t skewness(){return standardizedPeakMoment(3);}
