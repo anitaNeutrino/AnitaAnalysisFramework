@@ -45,6 +45,7 @@
 
 #pragma link C++ namespace AnitaResponse+;
 #pragma link C++ namespace impulsivity+;
+#pragma link C++ namespace bandwidth+;
 
 #pragma link C++ namespace polarimetry+;
 #pragma link C++ class polarimetry::StokesAnalysis;
@@ -64,6 +65,7 @@
 #pragma link C++ class AnitaResponse::DeconvolutionMethod+;
 
 #pragma link C++ class AnitaEventFaker+; 
+#pragma link C++ class SensitivityCalculator+; 
 
 
 #endif

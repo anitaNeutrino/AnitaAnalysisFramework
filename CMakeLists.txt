@@ -35,7 +35,15 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${UTIL_SHARE_DIR}/cmake/modules/")
 
 #---Locate the ROOT package and defines a number of variables (e.g. ROOT_INCLUDE_DIRS)
+option(ENABLE_ROOSTATS "Enable RooStats/RooFit") 
+if (ENABLE_ROOSTATS) 
+  find_package(ROOT REQUIRED COMPONENTS MathMoreMathCore RIO Hist Tree Net TMVA RooFit RooStats) 
+  add_definitions(-DUSE_ROOSTATS) 
+  message("Using RooStats") 
+else() 
 find_package(ROOT REQUIRED COMPONENTS MathMore MathCore RIO Hist Tree Net TMVA)
+endif() 
+
 find_package(FFTW REQUIRED)
 
 

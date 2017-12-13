@@ -86,6 +86,66 @@ void convolveTUFF(int ant=1, char tmb='B', char config='B', const char* outdir="
 	outV.close();
 }
 
+void makeAverage(const char* indir = "", const char* outdir="")
+{
+	mkdir(Form("data/responses/TUFFs/%s", outdir), 0777);
+	TString inf = Form("data/responses/TUFFs/%s/", indir);
+  char* dir = gSystem->ExpandPathName(inf.Data());
+  void* dirp = gSystem->OpenDirectory(dir);
+  const char* entry;
+  const char* fname[100];
+  Int_t n = 0;
+  TString str;
+  while((entry = (char*) gSystem->GetDirEntry(dirp)))
+  {
+    str = entry;
+    if(str.EndsWith(".imp")) fname[n++] = gSystem->ConcatFileName(dir, entry);
+  }
+  TGraph* gOut = new TGraph(fname[0]);
+  for(int i = 0; i < n; i++)
+  {
+    TGraph gTemp(fname[i]);
+    for(int j=0; j < gOut->GetN(); j++)
+    {
+      gOut->GetY()[j] += gTemp.GetY()[j];
+    }
+  }
+  for(int j=0; j < gOut->GetN(); j++)
+  {
+    gOut->GetY()[j] /= n;
+  }
+	TString oName = Form("data/responses/TUFFs/%s/%s.imp", outdir, indir);
+	ofstream outf(oName.Data());
+	for(int i = 0; i < gOut->GetN(); i++)
+	{
+		if(.1*i < 10)
+		{
+			outf << to_string(double(.1*i)).substr(0,3) << " " << gOut->GetY()[i] << "\n";
+			continue;
+		}
+		if(.1*i < 100)
+		{
+			outf << to_string(double(.1*i)).substr(0,4) << " " << gOut->GetY()[i] << "\n";
+			continue;
+		}
+		outf << to_string(double(.1*i)).substr(0,5) << " " << gOut->GetY()[i] << "\n";
+	}
+  outf.close();
+}
+
+void makePow(const char* indir = "", const char* outdir="")
+{
+	mkdir(Form("data/responses/TUFFs/%s", outdir), 0777);
+	TGraph* inf = new TGraph(Form("data/responses/TUFFs/%s/%s.imp", outdir, indir));
+  TGraph* outf = FFTtools::makePowerSpectrum(inf);
+  outf->SetName("power");
+  TFile* f = new TFile(Form("data/responses/TUFFs/%s/%s.root", outdir, indir), "RECREATE");
+  f->cd();
+  outf->Write();
+  f->Close();
+  delete inf;
+  delete outf;
+}
 
 void convolveTUFFS()
 {
@@ -95,40 +155,54 @@ void convolveTUFFS()
 		convolveTUFF(i, 'M', 'B', "notches_260_375_0");
 		convolveTUFF(i, 'T', 'B', "notches_260_375_0");
 	}
+  makeAverage("notches_260_375_0", "averages");
+  makePow("notches_260_375_0", "averages");
 	for(int i = 1; i < 17; i++)
 	{
 		convolveTUFF(i, 'B', 'J', "notches_250_375_0");
 		convolveTUFF(i, 'M', 'J', "notches_250_375_0");
 		convolveTUFF(i, 'T', 'J', "notches_250_375_0");
 	}
+  makeAverage("notches_250_375_0", "averages");
+  makePow("notches_250_375_0", "averages");
 	for(int i = 1; i < 17; i++)
 	{
 		convolveTUFF(i, 'B', 'C', "notches_260_0_460");
 		convolveTUFF(i, 'M', 'C', "notches_260_0_460");
 		convolveTUFF(i, 'T', 'C', "notches_260_0_460");
 	}
+  makeAverage("notches_260_0_460", "averages");
+  makePow("notches_260_0_460", "averages");
 	for(int i = 1; i < 17; i++)
 	{
 		convolveTUFF(i, 'B', 'A', "notches_260_0_0");
 		convolveTUFF(i, 'M', 'A', "notches_260_0_0");
 		convolveTUFF(i, 'T', 'A', "notches_260_0_0");
 	}
+  makeAverage("notches_260_0_0", "averages");
+  makePow("notches_260_0_0", "averages");
 	for(int i = 1; i < 17; i++)
 	{
 		convolveTUFF(i, 'B', 'O', "notches_260_365_0");
 		convolveTUFF(i, 'M', 'O', "notches_260_365_0");
 		convolveTUFF(i, 'T', 'O', "notches_260_365_0");
 	}
+  makeAverage("notches_260_365_0", "averages");
+  makePow("notches_260_365_0", "averages");
 	for(int i = 1; i < 17; i++)
 	{
 		convolveTUFF(i, 'B', 'G', "notches_260_385_0");
 		convolveTUFF(i, 'M', 'G', "notches_260_385_0");
 		convolveTUFF(i, 'T', 'G', "notches_260_385_0");
 	}
+  makeAverage("notches_260_385_0", "averages");
+  makePow("notches_260_385_0", "averages");
 	for(int i = 1; i < 17; i++)
 	{
 		convolveTUFF(i, 'B', 'P', "notches_260_375_460");
 		convolveTUFF(i, 'M', 'P', "notches_260_375_460");
 		convolveTUFF(i, 'T', 'P', "notches_260_375_460");
 	}
+  makeAverage("notches_260_375_460", "averages");
+  makePow("notches_260_375_460", "averages");
 }

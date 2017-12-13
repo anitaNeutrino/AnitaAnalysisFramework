@@ -40,6 +40,7 @@ class AnitaEventSummary : public TObject
   static const Int_t maxDirectionsPerPol = 5; /// The maximum number of hypotheses storable per polarization */
   static const Int_t peaksPerSpectrum = 3; /// The maximum number of frequency peaks per waveform spectrum
   static const Int_t numFracPowerWindows = 5;
+  static const Int_t numBlastPowerBands = 2;
 
   //------------------------------------------------------------------------------------
   /*************************************************************************************
@@ -193,6 +194,12 @@ class AnitaEventSummary : public TObject
     Double_t linearPolAngle() const;
     Double_t circPolFrac() const;
     Double_t totalPolFrac() const;
+    
+    //utilities for instantaneous polarization info
+    Double_t instantaneousLinearPolFrac() const;
+    Double_t instantaneousLinearPolAngle() const;
+    Double_t instantaneousCircPolFrac() const;
+    Double_t instantaneousTotalPolFrac() const;
 
     Double_t standardizedPeakMoment(Int_t i) const;
     inline Double_t skewness(){return standardizedPeakMoment(3);}
@@ -299,13 +306,17 @@ class AnitaEventSummary : public TObject
     Double_t minBottomToTopRatio[AnitaPol::kNotAPol];
     Int_t minBottomToTopRatioSector[AnitaPol::kNotAPol];
 
-
     Int_t nSectorsWhereBottomExceedsTop;
 
     /** The fraction of nearby events that are payload blasts */
     Double_t blastFraction;
 
-    ClassDefNV(EventFlags,11);
+    Double_t middleOrBottomPower[numBlastPowerBands];
+    Double_t topPower[numBlastPowerBands];
+    Int_t middleOrBottomAnt[numBlastPowerBands];
+    Int_t middleOrBottomPol[numBlastPowerBands];
+
+    ClassDefNV(EventFlags,13);
   };
 
 
@@ -329,7 +340,7 @@ class AnitaEventSummary : public TObject
 
     void reset(); /// sets all the values to nonsense.  Sorry, mapHistoryVal means this is in source now
 
-    ClassDefNV(SourceHypothesis,3);
+    ClassDef(SourceHypothesis,4);
   };
 
 
@@ -428,7 +439,7 @@ class AnitaEventSummary : public TObject
   void setTriggerInfomation(const RawAnitaHeader* header);
   void setSourceInformation(UsefulAdu5Pat* pat, const TruthAnitaEvent * truth = 0);
   void zeroInternals();
-
+  Bool_t update() const {resetNonPersistent(); return true;}
 
   // Utilities to find interesting entries in AnitaEventSummary
   AnitaPol::AnitaPol_t highestPol() const;
@@ -440,7 +451,7 @@ class AnitaEventSummary : public TObject
   const WaveformInfo& highestCoherentFiltered() const;
   const WaveformInfo& highestDeconvolvedFiltered() const;
 	
-	static void setThresholdForMostImpulsive(double threshold); /// value between 0 and 1, will find the brightest peak that is within threshold as impulsive as the most impulsive peak
+  static void setThresholdForMostImpulsive(double threshold); /// value between 0 and 1, will find the brightest peak that is within threshold as impulsive as the most impulsive peak
   AnitaPol::AnitaPol_t mostImpulsivePol(int whichMetric=0) const;
   Int_t mostImpulsivePolAsInt(int whichMetric=0) const;
   Int_t mostImpulsiveInd(int whichMetric=0) const;
@@ -474,8 +485,8 @@ class AnitaEventSummary : public TObject
   mutable AnitaPol::AnitaPol_t fHighestPol;        //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding highest peak
   mutable Int_t                fTrainingPeakIndex; //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak training peak (pulser/mc peak)
   mutable AnitaPol::AnitaPol_t fTrainingPol;       //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding peak training peak (pulser/mc peak)
-  mutable Int_t                fMostImpulsiveIndex; //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding most impulsive waveform
-  mutable AnitaPol::AnitaPol_t fMostImpulsivePol;       //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding most impulsive waveform
+  mutable Int_t                fMostImpulsiveIndex;//! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding most impulsive waveform
+  mutable AnitaPol::AnitaPol_t fMostImpulsivePol;  //! DOES NOT PERSIST IN ROOT! Internal index to cache result of finding most impulsive waveform
   mutable UInt_t               fLastEventNumber;   //! DOES NOT PERSIST IN ROOT! To check for stale caching variables
 
 
@@ -485,7 +496,7 @@ class AnitaEventSummary : public TObject
   void resetNonPersistent() const;
   const SourceHypothesis* sourceFromTag() const;
 
-  ClassDefNV(AnitaEventSummary, 36);
+  ClassDefNV(AnitaEventSummary, 37);
 };
 
 #endif

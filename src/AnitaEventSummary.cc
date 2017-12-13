@@ -596,6 +596,71 @@ double AnitaEventSummary::WaveformInfo::totalPolFrac() const {
 
 }
 
+/** 
+ * Utility function to return the instantaneous linear polarization fraction
+ * Useful for TTree::Draw() 
+ * 
+ * 
+ * @return the instantaneous linear polarization fraction
+ */
+
+double AnitaEventSummary::WaveformInfo::instantaneousLinearPolFrac() const {
+
+  double value = TMath::Sqrt( pow(max_dQ,2) + pow(max_dU,2) ) / max_dI;
+
+  return value;
+}
+
+
+/** 
+ * Utility function to return the instantaneous linear polarization angle
+ * Useful for TTree::Draw() 
+ * 
+ * 
+ * @return the instantaneous linear polarization angle is degrees
+ */
+
+double AnitaEventSummary::WaveformInfo::instantaneousLinearPolAngle() const {
+  
+  double value = (TMath::ATan(max_dU/max_dQ)/2)*TMath::RadToDeg();
+
+  return value;
+
+}
+
+
+
+/** 
+ * Utility function to return the instantaneous circular polarization fraction
+ * Useful for TTree::Draw() 
+ * 
+ * 
+ * @return the instantaneous circular polarization fraction
+ */
+
+double AnitaEventSummary::WaveformInfo::instantaneousCircPolFrac() const {
+  
+  double value = TMath::Abs(max_dV)/max_dI;
+
+  return value;
+
+}
+
+/** 
+ * Utility function to return the instantaneous total polarization fraction
+ * Useful for TTree::Draw() 
+ * 
+ * 
+ * @return the instantaneous circular polarization fraction
+ */
+
+double AnitaEventSummary::WaveformInfo::instantaneousTotalPolFrac() const {
+  
+  double value = TMath::Sqrt(pow(max_dQ,2) + pow(max_dU,2) + pow(max_dV,2))/max_dI;
+
+  return value;
+
+}
 
 
 
@@ -843,7 +908,9 @@ const AnitaEventSummary::WaveformInfo& AnitaEventSummary::trainingDeconvolvedFil
 
 
 /** 
- * Print warning if fContainer is NULL as the majority the utility functions that rely on it will print nonsense
+ * Print warning if fContainer is NULL as the majority the utility functions that rely on it will print nonsense.
+ * Note: A new public member update() has been added to force resetNonPersisent(), which sets fContainer, to be called.
+ * If required, this function should be called as the first in a series of cuts.
  * 
  * @param funcName should be the __PRETTY_FUNCTION__ macro for nice debugging info
  * 
@@ -851,9 +918,10 @@ const AnitaEventSummary::WaveformInfo& AnitaEventSummary::trainingDeconvolvedFil
  */
 const AnitaEventSummary* AnitaEventSummary::PointingHypothesis::getContainer(const char* funcName) const{
   if(!fContainer){
-    std::cerr << "Error in " << funcName
-              << " don't have access to AnitaEventSummary that contains me!"
-              << " Was the AnitaEventSummary constructor called?"
+    std::cerr << "Error in " << funcName << ", don't have access to AnitaEventSummary that contains me!\n" 
+	      << "To fix this error, try calling AnitaEventSummary()::update() as the first argument of the cuts in TTree::Draw(),\n"
+	      << "Note: update() always returns true, so TTree::Draw(\"sum.peak[0][0].dPhiWais()\", "
+	      << "\"sum.update() && TMath::Abs(sum.peak[0][0].dPhiWais()) < 5\") will select all events within 5 degrees of phi of WAIS.\n"
               << std::endl;
   }
   return fContainer;
@@ -965,7 +1033,7 @@ void AnitaEventSummary::findHighestPeak() const {
 /** 
  * Find the most impulsive peak candidate direction, choose impusivity metric with whichMetric
  * 
- * @param whichMetric 0 for Cosmin's impulsivityMeasure, 1 for Ben's fracPowerWindowGradient() (default = 0)
+ * @param whichMetric 0 for Cosmin's impulsivityMeasure, 1 for Ben's fracPowerWindowGradient(), 2 for impulsivityMeasure * peak.value (added by Andrew Ludwig for reasons) (default = 0)
  */
 void AnitaEventSummary::findMostImpulsive(int whichMetric) const {
   resetNonPersistent();
@@ -976,49 +1044,64 @@ void AnitaEventSummary::findMostImpulsive(int whichMetric) const {
       AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
       for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
 
-	const WaveformInfo& wave = deconvolved_filtered[polInd][peakInd];
+        const WaveformInfo& wave = deconvolved_filtered[polInd][peakInd];
 
-	// select which impulsivity measure to use...
-	// 0 -> Cosmin's impulsivityMeasure
-	// 1 -> Ben's fracPowerWindowGradient()
+        // select which impulsivity measure to use...
+        // 0 -> Cosmin's impulsivityMeasure
+        // 1 -> Ben's fracPowerWindowGradient()
 	
-                                                                  // VERY IMPORTANT FACTOR OF -1 HERE
-                                                                  // as lower == better for this metric
- 	double val = whichMetric <= 0 ? wave.impulsivityMeasure : -1*wave.fracPowerWindowGradient();
+        // VERY IMPORTANT FACTOR OF -1 HERE
+        // as lower == better for this metric
+        // 2 -> Cosmins's impulsivityMeasure * peak.value 
+        double val;
+        switch (whichMetric)
+        {
+          case 1:
+            val = -1*wave.fracPowerWindowGradient();
+            break;
+          case 2:
+            val = wave.impulsivityMeasure * peak[polInd][peakInd].value;
+            break;
+          case 0:
+          default:
+            val = wave.impulsivityMeasure;
+            break;
+        };
+        if(val > highestVal){
+          highestVal = val;
+          fMostImpulsiveIndex = peakInd;
+          fMostImpulsivePol = pol;
+        }
+      }
+    }
 
-	if(val > highestVal){
-	  highestVal = val;
-	  fMostImpulsiveIndex = peakInd;
-	  fMostImpulsivePol = pol;
-	}
+    if(whichMetric != 2 && impulsivityFractionThreshold > 0. && impulsivityFractionThreshold < 1.)
+    {
+      int prevPol = int(fMostImpulsivePol);
+      int prevInd = fMostImpulsiveIndex;
+      const WaveformInfo& wave = deconvolved_filtered[prevPol][prevInd];
+      double highestVal = whichMetric <= 0 ? wave.impulsivityMeasure : -1*wave.fracPowerWindowGradient();
+      double bright = peak[prevPol][prevInd].value;
+      for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
+        AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
+        for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++)
+        {
+          if((peakInd == prevInd) && (prevPol == polInd)) continue;
+          const WaveformInfo& wave2 = deconvolved_filtered[polInd][peakInd];
+
+          double val = whichMetric <= 0 ? wave.impulsivityMeasure : -1*wave.fracPowerWindowGradient();
+
+          if(val/highestVal < impulsivityFractionThreshold) continue;
+          if(bright < peak[polInd][peakInd].value)
+          {
+            bright = peak[polInd][peakInd].value;
+            fMostImpulsiveIndex = peakInd;
+            fMostImpulsivePol = pol;
+          }	
+        }
       }
     }
   }
-
-	if(impulsivityFractionThreshold > 0. && impulsivityFractionThreshold < 1.)
-	{
-		int prevPol = int(fMostImpulsivePol);
-		int prevInd = fMostImpulsiveIndex;
-		const WaveformInfo& wave = deconvolved_filtered[prevPol][prevInd];
-		double highestVal = whichMetric <= 0 ? wave.impulsivityMeasure : -1*wave.fracPowerWindowGradient();
-		double bright = peak[prevPol][prevInd].value;
-    for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
-      AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
-			for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++)
-			{
-				if((peakInd == prevInd) && (prevPol == polInd)) continue;
-				const WaveformInfo& wave2 = deconvolved_filtered[polInd][peakInd];
-				double val = whichMetric <= 0 ? wave2.impulsivityMeasure : -1*wave2.fracPowerWindowGradient();
-				if(val/highestVal < impulsivityFractionThreshold) continue;
-				if(bright < peak[polInd][peakInd].value)
-				{
-					bright = peak[polInd][peakInd].value;
-					fMostImpulsiveIndex = peakInd;
-					fMostImpulsivePol = pol;
-				}	
-			}
-		}
-	}
 }
 
 
@@ -1030,7 +1113,8 @@ void AnitaEventSummary::findMostImpulsive(int whichMetric) const {
  */
 const AnitaEventSummary::SourceHypothesis* AnitaEventSummary::sourceFromTag() const {
   switch(flags.pulser){
-    case EventFlags::WAIS or EventFlags::WAIS_V:
+  case EventFlags::WAIS_V:
+  case EventFlags::WAIS:
       // std::cerr << "wais" << std::endl;
       return &wais;
     case EventFlags::LDB:  
@@ -1042,6 +1126,7 @@ const AnitaEventSummary::SourceHypothesis* AnitaEventSummary::sourceFromTag() co
         return &mc;
       }
       else{
+        // std::cerr << "null" << std::endl;
         return NULL;
       }
   }
@@ -1065,25 +1150,23 @@ void AnitaEventSummary::findTrainingPeak() const {
     // return the peak closest to that source...
     const SourceHypothesis* peakOfInterest = sourceFromTag();
     if(peakOfInterest){
-
-      // Add a factor of 1./(peakValue*peakValue) since just finding the nearest peak
-      // was picking out the wrong polarisation of WAIS some fraction of the time
-      // presumably this was happening for MC too...
-
-      // double minWeightedDeltaAngleSq = 1e99;
+      // double lowestCloseFracPowWinGrad = DBL_MAX;
       double highestClosePeakVal = -1;
       for(int polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
         AnitaPol::AnitaPol_t pol = (AnitaPol::AnitaPol_t) polInd;
         for(int peakInd=0; peakInd < nPeaks[polInd]; peakInd++){
-          // double dPhi = peak[polInd][peakInd].dPhiSource(*peakOfInterest);
-          // double dTheta = peak[polInd][peakInd].dThetaSource(*peakOfInterest);
-          // double weightedDeltaAngleSq = (dPhi*dPhi + dTheta*dTheta)/(peak[polInd][peakInd].value*peak[polInd][peakInd].value);
           const double dPhiClose = 5.5;
           const double dThetaClose = 3.5;
-          if(peak[polInd][peakInd].closeToTagged(dPhiClose, dThetaClose) && peak[polInd][peakInd].value > highestClosePeakVal){
-            highestClosePeakVal = peak[polInd][peakInd].value;
-            fTrainingPeakIndex = peakInd;
-            fTrainingPol = pol;
+          if(peak[polInd][peakInd].closeToTagged(dPhiClose, dThetaClose)){
+	    // double fpwg = deconvolved_filtered[polInd][peakInd].fracPowerWindowGradient();
+	    // if(fpwg  < lowestCloseFracPowWinGrad){
+	    double mp = peak[polInd][peakInd].value;
+	    if(mp > highestClosePeakVal){
+	      // lowestCloseFracPowWinGrad = fpwg;
+	      highestClosePeakVal = mp;
+	      fTrainingPeakIndex = peakInd;
+	      fTrainingPol = pol;
+	    }
           }
         }
       }
@@ -1091,9 +1174,15 @@ void AnitaEventSummary::findTrainingPeak() const {
     if(fTrainingPeakIndex < 0){
       // didn't find one or no tagged source
       // so, just do highest peak in map
+
       findHighestPeak();
       fTrainingPeakIndex = fHighestPeakIndex;
       fTrainingPol = fHighestPol;
+
+      // const int metric = 1;
+      // findMostImpulsive(metric);
+      // fTrainingPeakIndex = fMostImpulsiveIndex;
+      // fTrainingPol = fMostImpulsivePol;
     }
   }
 }
