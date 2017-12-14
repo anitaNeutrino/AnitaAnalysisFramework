@@ -600,6 +600,71 @@ double AnitaEventSummary::WaveformInfo::totalPolFrac() const {
 
 }
 
+/** 
+ * Utility function to return the instantaneous linear polarization fraction
+ * Useful for TTree::Draw() 
+ * 
+ * 
+ * @return the instantaneous linear polarization fraction
+ */
+
+double AnitaEventSummary::WaveformInfo::instantaneousLinearPolFrac() const {
+
+  double value = TMath::Sqrt( pow(max_dQ,2) + pow(max_dU,2) ) / max_dI;
+
+  return value;
+}
+
+
+/** 
+ * Utility function to return the instantaneous linear polarization angle
+ * Useful for TTree::Draw() 
+ * 
+ * 
+ * @return the instantaneous linear polarization angle is degrees
+ */
+
+double AnitaEventSummary::WaveformInfo::instantaneousLinearPolAngle() const {
+  
+  double value = (TMath::ATan(max_dU/max_dQ)/2)*TMath::RadToDeg();
+
+  return value;
+
+}
+
+
+
+/** 
+ * Utility function to return the instantaneous circular polarization fraction
+ * Useful for TTree::Draw() 
+ * 
+ * 
+ * @return the instantaneous circular polarization fraction
+ */
+
+double AnitaEventSummary::WaveformInfo::instantaneousCircPolFrac() const {
+  
+  double value = TMath::Abs(max_dV)/max_dI;
+
+  return value;
+
+}
+
+/** 
+ * Utility function to return the instantaneous total polarization fraction
+ * Useful for TTree::Draw() 
+ * 
+ * 
+ * @return the instantaneous circular polarization fraction
+ */
+
+double AnitaEventSummary::WaveformInfo::instantaneousTotalPolFrac() const {
+  
+  double value = TMath::Sqrt(pow(max_dQ,2) + pow(max_dU,2) + pow(max_dV,2))/max_dI;
+
+  return value;
+
+}
 
 
 

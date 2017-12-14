@@ -133,6 +133,19 @@ void makeAverage(const char* indir = "", const char* outdir="")
   outf.close();
 }
 
+void makePow(const char* indir = "", const char* outdir="")
+{
+	mkdir(Form("data/responses/TUFFs/%s", outdir), 0777);
+	TGraph* inf = new TGraph(Form("data/responses/TUFFs/%s/%s.imp", outdir, indir));
+  TGraph* outf = FFTtools::makePowerSpectrum(inf);
+  outf->SetName("power");
+  TFile* f = new TFile(Form("data/responses/TUFFs/%s/%s.root", outdir, indir), "RECREATE");
+  f->cd();
+  outf->Write();
+  f->Close();
+  delete inf;
+  delete outf;
+}
 
 void convolveTUFFS()
 {
@@ -143,6 +156,7 @@ void convolveTUFFS()
 		convolveTUFF(i, 'T', 'B', "notches_260_375_0");
 	}
   makeAverage("notches_260_375_0", "averages");
+  makePow("notches_260_375_0", "averages");
 	for(int i = 1; i < 17; i++)
 	{
 		convolveTUFF(i, 'B', 'J', "notches_250_375_0");
@@ -150,6 +164,7 @@ void convolveTUFFS()
 		convolveTUFF(i, 'T', 'J', "notches_250_375_0");
 	}
   makeAverage("notches_250_375_0", "averages");
+  makePow("notches_250_375_0", "averages");
 	for(int i = 1; i < 17; i++)
 	{
 		convolveTUFF(i, 'B', 'C', "notches_260_0_460");
@@ -157,6 +172,7 @@ void convolveTUFFS()
 		convolveTUFF(i, 'T', 'C', "notches_260_0_460");
 	}
   makeAverage("notches_260_0_460", "averages");
+  makePow("notches_260_0_460", "averages");
 	for(int i = 1; i < 17; i++)
 	{
 		convolveTUFF(i, 'B', 'A', "notches_260_0_0");
@@ -164,6 +180,7 @@ void convolveTUFFS()
 		convolveTUFF(i, 'T', 'A', "notches_260_0_0");
 	}
   makeAverage("notches_260_0_0", "averages");
+  makePow("notches_260_0_0", "averages");
 	for(int i = 1; i < 17; i++)
 	{
 		convolveTUFF(i, 'B', 'O', "notches_260_365_0");
@@ -171,6 +188,7 @@ void convolveTUFFS()
 		convolveTUFF(i, 'T', 'O', "notches_260_365_0");
 	}
   makeAverage("notches_260_365_0", "averages");
+  makePow("notches_260_365_0", "averages");
 	for(int i = 1; i < 17; i++)
 	{
 		convolveTUFF(i, 'B', 'G', "notches_260_385_0");
@@ -178,6 +196,7 @@ void convolveTUFFS()
 		convolveTUFF(i, 'T', 'G', "notches_260_385_0");
 	}
   makeAverage("notches_260_385_0", "averages");
+  makePow("notches_260_385_0", "averages");
 	for(int i = 1; i < 17; i++)
 	{
 		convolveTUFF(i, 'B', 'P', "notches_260_375_460");
@@ -185,4 +204,5 @@ void convolveTUFFS()
 		convolveTUFF(i, 'T', 'P', "notches_260_375_460");
 	}
   makeAverage("notches_260_375_460", "averages");
+  makePow("notches_260_375_460", "averages");
 }
