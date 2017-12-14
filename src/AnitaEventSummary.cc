@@ -422,6 +422,8 @@ void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat, const TruthAnit
     mc.weight = truth->weight; 
     mc.distance = pat->getTriggerTimeNsFromSource(truth->sourceLat, truth->sourceLon, truth->sourceAlt);
     mc.energy = truth->nuMom; // I guess this won't be true if icemc ever simulates non-relativistic neutrinos :P
+    mc.triggerSNR[0] = truth->maxSNRAtTriggerH; 
+    mc.triggerSNR[1] = truth->maxSNRAtTriggerV; 
   }
 }
 
@@ -437,6 +439,8 @@ void AnitaEventSummary::MCTruth::reset()
   memset(&wf[1],0,sizeof(WaveformInfo));
   weight = 0;
   energy = 0;
+  triggerSNR[0] = 0;
+  triggerSNR[1] = 0; 
 }
 
 

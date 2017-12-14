@@ -346,9 +346,10 @@ class AnitaEventSummary : public TObject
     WaveformInfo wf[AnitaPol::kNotAPol];
     Double_t weight;
     Double_t energy;
+    Double_t triggerSNR[2]; 
     void reset();
 
-    ClassDefNV(MCTruth,5);
+    ClassDefNV(MCTruth,6);
   };
 
 
@@ -485,7 +486,7 @@ class AnitaEventSummary : public TObject
   void resetNonPersistent() const;
   const SourceHypothesis* sourceFromTag() const;
 
-  ClassDefNV(AnitaEventSummary, 36);
+  ClassDefNV(AnitaEventSummary, 37);
 };
 
 #endif
