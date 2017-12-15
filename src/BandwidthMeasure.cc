@@ -15,7 +15,8 @@ double bandwidth::bandwidthMeasure(const AnalysisWaveform* wf, int timeCheck, TG
   const TGraphAligned* gPow = wf->power();
   std::vector<double> powers;
   double notch0, notch1, notch2;
-  bandwidth::checkNotches(timeCheck, notch0, notch1, notch2);
+  notch0=0; notch1=0; notch2=0;
+  //bandwidth::checkNotches(timeCheck, notch0, notch1, notch2);
 
   double norm = bandwidth::fillPowers(gPow, powers, notch0, notch1, notch2);
   int N = powers.size();
@@ -131,6 +132,23 @@ double bandwidth::theilIndex(const AnalysisWaveform * wf, int timeCheck)
   theil = fabs(theil - 1.);
   powers.clear();
   return theil;
+}
+
+double bandwidth::powerInBand(const AnalysisWaveform* wf, double minFreq, double maxFreq) 
+{
+  const TGraphAligned* gPow = wf->power();
+
+  double norm = 0;
+  double fraction = 0;
+  for(int i = 0; i < gPow->GetN(); i++)
+  {
+    if(gPow->GetX()[i] > 1.3) break;
+    if(gPow->GetX()[i] < minFreq) continue;
+    if(gPow->GetX()[i] < 1.3) norm += gPow->GetY()[i];
+    if(gPow->GetX()[i] <= maxFreq) fraction += gPow->GetY()[i];
+  }
+  fraction /= norm;
+  return fraction;
 }
 
 void bandwidth::checkNotches(int timeCheck, double& notch0, double& notch1, double& notch2)
