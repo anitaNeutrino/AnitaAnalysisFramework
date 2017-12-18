@@ -621,6 +621,8 @@ const TGraphAligned * AnalysisWaveform::powerdB() const
 
     g_power_db.adopt(the_power);
     g_power_db.dBize(); 
+    g_power_db.SetTitle("powerdB"); 
+    g_power_db.SetName("powerdB"); 
     g_power_db.GetXaxis()->SetTitle("Frequency"); 
     g_power_db.GetYaxis()->SetTitle("Power (dBm)"); 
     power_db_dirty = false;
