@@ -471,6 +471,7 @@ class AnitaEventSummary : public TObject
   const WaveformInfo& trainingDeconvolved() const;
   const WaveformInfo& trainingCoherentFiltered() const;
   const WaveformInfo& trainingDeconvolvedFiltered() const;
+  Int_t countChannelAboveThreshold(int threshold=100) const;
 
   //------------------------------------------------------------------------------------
  private:
@@ -497,7 +498,7 @@ class AnitaEventSummary : public TObject
   void resetNonPersistent() const;
   const SourceHypothesis* sourceFromTag() const;
 
-  ClassDefNV(AnitaEventSummary, 38);
+  ClassDefNV(AnitaEventSummary, 39);
 };
 
 #endif
