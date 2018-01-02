@@ -331,6 +331,23 @@ const AnitaEventSummary::WaveformInfo& AnitaEventSummary::mostImpulsiveDeconvolv
 }
 
 
+/** 
+ * Utility function to get the number of the channel that rms > threshold
+ * Useful for finding the blast events
+ * 
+ * @return the  the number of the channel that rms > threshold
+ */
+int AnitaEventSummary::countChannelAboveThreshold(int threshold) const{
+  int count = 0;
+  for(Int_t polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
+    for(Int_t ant=0; ant < 48; ant++){
+      if (channels[polInd][ant].rms>threshold){
+        count++;
+      };
+    }
+  }
+  return count;
+}
 
 
 

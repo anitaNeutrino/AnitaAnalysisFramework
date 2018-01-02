@@ -46,6 +46,10 @@ namespace bandwidth
    *  Between 0 and 1 with 0 less broadband, 1 more so.
    */
   double theilIndex(const AnalysisWaveform * wf, int timeCheck = 0);
+  /** Returns the fraction of power in the given band.
+   *  Added as an idea of how to check for payload blasts (lot of low frequency power).
+   */
+  double powerInBand(const AnalysisWaveform * wf, double minFreq=.17, double maxFreq=.26);
 
   /** This stuff is all used by the various metrics, not actually useful for anything else */
   void checkNotches(int timeCheck, double& notch0, double& notch1, double& notch2);

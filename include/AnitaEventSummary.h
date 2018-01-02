@@ -287,6 +287,7 @@ class AnitaEventSummary : public TObject
     Int_t isHPolTrigger;
     Int_t isVPolTrigger;
     Int_t isStepFunction;
+    Int_t hasGlitch;
 
     CalPulser pulser;
     Bool_t isVarner;
@@ -316,7 +317,7 @@ class AnitaEventSummary : public TObject
     Int_t middleOrBottomAnt[numBlastPowerBands];
     Int_t middleOrBottomPol[numBlastPowerBands];
 
-    ClassDefNV(EventFlags,13);
+    ClassDefNV(EventFlags,14);
   };
 
 
@@ -471,6 +472,7 @@ class AnitaEventSummary : public TObject
   const WaveformInfo& trainingDeconvolved() const;
   const WaveformInfo& trainingCoherentFiltered() const;
   const WaveformInfo& trainingDeconvolvedFiltered() const;
+  Int_t countChannelAboveThreshold(int threshold=100) const;
 
   //------------------------------------------------------------------------------------
  private:
@@ -497,7 +499,7 @@ class AnitaEventSummary : public TObject
   void resetNonPersistent() const;
   const SourceHypothesis* sourceFromTag() const;
 
-  ClassDefNV(AnitaEventSummary, 37);
+  ClassDefNV(AnitaEventSummary, 39);
 };
 
 #endif

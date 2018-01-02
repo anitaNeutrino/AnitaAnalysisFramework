@@ -126,7 +126,7 @@ TTree* AnitaTMVA::makeTMVATree(int ntrees, TTree ** in, TFile * outf, const char
   {
     in[t]->SetEstimate(in[t]->GetEntries() *10); 
 //    Nout[t] = in[t]->Draw(drawstr.str().c_str(),cut,"gl5d"); //goff does not work for multiple variable, peng.
-     Nout[t] = in[t]->Draw(drawstr.str().c_str(),cut, ROOT_VERSION_CODE < ROOT_VERSION(6,0,8) ? "para goff" : "goff"); //Yes it does (but not on old ROOT, but we'll try using PARA instead 
+     Nout[t] = in[t]->Draw(drawstr.str().c_str(),cut, ROOT_VERSION_CODE < ROOT_VERSION(6,8,0) ? "para goff" : "goff"); //Yes it does (but not on old ROOT, but we'll try using PARA instead 
   }
  
 
