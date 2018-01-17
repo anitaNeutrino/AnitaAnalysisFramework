@@ -340,6 +340,7 @@ class AnitaEventSummary : public TObject
     Double_t mapHistoryVal[NUM_POLS]; /// a history of the interferometric map value for the source location
 
     void reset(); /// sets all the values to nonsense.  Sorry, mapHistoryVal means this is in source now
+    virtual ~SourceHypothesis() { ; } 
 
     ClassDef(SourceHypothesis,4);
   };
@@ -360,6 +361,7 @@ class AnitaEventSummary : public TObject
     Double_t energy;
     Double_t triggerSNR[2]; 
     void reset();
+    virtual ~MCTruth() { ; } 
 
     ClassDefNV(MCTruth,6);
   };
