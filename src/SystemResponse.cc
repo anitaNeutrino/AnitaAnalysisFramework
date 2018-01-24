@@ -12,17 +12,34 @@ void AnitaResponse::WienerDeconvolution::deconvolve(size_t N, double df, FFTWCom
 {
 
   FFTWComplex zero(0,0); 
+
+  if (control_max_f) 
+  {
+    min = 0; 
+    max = N * df; 
+
+    int i =0; 
+    control_avg = 0;
+    while (i * df < control_max_f)
+    {
+      control_avg += response[i].getAbs(); 
+      i++; 
+    }
+    control_avg /= i; 
+    control_avg *= control_avg; 
+  }
+
   for (unsigned i = 0; i < N; i++) 
   {
     double f = i * df; 
 
-    double SNR = snr(f); 
+    double H2 = response[i].getAbsSq(); 
+    double SNR = snr(f,H2); 
 //    printf("SNR(%f) = %f\n", f, SNR); 
 
     if (SNR <=0)  Y[i] = zero; 
     else
     {
-      double H2 = response[i].getAbsSq(); 
       Y[i] = Y[i] / response[i] * ( H2 / (H2 + 1./SNR)); 
     }
   }
@@ -35,20 +52,32 @@ AnitaResponse::WienerDeconvolution::WienerDeconvolution(const TGraph *g, const d
   min = g->GetX()[0]; 
   max = g->GetX()[g->GetN()-1]; 
   snr_function = 0; 
+  control_max_f = 0;
   scale = sc; 
 }
 
 AnitaResponse::WienerDeconvolution::WienerDeconvolution(const TF1 *f) 
 {
   snr_function = f; 
+  control_max_f = 0;
   f->GetRange(min,max); 
   snr_graph = 0;
   scale = 0; 
 }
 
+AnitaResponse::WienerDeconvolution::WienerDeconvolution(double max_f) 
+{
+  snr_graph = 0; 
+  scale = 0; 
+  min = 0; 
+  max = 0; 
+  snr_function = 0; 
+  control_max_f = max_f; 
+}
 
 
-double AnitaResponse::WienerDeconvolution::snr(double f) const
+
+double AnitaResponse::WienerDeconvolution::snr(double f, double R2 ) const
 {
 
   if (f < min || f > max ) return 0; 
@@ -62,6 +91,14 @@ double AnitaResponse::WienerDeconvolution::snr(double f) const
   {
 //    printf("%f\n",f); 
     return snr_function->Eval(f); 
+  }
+  else if (control_max_f) 
+  {
+    if (f < control_max_f) return 0; 
+    if (R2 < control_avg) return 0; 
+
+    return sqrt(R2/control_avg-1); 
+
   }
  
   fprintf(stderr,"Something's wrong...\n"); 
