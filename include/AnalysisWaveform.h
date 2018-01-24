@@ -301,6 +301,18 @@ class AnalysisWaveform
     /** Zero mean even graph */ 
     void zeroMeanEven(); 
 
+    void setTitle(const char * title); 
+    /* Sets the line and marker color */ 
+    void setColor(int c); 
+    /* Sets the line width */ 
+    void setWidth(int w);  
+
+    /* Sets range user for x axis of frequency plots */ 
+    void setFreqDisplayRange(double low, double high); 
+
+    /* Sets range user for x axis of time plots */ 
+    void setTimeDisplayRange(double low, double high); 
+
   private: 
     void calculateEvenFromUneven() const; 
     void calculateEvenFromFreq() const;  
@@ -315,6 +327,8 @@ class AnalysisWaveform
     mutable TGraphAligned g_power_db;
     mutable TGraphAligned g_phase;  
     mutable TGraphAligned g_group_delay; 
+
+
     mutable double dt;  
     mutable double df; 
     mutable int fft_len; 
@@ -342,6 +356,7 @@ class AnalysisWaveform
     mutable bool even_akima_interpolator_dirty; 
     mutable AnalysisWaveform * hilbert_transform;
     mutable int force_even_size; 
+
 }; 
 
 

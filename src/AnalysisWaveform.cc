@@ -338,6 +338,38 @@ FFTWComplex * AnalysisWaveform::updateFreq()
 }
 
 
+#define DO_FOR_ALL(THING)   g_uneven.THING; g_hilbert_envelope.THING; g_even.THING; g_power.THING; g_power_db.THING; g_phase.THING; g_group_delay.THING; 
+#define DO_FOR_TIME(THING)  g_uneven.THING; g_hilbert_envelope.THING; g_even.THING;
+#define DO_FOR_FREQ(THING)  g_power.THING; g_power_db.THING; g_phase.THING; g_group_delay.THING; 
+
+void AnalysisWaveform::setColor(int c) 
+{
+  DO_FOR_ALL(SetLineColor(c)); 
+  DO_FOR_ALL(SetMarkerColor(c)); 
+}
+
+void AnalysisWaveform::setTitle(const char * title) 
+{
+  DO_FOR_ALL(SetTitle(title)); 
+}
+
+void AnalysisWaveform::setFreqDisplayRange(double l, double h)
+{
+  DO_FOR_FREQ(GetXaxis()->SetRangeUser(l,h)); 
+}
+
+void AnalysisWaveform::setTimeDisplayRange(double l, double h)
+{
+  DO_FOR_TIME(GetXaxis()->SetRangeUser(l,h)); 
+}
+
+void AnalysisWaveform::setWidth(int w) 
+{
+  DO_FOR_ALL(SetLineWidth(w)); 
+
+}
+
+
 
 
 void AnalysisWaveform::updateUneven(const TGraph * replace)
@@ -591,8 +623,7 @@ const TGraphAligned * AnalysisWaveform::groupDelay() const
   {
 
     g_group_delay.adopt(phase()); 
-    g_group_delay.SetTitle("Group Delay"); 
-    g_group_delay.GetYaxis()->SetTitle("ns ? "); 
+    g_group_delay.GetYaxis()->SetTitle("Group Delay (ns) "); 
     g_group_delay.GetXaxis()->SetTitle("f (Ghz)"); 
 
     FFTtools::unwrap( g_group_delay.GetN(), g_group_delay.GetY(), 2 * TMath::Pi()); 
@@ -621,7 +652,6 @@ const TGraphAligned * AnalysisWaveform::powerdB() const
 
     g_power_db.adopt(the_power);
     g_power_db.dBize(); 
-    g_power_db.SetTitle("powerdB"); 
     g_power_db.SetName("powerdB"); 
     g_power_db.GetXaxis()->SetTitle("Frequency"); 
     g_power_db.GetYaxis()->SetTitle("Power (dBm)"); 
