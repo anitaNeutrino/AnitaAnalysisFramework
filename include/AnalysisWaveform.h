@@ -356,7 +356,8 @@ class AnalysisWaveform
     mutable bool even_akima_interpolator_dirty; 
     mutable AnalysisWaveform * hilbert_transform;
     mutable int force_even_size; 
-
+    unsigned uid; 
+    void nameGraphs(); 
 }; 
 
 

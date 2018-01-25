@@ -42,6 +42,10 @@ void AnalysisWaveform::allowEvenToUnevenConversion( bool allow) { ALLOW_EVEN_TO_
 static __thread bool nag_if_not_zero_padded = true; 
 
 
+/** give things unique names */ 
+volatile static unsigned counter = 0; 
+
+
 static void fillEven(int N, double * x, double dt, double t0)
 {
 #ifdef ENABLE_VECTORIZE
@@ -107,6 +111,9 @@ AnalysisWaveform::AnalysisWaveform(int N, const double *x, const double * y, dou
   just_padded = false; 
   fft_len = 0; 
 
+  uid = __sync_fetch_and_add(&counter,1); 
+  nameGraphs(); 
+
   //HACK HACK HACK 
   //check for zero's at the end
   for (int i = 1; i < g_uneven.GetN(); i++)
@@ -151,6 +158,8 @@ AnalysisWaveform::AnalysisWaveform(int N, const double * y, double dt, double t0
   phase_dirty = true;
   group_delay_dirty = true;
   just_padded = false; 
+  uid = __sync_fetch_and_add(&counter,1); 
+  nameGraphs(); 
   df = 0; 
 }
 
@@ -172,6 +181,8 @@ AnalysisWaveform::AnalysisWaveform(int N, double dt, double t0)
   group_delay_dirty = true;
   hilbert_envelope_dirty = true; 
   even_akima_interpolator_dirty = true; 
+  uid = __sync_fetch_and_add(&counter,1); 
+  nameGraphs(); 
   just_padded = false; 
 
 }
@@ -198,6 +209,7 @@ AnalysisWaveform::AnalysisWaveform(int N, const FFTWComplex * f, double df, doub
   power_db_dirty = true; 
   phase_dirty = true; 
   group_delay_dirty = true; 
+  uid = __sync_fetch_and_add(&counter,1); 
   just_padded = false; 
   even_akima_interpolator_dirty = true; 
 }
@@ -652,7 +664,6 @@ const TGraphAligned * AnalysisWaveform::powerdB() const
 
     g_power_db.adopt(the_power);
     g_power_db.dBize(); 
-    g_power_db.SetName("powerdB"); 
     g_power_db.GetXaxis()->SetTitle("Frequency"); 
     g_power_db.GetYaxis()->SetTitle("Power (dBm)"); 
     power_db_dirty = false;
@@ -716,6 +727,8 @@ const TGraphAligned * AnalysisWaveform::power() const
   if (power_dirty)
   {
 
+    g_power.GetXaxis()->SetTitle("f (GHz)"); 
+    g_power.GetYaxis()->SetTitle("Power (arb)"); 
     if (power_options.method == PowerCalculationOptions::FFT) 
     {
       const FFTWComplex * the_fft = freq(); //will update if necessary
@@ -1404,6 +1417,17 @@ void AnalysisWaveform::setCorrelationNag(bool nag)
 {
 
   nag_if_not_zero_padded = nag; 
+}
+
+void AnalysisWaveform::nameGraphs() 
+{
+  g_uneven.SetName(TString::Format("wf_uneven_%d", uid)); 
+  g_even.SetName(TString::Format("wf_even_%d", uid)); 
+  g_hilbert_envelope.SetName(TString::Format("wf_hilbert_env_%d", uid)); 
+  g_power.SetName(TString::Format("wf_power_%d", uid)); 
+  g_power_db.SetName(TString::Format("wf_power_db_%d", uid)); 
+  g_phase.SetName(TString::Format("wf_phase_%d", uid)); 
+  g_group_delay.SetName(TString::Format("wf_group_delay_%d", uid)); 
 }
 
 
