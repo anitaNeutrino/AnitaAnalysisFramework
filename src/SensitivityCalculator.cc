@@ -53,7 +53,7 @@ SensitivityCalculator::SensitivityCalculator(double CL, bool FC)
   /* The likelihood  model is the product of all of the distributions */ 
   w->factory("PROD::model(obsModel,thermalModel,anthroModel,effModel, anthroTauErrorModel)"); 
 
-  w->factory("SUM:total_bg(banthro,bthermal)"); 
+//  w->factory("SUM:total_bg(banthro,bthermal)"); 
 
 
 
