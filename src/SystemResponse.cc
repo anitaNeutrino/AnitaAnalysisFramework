@@ -12,30 +12,13 @@ void AnitaResponse::WienerDeconvolution::deconvolve(size_t N, double df, FFTWCom
 {
 
   FFTWComplex zero(0,0); 
-
-  if (control_max_f) 
-  {
-    min = 0; 
-    max = N * df; 
-
-    int i =0; 
-    control_avg = 0;
-    while (i * df < control_max_f)
-    {
-      control_avg += response[i].getAbs(); 
-      i++; 
-    }
-    control_avg /= i; 
-    control_avg *= control_avg; 
-  }
-
   for (unsigned i = 0; i < N; i++) 
   {
     double f = i * df; 
 
     double H2 = response[i].getAbsSq(); 
-    double SNR = snr(f,H2); 
-//    printf("SNR(%f) = %f\n", f, SNR); 
+    double SNR = snr(f,H2,N); 
+    printf("SNR(%f) = %f\n", f, SNR); 
 
     if (SNR <=0)  Y[i] = zero; 
     else
@@ -52,53 +35,49 @@ AnitaResponse::WienerDeconvolution::WienerDeconvolution(const TGraph *g, const d
   min = g->GetX()[0]; 
   max = g->GetX()[g->GetN()-1]; 
   snr_function = 0; 
-  control_max_f = 0;
+  noise_level = 0;
   scale = sc; 
 }
 
 AnitaResponse::WienerDeconvolution::WienerDeconvolution(const TF1 *f) 
 {
   snr_function = f; 
-  control_max_f = 0;
+  noise_level = 0;
   f->GetRange(min,max); 
   snr_graph = 0;
   scale = 0; 
 }
 
-AnitaResponse::WienerDeconvolution::WienerDeconvolution(double max_f) 
+AnitaResponse::WienerDeconvolution::WienerDeconvolution(double N) 
 {
   snr_graph = 0; 
   scale = 0; 
-  min = 0; 
-  max = 0; 
   snr_function = 0; 
-  control_max_f = max_f; 
+  noise_level = N; 
 }
 
 
 
-double AnitaResponse::WienerDeconvolution::snr(double f, double R2 ) const
+double AnitaResponse::WienerDeconvolution::snr(double f, double R2, int N ) const
 {
 
-  if (f < min || f > max ) return 0; 
 
   if (snr_graph)
   {
+    if (f < min || f > max ) return 0; 
     double sc = scale ? *scale : 1; 
     return sc*snr_graph->Eval(f); 
   }
   else if (snr_function) 
   {
 //    printf("%f\n",f); 
+    if (f < min || f > max ) return 0; 
     return snr_function->Eval(f); 
   }
-  else if (control_max_f) 
+  else if (noise_level) 
   {
-    if (f < control_max_f) return 0; 
-    if (R2 < control_avg) return 0; 
-
-    return sqrt(R2/control_avg-1); 
-
+//    printf("%g %g\n",R2,noise_level); 
+    return R2/noise_level/N ; 
   }
  
   fprintf(stderr,"Something's wrong...\n"); 

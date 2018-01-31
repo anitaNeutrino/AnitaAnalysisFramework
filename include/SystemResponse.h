@@ -59,8 +59,8 @@ namespace AnitaResponse{
        * Optionally, a pointer to a scale value may be given, which may also be modified externally, and must also exist for the lifetime of this object. */
       WienerDeconvolution (const TGraph * g_snr, const double * scale = 0); 
 
-      /** Construct a Wiener Deconvolution ``automatically'' using the system response, where the frequencies up to control_max_f are used to estimate the digitizer noise */ 
-      WienerDeconvolution(double control_max_f = 0.15); 
+      /** Construct a Wiener Deconvolution ``automatically'' using the system response, where noise_level is the effective digitizer noise level relative to the response*/ 
+      WienerDeconvolution(double noise_level = 1); 
 
       /** Construct a WienerDeconvolution where the SNR is given as a TF1. This function may be modified externally but must exist for the lifetime of this object. */
       WienerDeconvolution (const TF1 * f); 
@@ -70,16 +70,14 @@ namespace AnitaResponse{
                               const FFTWComplex * response) const ; 
 
     protected: 
-      virtual double snr(double f, double R2) const; 
+      virtual double snr(double f, double R2, int N) const; 
 
     private: 
       const TGraph * snr_graph;
       const double * scale; 
       const TF1 * snr_function; 
-      double control_max_f; 
-      mutable double control_avg; 
-      mutable double min, max; 
-
+      double min,max;
+      double noise_level; 
   }; 
 
   class BandLimitedDeconvolution : public DeconvolutionMethod
