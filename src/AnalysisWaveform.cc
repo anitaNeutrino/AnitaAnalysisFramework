@@ -3,6 +3,7 @@
 #include "TAxis.h"
 #include "RFInterpolate.h" 
 #include <stdlib.h>
+#include "TMutex.h" 
 #include <assert.h>
 
 
@@ -635,8 +636,6 @@ const TGraphAligned * AnalysisWaveform::groupDelay() const
   {
 
     g_group_delay.adopt(phase()); 
-    g_group_delay.GetYaxis()->SetTitle("Group Delay (ns) "); 
-    g_group_delay.GetXaxis()->SetTitle("f (Ghz)"); 
 
     FFTtools::unwrap( g_group_delay.GetN(), g_group_delay.GetY(), 2 * TMath::Pi()); 
 
@@ -664,8 +663,6 @@ const TGraphAligned * AnalysisWaveform::powerdB() const
 
     g_power_db.adopt(the_power);
     g_power_db.dBize(); 
-    g_power_db.GetXaxis()->SetTitle("Frequency"); 
-    g_power_db.GetYaxis()->SetTitle("Power (dBm)"); 
     power_db_dirty = false;
   }
 
@@ -727,8 +724,6 @@ const TGraphAligned * AnalysisWaveform::power() const
   if (power_dirty)
   {
 
-    g_power.GetXaxis()->SetTitle("f (GHz)"); 
-    g_power.GetYaxis()->SetTitle("Power (arb)"); 
     if (power_options.method == PowerCalculationOptions::FFT) 
     {
       const FFTWComplex * the_fft = freq(); //will update if necessary
@@ -1421,13 +1416,31 @@ void AnalysisWaveform::setCorrelationNag(bool nag)
 
 void AnalysisWaveform::nameGraphs() 
 {
+
+  static TMutex m; 
+  TLockGuard l(&m); 
+
+  DO_FOR_TIME(GetXaxis()->SetTitle("ns")); 
+  DO_FOR_FREQ(GetXaxis()->SetTitle("Ghz")); 
+
   g_uneven.SetName(TString::Format("wf_uneven_%d", uid)); 
+
   g_even.SetName(TString::Format("wf_even_%d", uid)); 
+
   g_hilbert_envelope.SetName(TString::Format("wf_hilbert_env_%d", uid)); 
+  g_hilbert_envelope.GetYaxis()->SetTitle("Analytic Envelope"); 
+
   g_power.SetName(TString::Format("wf_power_%d", uid)); 
+  g_power.GetYaxis()->SetTitle("Power (arb) "); 
+
   g_power_db.SetName(TString::Format("wf_power_db_%d", uid)); 
+  g_power_db.GetYaxis()->SetTitle("Power (dbSomething) "); 
+
   g_phase.SetName(TString::Format("wf_phase_%d", uid)); 
+  g_phase.GetYaxis()->SetTitle("Phase"); 
+
   g_group_delay.SetName(TString::Format("wf_group_delay_%d", uid)); 
+  g_group_delay.GetYaxis()->SetTitle("Group Delay (ns)"); 
 }
 
 
