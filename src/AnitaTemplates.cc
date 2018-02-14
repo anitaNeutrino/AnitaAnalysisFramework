@@ -187,13 +187,15 @@ void AnitaTemplateMachine::getWaisTemplate() {
   char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
   std::stringstream name;
   name.str("");
-  name << installDir << "/share/AnitaAnalysisFramework/templates/waisTemplateA3.root";
+  if(AnitaVersion::get() == 4) name << installDir << "/share/AnitaAnalysisFramework/templates/waisTemplateA4.root";
+  else name << installDir << "/share/AnitaAnalysisFramework/templates/waisTemplateA3.root";
   TFile *inFile = TFile::Open(name.str().c_str());
-  TGraph *grTemplateRaw = (TGraph*)inFile->Get("wais01TH");
+  TGraph *grTemplateRaw = (AnitaVersion::get() == 4) ? (TGraph*)inFile->Get("wais") : (TGraph*)inFile->Get("wais01TH");
   //the wais waveform is like N=2832, but most of it is dumb, so cut off the beginning
   //actually just window it!
+  // haven't added windowing for A4 yet !!
   int peakHilb = -1;
-  TGraph *grTemplateCut = WindowingTools::windowCut(grTemplateRaw,length);
+  TGraph *grTemplateCut = (AnitaVersion::get() == 4) ? grTemplateRaw : WindowingTools::windowCut(grTemplateRaw,length);
   delete grTemplateRaw;
 
 
