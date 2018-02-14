@@ -85,9 +85,9 @@ class AnitaTemplateMachine : public TObject {
   bool isTmpltsDeconv() { return kTmpltsDeconv; };
 
   /** use the templates, and a supplied AnalysisWaveform, to fill up the summary */
-  void doTemplateAnalysis(const AnalysisWaveform *waveform, int poli, int dir, AnitaTemplateSummary *summary);
-  void doDeconvolvedTemplateAnalysis(const AnalysisWaveform *waveform, const AnitaResponse::DeconvolutionMethod *deconv,
-				     int poli, int dir, AnitaTemplateSummary *summary);
+  void doTemplateAnalysis(const AnalysisWaveform *waveform, int poli, int dir, AnitaTemplateSummary *summary, bool do_impulse = true, bool do_wais = true, bool do_cr = true);
+  void doDeconvolvedTemplateAnalysis(const AnalysisWaveform *waveform, const AnitaResponse::DeconvolutionMethod *deconv, 
+				     int poli, int dir, AnitaTemplateSummary *summary,bool do_impulse = true, bool do_wais = true, bool do_cr = true );
 
 
   /** Write templates to file **/
