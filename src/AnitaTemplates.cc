@@ -313,7 +313,7 @@ void AnitaTemplateMachine::deconvolveTemplates(AnitaResponse::DeconvolutionMetho
 
 
 
-void AnitaTemplateMachine::doTemplateAnalysis(const AnalysisWaveform *waveform, int poli, int dir, AnitaTemplateSummary *templateSummary) {
+void AnitaTemplateMachine::doTemplateAnalysis(const AnalysisWaveform *waveform, int poli, int dir, AnitaTemplateSummary *templateSummary, bool do_impulse, bool do_wais, bool do_cr) {
   /* copied out of templateSearch.cc */
 
 
@@ -348,48 +348,56 @@ void AnitaTemplateMachine::doTemplateAnalysis(const AnalysisWaveform *waveform, 
   double *dCorr;
     
   //Impulse Response
-  dCorr = FFTtools::getCorrelationFromFFT(length,theImpTemplateFFT,coherentFFT);
-  maxValue = TMath::MaxElement(length,dCorr);
-  minValue = TMath::Abs(TMath::MinElement(length,dCorr));
-  if (TMath::Max(maxValue,minValue) == maxValue) {
-    value = maxValue;
-    value_loc = TMath::LocMax(length,dCorr);
-    value_pol = true;
-  }
-  else {
-    value = minValue;
-    value_loc = TMath::LocMin(length,dCorr);
-    value_pol = false;
-  }
-  templateSummary->coherent[poli][dir].impulse  = value;
-  templateSummary->coherent[poli][dir].impulse_loc = value_loc;
-  templateSummary->coherent[poli][dir].impulse_pol = value_pol;
+  if (do_impulse) 
+  {
+    dCorr = FFTtools::getCorrelationFromFFT(length,theImpTemplateFFT,coherentFFT);
+    maxValue = TMath::MaxElement(length,dCorr);
+    minValue = TMath::Abs(TMath::MinElement(length,dCorr));
+    if (TMath::Max(maxValue,minValue) == maxValue) {
+      value = maxValue;
+      value_loc = TMath::LocMax(length,dCorr);
+      value_pol = true;
+    }
+    else {
+      value = minValue;
+      value_loc = TMath::LocMin(length,dCorr);
+      value_pol = false;
+    }
+    templateSummary->coherent[poli][dir].impulse  = value;
+    templateSummary->coherent[poli][dir].impulse_loc = value_loc;
+    templateSummary->coherent[poli][dir].impulse_pol = value_pol;
 
-  delete[] dCorr;
+    delete[] dCorr;
+  }
 
   //Wais
-  dCorr = FFTtools::getCorrelationFromFFT(length,theWaisTemplateFFT,coherentFFT);
-  maxValue = TMath::MaxElement(length,dCorr);
-  minValue = TMath::Abs(TMath::MinElement(length,dCorr));
-  if (TMath::Max(maxValue,minValue) == maxValue) {
-    value = maxValue;
-    value_loc = TMath::LocMax(length,dCorr);
-    value_pol = true;
-  }
-  else {
-    value = minValue;
-    value_loc = TMath::LocMin(length,dCorr);
-    value_pol = false;
-  }
-  templateSummary->coherent[poli][dir].wais  = value;
-  templateSummary->coherent[poli][dir].wais_loc = value_loc;
-  templateSummary->coherent[poli][dir].wais_pol = value_pol;
+  
+  if (do_wais)
+  {
+    dCorr = FFTtools::getCorrelationFromFFT(length,theWaisTemplateFFT,coherentFFT);
+    maxValue = TMath::MaxElement(length,dCorr);
+    minValue = TMath::Abs(TMath::MinElement(length,dCorr));
+    if (TMath::Max(maxValue,minValue) == maxValue) {
+      value = maxValue;
+      value_loc = TMath::LocMax(length,dCorr);
+      value_pol = true;
+    }
+    else {
+      value = minValue;
+      value_loc = TMath::LocMin(length,dCorr);
+      value_pol = false;
+    }
+    templateSummary->coherent[poli][dir].wais  = value;
+    templateSummary->coherent[poli][dir].wais_loc = value_loc;
+    templateSummary->coherent[poli][dir].wais_pol = value_pol;
 
-  delete[] dCorr;
+    delete[] dCorr;
+  }
 
 
   //Cosmic Ray Templates
   for (int i=0; i<numCRTemplates; i++) {
+    if (!do_cr) break; 
     dCorr = FFTtools::getCorrelationFromFFT(length,theCRTemplateFFTs[i],coherentFFT);
     maxValue = TMath::MaxElement(length,dCorr);
     minValue = TMath::Abs(TMath::MinElement(length,dCorr));
@@ -419,7 +427,8 @@ void AnitaTemplateMachine::doTemplateAnalysis(const AnalysisWaveform *waveform, 
 
 void AnitaTemplateMachine::doDeconvolvedTemplateAnalysis(const AnalysisWaveform *waveform, 
 							 const AnitaResponse::DeconvolutionMethod *deconv,
-							 int poli, int dir, AnitaTemplateSummary *templateSummary) {
+							 int poli, int dir, AnitaTemplateSummary *templateSummary,
+               bool do_impulse, bool do_wais, bool do_cr) {
   /* copied out of templateSearch.cc */
 
 
@@ -454,47 +463,54 @@ void AnitaTemplateMachine::doDeconvolvedTemplateAnalysis(const AnalysisWaveform 
   double *dCorr;
     
   //Impulse Response
-  dCorr = FFTtools::getCorrelationFromFFT(length,theImpTemplateFFT_deconv,deconvolvedFFT);
-  maxValue = TMath::MaxElement(length,dCorr);
-  minValue = TMath::Abs(TMath::MinElement(length,dCorr));
-  if (TMath::Max(maxValue,minValue) == maxValue) {
-    value = maxValue;
-    value_loc = TMath::LocMax(length,dCorr);
-    value_pol = true;
-  }
-  else {
-    value = minValue;
-    value_loc = TMath::LocMin(length,dCorr);
-    value_pol = false;
-  }
-  templateSummary->deconvolved[poli][dir].impulse  = value;
-  templateSummary->deconvolved[poli][dir].impulse_loc = value_loc;
-  templateSummary->deconvolved[poli][dir].impulse_pol = value_pol;
+  if (do_impulse)
+  {
+    dCorr = FFTtools::getCorrelationFromFFT(length,theImpTemplateFFT_deconv,deconvolvedFFT);
+    maxValue = TMath::MaxElement(length,dCorr);
+    minValue = TMath::Abs(TMath::MinElement(length,dCorr));
+    if (TMath::Max(maxValue,minValue) == maxValue) {
+      value = maxValue;
+      value_loc = TMath::LocMax(length,dCorr);
+      value_pol = true;
+    }
+    else {
+      value = minValue;
+      value_loc = TMath::LocMin(length,dCorr);
+      value_pol = false;
+    }
+    templateSummary->deconvolved[poli][dir].impulse  = value;
+    templateSummary->deconvolved[poli][dir].impulse_loc = value_loc;
+    templateSummary->deconvolved[poli][dir].impulse_pol = value_pol;
 
-  delete[] dCorr;
+    delete[] dCorr;
+  }
 
   //Wais
-  dCorr = FFTtools::getCorrelationFromFFT(length,theWaisTemplateFFT_deconv,deconvolvedFFT);
-  maxValue = TMath::MaxElement(length,dCorr);
-  minValue = TMath::Abs(TMath::MinElement(length,dCorr));
-  if (TMath::Max(maxValue,minValue) == maxValue) {
-    value = maxValue;
-    value_loc = TMath::LocMax(length,dCorr);
-    value_pol = true;
-  }
-  else {
-    value = minValue;
-    value_loc = TMath::LocMin(length,dCorr);
-    value_pol = false;
-  }
-  templateSummary->deconvolved[poli][dir].wais  = value;
-  templateSummary->deconvolved[poli][dir].wais_loc = value_loc;
-  templateSummary->deconvolved[poli][dir].wais_pol = value_pol;
+  if (do_wais) 
+  {
+    dCorr = FFTtools::getCorrelationFromFFT(length,theWaisTemplateFFT_deconv,deconvolvedFFT);
+    maxValue = TMath::MaxElement(length,dCorr);
+    minValue = TMath::Abs(TMath::MinElement(length,dCorr));
+    if (TMath::Max(maxValue,minValue) == maxValue) {
+      value = maxValue;
+      value_loc = TMath::LocMax(length,dCorr);
+      value_pol = true;
+    }
+    else {
+      value = minValue;
+      value_loc = TMath::LocMin(length,dCorr);
+      value_pol = false;
+    }
+    templateSummary->deconvolved[poli][dir].wais  = value;
+    templateSummary->deconvolved[poli][dir].wais_loc = value_loc;
+    templateSummary->deconvolved[poli][dir].wais_pol = value_pol;
 
-  delete[] dCorr;
+    delete[] dCorr;
+  }
 
   //Cosmic Ray Templates
   for (int i=0; i<numCRTemplates; i++) {
+    if (!do_cr) break; 
     dCorr = FFTtools::getCorrelationFromFFT(length,theCRTemplateFFTs_deconv[i],deconvolvedFFT);
     maxValue = TMath::MaxElement(length,dCorr);
     minValue = TMath::Abs(TMath::MinElement(length,dCorr));
