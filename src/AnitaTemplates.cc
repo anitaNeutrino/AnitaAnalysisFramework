@@ -45,6 +45,8 @@ AnitaTemplateMachine::AnitaTemplateMachine(int inLength)
   kTmpltsLoaded = false;
   kTmpltsDeconv = false;
 
+  fNotchStr = "";
+
   //initialize the TGraphs to NULL at least, the FFTs are allocated in the "get" stuff.
   theImpTemplate = NULL;
   theWaisTemplate = NULL;
@@ -84,14 +86,17 @@ void AnitaTemplateMachine::zeroInternals() {
   return;
 }
 
-void AnitaTemplateMachine::getImpulseResponseTemplate() {
+void AnitaTemplateMachine::getImpulseResponseTemplate(int version) {
   
   //and get the "averaged" impulse response as the template"
   char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
-  std::stringstream name;
-  name.str("");
-  name << installDir << "/share/AnitaAnalysisFramework/responses/SingleBRotter/all.imp";
-  TGraph *grTemplateRaw = new TGraph(name.str().c_str());
+  TString name;
+  if(version == 4)
+  {
+    name = Form("%s/share/AnitaAnalysisFramework/responses/TUFFS/averages/%s.imp", installDir, fNotchStr.c_str());
+  }
+  else name = Form("%s/share/AnitaAnalysisFramework/responses/SingleBRotter/all.imp", installDir);
+  TGraph *grTemplateRaw = new TGraph(name.Data());
   //waveforms are normally a little over 1024 so lets pad to 2048 (defined in length above)
   TGraph *grTemplatePadded = FFTtools::padWaveToLength(grTemplateRaw,length);
   delete grTemplateRaw;
@@ -125,14 +130,18 @@ void AnitaTemplateMachine::getImpulseResponseTemplate() {
 
 
 
-void AnitaTemplateMachine::getCRTemplates() {
+void AnitaTemplateMachine::getCRTemplates(int version) {
 
   char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
+  TString fname;
+  if(version == 4)
+  {
+    fname = Form("%s/share/AnitaAnalysisFramework/templates/crTmpltsA4_%s.imp", installDir, fNotchStr.c_str());
+  }
+  else fname = Form("%s/share/AnitaAnalysisFramework/templates/crTmpltsA3.imp", installDir);
+  TFile *inFile = TFile::Open(fname.Data());
   std::stringstream name;
-  name.str("");
-  name << installDir << "/share/AnitaAnalysisFramework/templates/crTmpltsA3.root";
-  TFile *inFile = TFile::Open(name.str().c_str());
-  
+
   for (int i=0; i<numCRTemplates; i++) {
     //want to get graphs 13 through 24 (like in makeTemplate.C)
     int wave = i+13; //peak seems to be at around the 13th one, then by 23 it is basically zero
@@ -209,15 +218,29 @@ void AnitaTemplateMachine::getWaisTemplate() {
   return;
 }
 
-void AnitaTemplateMachine::loadTemplates() {
-
-  if (kTmpltsLoaded) zeroInternals();
-
+void AnitaTemplateMachine::loadTemplates(unsigned int evTime) {
 
   std::cout << "Loading templates, length=" << length << std::endl;
-  getImpulseResponseTemplate();
+  std::string tempStr = "";
+  if(AnitaVersion::get() == 4)
+  {
+    std::string tempTime;
+    char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
+    std::ifstream inf(Form("%s/share/AnitaAnalysisFramework/responses/TUFFS/index.txt", installDir));
+    while(inf >> tempStr >> tempTime)
+    {
+      if(evTime < tempTime) break;
+    }
+    if(kTmpltsLoaded)
+    {
+      if(tempStr.compare(fNotchStr) == 0) return;
+    }
+  }
+  fNotchStr = tempStr;
+  if (kTmpltsLoaded) zeroInternals();
+  getImpulseResponseTemplate(AnitaVersion::get());
   getWaisTemplate();
-  getCRTemplates();
+  getCRTemplates(AnitaVersion::get());
 
   kTmpltsLoaded = true;
 
