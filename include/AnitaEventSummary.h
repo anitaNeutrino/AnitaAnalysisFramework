@@ -95,15 +95,15 @@ class AnitaEventSummary : public TObject
 
     // Find angle from stored source hypotheses
     Double_t dPhiWais() const;
-    Double_t dThetaWais() const;
+    Double_t dThetaWais(bool different_sign_conventions = true) const;
     Double_t dPhiSun() const;
-    Double_t dThetaSun() const;
+    Double_t dThetaSun(bool different_sign_conventions = true) const;
     Double_t dPhiLDB() const;
-    Double_t dThetaLDB() const;
+    Double_t dThetaLDB(bool different_sign_conventions = true) const;
     Double_t dPhiMC() const;
-    Double_t dThetaMC() const;
+    Double_t dThetaMC(bool different_sign_conventions = true) const;
     Double_t dPhiTagged() const;    /// See AnitaEventSummary::sourceFromTag()
-    Double_t dThetaTagged() const;  /// See AnitaEventSummary::sourceFromTag()
+    Double_t dThetaTagged(bool different_sign_conventions = true) const;  /// See AnitaEventSummary::sourceFromTag()
 
     // Are you within this theta/phi of a stored hypothesis?
     Bool_t closeToMC(Double_t deltaPhiDeg, Double_t deltaThetaDeg) const;
@@ -125,7 +125,7 @@ class AnitaEventSummary : public TObject
     mutable AnitaEventSummary* fContainer; //! WARNING! Does not persist! Get access to AnitaEventSummary that contains this PointingHypothesis
     const AnitaEventSummary* getContainer(const char* funcName) const; /// Wraps getting fContainer with a warning if NULL.
     Double_t dPhiSource(const SourceHypothesis& source) const;   // Won't work inside TTree::Draw due to limitations in TTreeFormula, so are private, use e.g. dPhiWais() instead.
-    Double_t dThetaSource(const SourceHypothesis& source) const; // Won't work inside TTree::Draw due to limitations in TTreeFormula, so are private, use e.g. dThetaWais() instead.
+    Double_t dThetaSource(const SourceHypothesis& source, bool different_sign_conventions = true) const; // Won't work inside TTree::Draw due to limitations in TTreeFormula, so are private, use e.g. dThetaWais() instead.
     void printEvent() const;
     friend class AnitaEventSummary;
 
