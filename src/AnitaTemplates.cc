@@ -93,7 +93,7 @@ void AnitaTemplateMachine::getImpulseResponseTemplate(int version) {
   TString name;
   if(version == 4)
   {
-    name = Form("%s/share/AnitaAnalysisFramework/responses/TUFFS/averages/%s.imp", installDir, fNotchStr.c_str());
+    name = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/averages/%s.imp", installDir, fNotchStr.c_str());
   }
   else name = Form("%s/share/AnitaAnalysisFramework/responses/SingleBRotter/all.imp", installDir);
   TGraph *grTemplateRaw = new TGraph(name.Data());
@@ -136,9 +136,9 @@ void AnitaTemplateMachine::getCRTemplates(int version) {
   TString fname;
   if(version == 4)
   {
-    fname = Form("%s/share/AnitaAnalysisFramework/templates/crTmpltsA4_%s.imp", installDir, fNotchStr.c_str());
+    fname = Form("%s/share/AnitaAnalysisFramework/templates/crTmpltsA4_%s.root", installDir, fNotchStr.c_str());
   }
-  else fname = Form("%s/share/AnitaAnalysisFramework/templates/crTmpltsA3.imp", installDir);
+  else fname = Form("%s/share/AnitaAnalysisFramework/templates/crTmpltsA3.root", installDir);
   TFile *inFile = TFile::Open(fname.Data());
   std::stringstream name;
 
@@ -195,9 +195,9 @@ void AnitaTemplateMachine::getWaisTemplate() {
   //actually just window it!
   // haven't added windowing for A4 yet !!
   int peakHilb = -1;
-  TGraph *grTemplateCut = (AnitaVersion::get() == 4) ? grTemplateRaw : WindowingTools::windowCut(grTemplateRaw,length);
+  //TGraph *grTemplateCut = (AnitaVersion::get() == 4) ? grTemplateRaw : WindowingTools::windowCut(grTemplateRaw,length);
+  TGraph *grTemplateCut = WindowingTools::windowCut(grTemplateRaw,length);
   delete grTemplateRaw;
-
 
   //Make it start at zero
   double xStart = grTemplateCut->GetX()[0];
@@ -228,7 +228,7 @@ void AnitaTemplateMachine::loadTemplates(unsigned int evTime) {
   {
     std::string tempTime;
     char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
-    std::ifstream inf(Form("%s/share/AnitaAnalysisFramework/responses/TUFFS/index.txt", installDir));
+    std::ifstream inf(Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/index.txt", installDir));
     while(inf >> tempStr >> tempTime)
     {
       if(evTime < tempTime) break;
