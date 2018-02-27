@@ -74,13 +74,13 @@ void AnitaTemplateMachine::zeroInternals() {
 
   /* if it is loaded, free the FFT stuff too */
   if (kTmpltsLoaded) {
-    free(theImpTemplateFFT);
-    free(theWaisTemplateFFT);
+    delete[] theImpTemplateFFT;
+    delete[] theWaisTemplateFFT;
     for (int i=0; i < numCRTemplates; i++) {
-      free(theCRTemplates[i]);
+      delete[] theCRTemplates[i];
     }
+  std::cout << "delete CR ffts" << std::endl;
   }
-    
   
   kTmpltsLoaded = false;
   return;
@@ -237,6 +237,7 @@ void AnitaTemplateMachine::loadTemplates(unsigned int evTime) {
     {
       if(tempStr.compare(fNotchStr) == 0) return;
     }
+    kTmpltsDeconv = false;
   }
   fNotchStr = tempStr;
   if (kTmpltsLoaded) zeroInternals();
@@ -252,6 +253,7 @@ void AnitaTemplateMachine::loadTemplates(unsigned int evTime) {
 
 
 void AnitaTemplateMachine::deconvolveTemplates(AnitaResponse::DeconvolutionMethod *deconv) {
+  if(kTmpltsDeconv) return;
 
   std::cout << "Deconvolving templates" << std::endl;
   
