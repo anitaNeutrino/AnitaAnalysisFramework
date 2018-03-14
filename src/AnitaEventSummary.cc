@@ -441,6 +441,7 @@ void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat, const TruthAnit
     mc.energy = truth->nuMom; // I guess this won't be true if icemc ever simulates non-relativistic neutrinos :P
     mc.triggerSNR[0] = truth->maxSNRAtTriggerH; 
     mc.triggerSNR[1] = truth->maxSNRAtTriggerV; 
+    mc.nuDirection.SetXYZ(truth->nuDir[0], truth->nuDir[1], truth->nuDir[2]); 
   }
 }
 
@@ -458,6 +459,7 @@ void AnitaEventSummary::MCTruth::reset()
   energy = 0;
   triggerSNR[0] = 0;
   triggerSNR[1] = 0; 
+  nuDirection.SetXYZ(0,0,0); 
 }
 
 
