@@ -302,7 +302,7 @@ void TGraphAligned::getMeanAndRMS(Double_t * mean, Double_t * rms, Int_t istart,
   double sum2 = 0; 
 
 
-  //why the fuck is this not autovectorizing?!?? !?!?!? 
+  //weird that this doesn't auto-vectorize
   //is it because hadd is too slow? 
   for (int i = real_start; i <= real_end; i++) 
   {
@@ -490,3 +490,10 @@ TH1 *  TGraphAligned::valueHist(int nbins, const double * w, TH1 * out) const
 
    
 
+void TGraphAligned::zeroMean()
+{
+  double mean = 0; 
+  for (int i = 0; i < GetN(); i++) mean+= GetY()[i]; 
+  mean /= GetN(); 
+  for (int i = 0; i < GetN(); i++) GetY()[i]-=mean;
+}
