@@ -7,6 +7,7 @@
 #include "TFile.h"
 #include "AnalysisWaveform.h"
 #include "SystemResponse.h"
+#include "AnitaVersion.h"
 
 
 /* * * * * * * * *
@@ -74,7 +75,7 @@ class AnitaTemplateMachine : public TObject {
   
 
   /** Filling the stored templates **/
-  void loadTemplates();
+  void loadTemplates( unsigned int evTime = 0);
   void deconvolveTemplates(AnitaResponse::DeconvolutionMethod *deconv);
   
 
@@ -97,11 +98,13 @@ class AnitaTemplateMachine : public TObject {
   /* flags to see what you still might need to do */
   bool kTmpltsLoaded;
   bool kTmpltsDeconv;
+
+  std::string fNotchStr;
   
   /* hidden functions for filling the templates one at a time */
-  void getImpulseResponseTemplate();
+  void getImpulseResponseTemplate(int version);
   void getWaisTemplate();
-  void getCRTemplates();
+  void getCRTemplates(int version);
   
   
   ClassDefNV(AnitaTemplateMachine, 1);
