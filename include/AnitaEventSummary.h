@@ -5,6 +5,7 @@
 #include "AnitaConventions.h"
 #include "Adu5Pat.h"
 #include <iostream>
+#include "TVector3.h" 
 
 class UsefulAdu5Pat;
 class RawAnitaHeader;
@@ -360,10 +361,11 @@ class AnitaEventSummary : public TObject
     Double_t weight;
     Double_t energy;
     Double_t triggerSNR[2]; 
+    TVector3 nuDirection; 
     void reset();
     virtual ~MCTruth() { ; } 
 
-    ClassDefNV(MCTruth,6);
+    ClassDefNV(MCTruth,7);
   };
 
 
@@ -501,7 +503,7 @@ class AnitaEventSummary : public TObject
   void resetNonPersistent() const;
   const SourceHypothesis* sourceFromTag() const;
 
-  ClassDefNV(AnitaEventSummary, 39);
+  ClassDefNV(AnitaEventSummary, 40);
 };
 
 #endif
