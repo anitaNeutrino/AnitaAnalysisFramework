@@ -2,10 +2,11 @@
 #include "FFTtools.h" 
 #include "TAxis.h"
 #include "RFInterpolate.h" 
+#include "TDirectory.h" 
 #include <stdlib.h>
 #include "TMutex.h" 
 #include <assert.h>
-
+#include "TH1.h" 
 
 #define ALIGNMENT 32 
 
@@ -1416,9 +1417,12 @@ void AnalysisWaveform::setCorrelationNag(bool nag)
 
 void AnalysisWaveform::nameGraphs() 
 {
-
-  static TMutex m; 
-  TLockGuard l(&m); 
+#ifdef USE_OMP
+#pragma omp critical 
+#endif
+  {
+  TDirectory * old_dir = gDirectory;
+  gDirectory = 0; // this is supposed to be thread local if open mp is enabled? 
 
   DO_FOR_TIME(GetXaxis()->SetTitle("ns")); 
   DO_FOR_FREQ(GetXaxis()->SetTitle("Ghz")); 
@@ -1441,6 +1445,8 @@ void AnalysisWaveform::nameGraphs()
 
   g_group_delay.SetName(TString::Format("wf_group_delay_%d", uid)); 
   g_group_delay.GetYaxis()->SetTitle("Group Delay (ns)"); 
+  gDirectory = old_dir; 
+  }
 }
 
 
