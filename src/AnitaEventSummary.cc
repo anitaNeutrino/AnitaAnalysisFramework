@@ -839,8 +839,8 @@ double AnitaEventSummary::PointingHypothesis::dTheta(double theta2, bool differe
  * 
  * @return the theta angle between the peak and the source
  */
-double AnitaEventSummary::PointingHypothesis::dThetaSource(const SourceHypothesis& source) const{
-  return dTheta(source.theta, true);
+double AnitaEventSummary::PointingHypothesis::dThetaSource(const SourceHypothesis& source, bool different_sign_conventions) const{
+  return dTheta(source.theta, different_sign_conventions);
 }
 
 
@@ -978,32 +978,32 @@ Bool_t AnitaEventSummary::PointingHypothesis::absHwAngleLessThanAbsHwAngleXPol()
 double AnitaEventSummary::PointingHypothesis::dPhiWais() const {
   return getContainer(__PRETTY_FUNCTION__) ? dPhiSource(fContainer->wais) : dPhi(-9999); // should trigger warning message
 }
-double AnitaEventSummary::PointingHypothesis::dThetaWais() const {
-  return getContainer(__PRETTY_FUNCTION__) ? dThetaSource(fContainer->wais) : dPhi(-9999); // should trigger warning message
+double AnitaEventSummary::PointingHypothesis::dThetaWais(bool different_sign_conventions) const {
+  return getContainer(__PRETTY_FUNCTION__) ? dThetaSource(fContainer->wais, different_sign_conventions) : dPhi(-9999); // should trigger warning message
 }
 double AnitaEventSummary::PointingHypothesis::dPhiSun() const {
   return getContainer(__PRETTY_FUNCTION__) ? dPhiSource(fContainer->sun) : dPhi(-9999); // should trigger warning message
 }
-double AnitaEventSummary::PointingHypothesis::dThetaSun() const {
-  return getContainer(__PRETTY_FUNCTION__) ? dThetaSource(fContainer->sun) : dPhi(-9999); // should trigger warning message
+double AnitaEventSummary::PointingHypothesis::dThetaSun(bool different_sign_conventions) const {
+  return getContainer(__PRETTY_FUNCTION__) ? dThetaSource(fContainer->sun, different_sign_conventions) : dPhi(-9999); // should trigger warning message
 }
 double AnitaEventSummary::PointingHypothesis::dPhiLDB() const {
   return getContainer(__PRETTY_FUNCTION__) ? dPhiSource(fContainer->ldb) : dPhi(-9999); // should trigger warning message
 }
-double AnitaEventSummary::PointingHypothesis::dThetaLDB() const {
-  return getContainer(__PRETTY_FUNCTION__) ? dThetaSource(fContainer->ldb) : dPhi(-9999); // should trigger warning message
+double AnitaEventSummary::PointingHypothesis::dThetaLDB(bool different_sign_conventions) const {
+  return getContainer(__PRETTY_FUNCTION__) ? dThetaSource(fContainer->ldb, different_sign_conventions) : dPhi(-9999); // should trigger warning message
 }
 double AnitaEventSummary::PointingHypothesis::dPhiMC() const {
   return getContainer(__PRETTY_FUNCTION__) && fContainer->mc.weight > 0 ? dPhiSource(fContainer->mc) : -9999;
 }
-double AnitaEventSummary::PointingHypothesis::dThetaMC() const {
-  return getContainer(__PRETTY_FUNCTION__) && fContainer->mc.weight > 0 ? dThetaSource(fContainer->mc) : -9999;
+double AnitaEventSummary::PointingHypothesis::dThetaMC(bool different_sign_conventions) const {
+  return getContainer(__PRETTY_FUNCTION__) && fContainer->mc.weight > 0 ? dThetaSource(fContainer->mc, different_sign_conventions) : -9999;
 }
 double AnitaEventSummary::PointingHypothesis::dPhiTagged() const {
   return getContainer(__PRETTY_FUNCTION__) && fContainer->sourceFromTag() ? dPhiSource(*fContainer->sourceFromTag()) : -9999;
 }
-double AnitaEventSummary::PointingHypothesis::dThetaTagged() const {
-  return getContainer(__PRETTY_FUNCTION__) && fContainer->sourceFromTag() ? dThetaSource(*fContainer->sourceFromTag()) : -9999;
+double AnitaEventSummary::PointingHypothesis::dThetaTagged(bool different_sign_conventions) const {
+  return getContainer(__PRETTY_FUNCTION__) && fContainer->sourceFromTag() ? dThetaSource(*fContainer->sourceFromTag(), different_sign_conventions) : -9999;
 }
 
 
