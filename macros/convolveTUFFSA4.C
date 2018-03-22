@@ -147,7 +147,7 @@ void makePow(const char* indir = "", const char* outdir="")
   delete outf;
 }
 
-void convolveTUFFS()
+void convolveTUFFSA4()
 {
 	mkdir("data/responses/A4ImpulseTUFFs", 0777);
 	for(int i = 1; i < 17; i++)
