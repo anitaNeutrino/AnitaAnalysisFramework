@@ -75,7 +75,7 @@ class AnitaTemplateMachine : public TObject {
   
 
   /** Filling the stored templates **/
-  void loadTemplates( unsigned int evTime = 0);
+  void loadTemplates( unsigned int evTime = 0, int version = AnitaVersion::get());
   void deconvolveTemplates(AnitaResponse::DeconvolutionMethod *deconv);
   
 

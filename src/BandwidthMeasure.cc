@@ -16,7 +16,7 @@ double bandwidth::bandwidthMeasure(const AnalysisWaveform* wf, int timeCheck, TG
   std::vector<double> powers;
   double notch0, notch1, notch2;
   notch0=0; notch1=0; notch2=0;
-  //bandwidth::checkNotches(timeCheck, notch0, notch1, notch2);
+  bandwidth::checkNotches(timeCheck, notch0, notch1, notch2);
 
   double norm = bandwidth::fillPowers(gPow, powers, notch0, notch1, notch2);
   int N = powers.size();
@@ -24,9 +24,11 @@ double bandwidth::bandwidthMeasure(const AnalysisWaveform* wf, int timeCheck, TG
 
   TGraph* gTemp = new TGraph(N);
   gTemp->SetPoint(0, 0, powers[N-1]/norm);
+  int altInd = 1;
   for(int i = N-2; i > -1; i--)
   {
-    gTemp->SetPoint(i, i, powers[i]/norm + gTemp->GetY()[i-1]);
+    gTemp->SetPoint(altInd, altInd, powers[i]/norm + gTemp->GetY()[altInd-1]);
+    altInd++;
   }
   if(gTest)
   {
@@ -244,8 +246,7 @@ double bandwidth::fillPowers(const TGraphAligned* powdb, std::vector<double> &po
   for(int i = 0; i < powdb->GetN(); i++)
   {
     skip = 0;
-    if(powdb->GetX()[i] < .17 || powdb->GetX()[i] > 1.1) skip = 1;
-    /*
+    if(powdb->GetX()[i] < .18 || powdb->GetX()[i] > 1.1) skip = 1;
     if(AnitaVersion::get() == 4)
     {
       if(notch0 > 0)
@@ -261,7 +262,6 @@ double bandwidth::fillPowers(const TGraphAligned* powdb, std::vector<double> &po
         if(notch2 - .15 <= powdb->GetX()[i] <= notch2 + .15) skip = 1;
       }
     }
-    */
     if(!skip)
     {
       powers.push_back(powdb->GetY()[i]);

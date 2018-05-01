@@ -195,8 +195,8 @@ void AnitaTemplateMachine::getWaisTemplate() {
   //actually just window it!
   // haven't added windowing for A4 yet !!
   int peakHilb = -1;
-  //TGraph *grTemplateCut = (AnitaVersion::get() == 4) ? grTemplateRaw : WindowingTools::windowCut(grTemplateRaw,length);
-  TGraph *grTemplateCut = WindowingTools::windowCut(grTemplateRaw,length);
+  TGraph *grTemplateCut = (AnitaVersion::get() == 4) ? new TGraph(grTemplateRaw->GetN(), grTemplateRaw->GetX(), grTemplateRaw->GetY()) : WindowingTools::windowCut(grTemplateRaw,length);
+  //TGraph *grTemplateCut = WindowingTools::windowCut(grTemplateRaw,length);
   delete grTemplateRaw;
 
   //Make it start at zero
@@ -220,11 +220,11 @@ void AnitaTemplateMachine::getWaisTemplate() {
   return;
 }
 
-void AnitaTemplateMachine::loadTemplates(unsigned int evTime) {
+void AnitaTemplateMachine::loadTemplates(unsigned int evTime, int version) {
 
   std::cout << "Loading templates, length=" << length << std::endl;
   std::string tempStr = "";
-  if(AnitaVersion::get() == 4)
+  if(version == 4)
   {
     std::string tempTime;
     char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
@@ -241,9 +241,9 @@ void AnitaTemplateMachine::loadTemplates(unsigned int evTime) {
   }
   fNotchStr = tempStr;
   if (kTmpltsLoaded) zeroInternals();
-  getImpulseResponseTemplate(AnitaVersion::get());
+  getImpulseResponseTemplate(version);
   getWaisTemplate();
-  getCRTemplates(AnitaVersion::get());
+  getCRTemplates(version);
 
   kTmpltsLoaded = true;
 
