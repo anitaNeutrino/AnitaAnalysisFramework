@@ -181,9 +181,8 @@ void AnitaTemplateMachine::getCRTemplates(int version) {
 
 
     
-void AnitaTemplateMachine::getWaisTemplate() {
-  
-  //and get the "averaged" impulse response as the template"
+void AnitaTemplateMachine::getWaisTemplate(int version) {
+ 
   char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
   std::stringstream name;
   name.str("");
@@ -193,7 +192,7 @@ void AnitaTemplateMachine::getWaisTemplate() {
   TGraph *grTemplateRaw = (AnitaVersion::get() == 4) ? (TGraph*)inFile->Get("wais") : (TGraph*)inFile->Get("wais01TH");
   //the wais waveform is like N=2832, but most of it is dumb, so cut off the beginning
   //actually just window it!
-  // haven't added windowing for A4 yet !!
+  // dont need windowing for a4 !!
   int peakHilb = -1;
   TGraph *grTemplateCut = (AnitaVersion::get() == 4) ? new TGraph(grTemplateRaw->GetN(), grTemplateRaw->GetX(), grTemplateRaw->GetY()) : WindowingTools::windowCut(grTemplateRaw,length);
   //TGraph *grTemplateCut = WindowingTools::windowCut(grTemplateRaw,length);
@@ -216,6 +215,8 @@ void AnitaTemplateMachine::getWaisTemplate() {
   //and get the FFT of it as well, since we don't want to do this every single event
   theWaisTemplateFFT = FFTtools::doFFT(grTemplate->GetN(),grTemplate->GetY());
   theWaisTemplate = grTemplate;
+  
+  inFile->Close();
 
   return;
 }
@@ -242,7 +243,7 @@ void AnitaTemplateMachine::loadTemplates(unsigned int evTime, int version) {
   fNotchStr = tempStr;
   if (kTmpltsLoaded) zeroInternals();
   getImpulseResponseTemplate(version);
-  getWaisTemplate();
+  getWaisTemplate(version);
   getCRTemplates(version);
 
   kTmpltsLoaded = true;

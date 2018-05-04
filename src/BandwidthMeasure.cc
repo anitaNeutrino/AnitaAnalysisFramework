@@ -213,6 +213,7 @@ TGraph* bandwidth::loadImpulsePower(int timeCheck)
     dir.Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/averages/%s.root", getenv("ANITA_UTIL_INSTALL_DIR"), notchConfig.c_str());
     TFile f(dir.Data());
     TGraph* gpow =(TGraph*) f.Get("power");
+    f.Close();
     return gpow;
   }
 }

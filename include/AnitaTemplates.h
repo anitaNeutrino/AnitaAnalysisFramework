@@ -103,7 +103,7 @@ class AnitaTemplateMachine : public TObject {
   
   /* hidden functions for filling the templates one at a time */
   void getImpulseResponseTemplate(int version);
-  void getWaisTemplate();
+  void getWaisTemplate(int version);
   void getCRTemplates(int version);
   
   
