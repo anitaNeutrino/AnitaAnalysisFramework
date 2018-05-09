@@ -93,13 +93,20 @@ class AnitaTemplateMachine : public TObject {
 
   /** Write templates to file **/
   void writeTemplatesToFile(TFile *outFile);
+
+  void setUseAverageCRTemplate(bool opt) { fUseAverageCRTemplate = opt; }
   
  private:
   /* flags to see what you still might need to do */
   bool kTmpltsLoaded;
   bool kTmpltsDeconv;
+  bool fUseAverageCRTemplate;
 
   std::string fNotchStr;
+  std::vector<int> payloadTimes;
+  std::vector<std::string> notchConfigs;
+
+  void fillNotchConfigs();
   
   /* hidden functions for filling the templates one at a time */
   void getImpulseResponseTemplate(int version);

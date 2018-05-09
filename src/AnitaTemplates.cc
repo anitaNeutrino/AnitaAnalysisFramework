@@ -53,6 +53,7 @@ AnitaTemplateMachine::AnitaTemplateMachine(int inLength)
   for (int i=0; i < numCRTemplates; i++) {
     theCRTemplates[i] = NULL;
   }
+  if(AnitaVersion::get() == 4) fillNotchConfigs();
 
   zeroInternals();
 }
@@ -85,6 +86,20 @@ void AnitaTemplateMachine::zeroInternals() {
   kTmpltsLoaded = false;
   return;
 }
+
+void AnitaTemplateMachine::fillNotchConfigs()
+{
+  int tempTime;
+  std::string tempStr;
+  char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
+  std::ifstream inf(Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/index.txt", installDir));
+  while(inf >> tempStr >> tempTime)
+  {
+    payloadTimes.push_back(tempTime);
+    notchConfigs.push_back(tempStr);
+  }
+  inf.close();
+} 
 
 void AnitaTemplateMachine::getImpulseResponseTemplate(int version) {
   
@@ -134,48 +149,76 @@ void AnitaTemplateMachine::getCRTemplates(int version) {
 
   char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
   TString fname;
-  if(version == 4)
+  if(version == 4 && !fUseAverageCRTemplate)
   {
     fname = Form("%s/share/AnitaAnalysisFramework/templates/crTmpltsA4_%s.root", installDir, fNotchStr.c_str());
   }
+  else if(version == 4 && fUseAverageCRTemplate)
+  {
+    fname = Form("%s/share/AnitaAnalysisFramework/templates/averageA3CR_%s.txt", installDir, fNotchStr.c_str());
+  }
+  else if(version != 4 && fUseAverageCRTemplate)
+  {
+    fname = Form("%s/share/AnitaAnalysisFramework/templates/averageA3CR.txt", installDir);
+  }
   else fname = Form("%s/share/AnitaAnalysisFramework/templates/crTmpltsA3.root", installDir);
-  TFile *inFile = TFile::Open(fname.Data());
-  std::stringstream name;
 
-  for (int i=0; i<numCRTemplates; i++) {
-    //want to get graphs 13 through 24 (like in makeTemplate.C)
-    int wave = i+13; //peak seems to be at around the 13th one, then by 23 it is basically zero
-    name.str("");
-    name << "disp" << wave;
-    TGraph *grTemplateRaw = (TGraph*)inFile->Get(name.str().c_str());
-    
-    //waveforms are super long so we can just cut it to the window dimentions
-    int peakHilb = -1;
-    TGraph *grTemplateCut = WindowingTools::windowCut(grTemplateRaw,length);
-    delete grTemplateRaw;
+  if(!fUseAverageCRTemplate)
+  {
+    TFile *inFile = TFile::Open(fname.Data());
+    std::stringstream name;
 
-    //Make them start at zero
-    double xStart = grTemplateCut->GetX()[0];
-    for (int pt=0; pt<grTemplateCut->GetN(); pt++) grTemplateCut->GetX()[pt] -= xStart;
-    
-    
-    //and finally normalize it (last step!)
+    for (int i=0; i<numCRTemplates; i++) {
+      //want to get graphs 13 through 24 (like in makeTemplate.C)
+      int wave = i+13; //peak seems to be at around the 13th one, then by 23 it is basically zero
+      name.str("");
+      name << "disp" << wave;
+      TGraph *grTemplateRaw = (TGraph*)inFile->Get(name.str().c_str());
+
+      //waveforms are super long so we can just cut it to the window dimentions
+      int peakHilb = -1;
+      TGraph *grTemplateCut = WindowingTools::windowCut(grTemplateRaw,length);
+      delete grTemplateRaw;
+
+      //Make them start at zero
+      double xStart = grTemplateCut->GetX()[0];
+      for (int pt=0; pt<grTemplateCut->GetN(); pt++) grTemplateCut->GetX()[pt] -= xStart;
+
+
+      //and finally normalize it (last step!)
+      TGraph *grTemplate = FFTtools::normalizeWaveform(grTemplateCut);
+      delete grTemplateCut;
+
+      //give it a name
+      grTemplate->SetName(name.str().c_str());
+
+      //    std::cout << "CR Template " << i << " Length: " << grTemplate->GetN() << std::endl;
+
+      //and get the FFT of it as well, since we don't want to do this every single event
+      FFTWComplex *theTemplateFFT=FFTtools::doFFT(grTemplate->GetN(),grTemplate->GetY());
+      theCRTemplates[i] = grTemplate;
+      theCRTemplateFFTs[i] = theTemplateFFT;
+    }
+
+    inFile->Close();
+  }
+
+  if(fUseAverageCRTemplate)
+  {
+    TGraph* grTemplateCut = new TGraph(fname.Data());
+
     TGraph *grTemplate = FFTtools::normalizeWaveform(grTemplateCut);
     delete grTemplateCut;
 
     //give it a name
-    grTemplate->SetName(name.str().c_str());
-    
-    //    std::cout << "CR Template " << i << " Length: " << grTemplate->GetN() << std::endl;
-    
+    grTemplate->SetName("disp0");
+
     //and get the FFT of it as well, since we don't want to do this every single event
     FFTWComplex *theTemplateFFT=FFTtools::doFFT(grTemplate->GetN(),grTemplate->GetY());
-    theCRTemplates[i] = grTemplate;
-    theCRTemplateFFTs[i] = theTemplateFFT;
+    theCRTemplates[0] = grTemplate;
+    theCRTemplateFFTs[0] = theTemplateFFT;
   }
-  
-  inFile->Close();
-
+    
   return;
 }
 
@@ -225,15 +268,15 @@ void AnitaTemplateMachine::loadTemplates(unsigned int evTime, int version) {
 
   std::cout << "Loading templates, length=" << length << std::endl;
   std::string tempStr = "";
+  int i = 0;
   if(version == 4)
   {
-    std::string tempTime;
-    char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
-    std::ifstream inf(Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/index.txt", installDir));
-    while(inf >> tempStr >> tempTime)
+    while(i < payloadTimes.size())
     {
-      if(evTime < tempTime) break;
+      if(evTime < payloadTimes.at(i)) break;
+      i++;
     }
+    tempStr = notchConfigs.at(i);
     if(kTmpltsLoaded)
     {
       if(tempStr.compare(fNotchStr) == 0) return;
@@ -295,19 +338,39 @@ void AnitaTemplateMachine::deconvolveTemplates(AnitaResponse::DeconvolutionMetho
 
 
   /**CR templates */
-  for (int cr = 0; cr<numCRTemplates; cr++ ) {
-    theCRTemplateFFTs_deconv[cr] = (FFTWComplex*)malloc(lengthFFT*sizeof(FFTWComplex));
-    for (int i=0; i<(length/2 + 1); i++) {
-      theCRTemplateFFTs_deconv[cr][i] = theCRTemplateFFTs[cr][i];
-    }				    
-    deconv->deconvolve(lengthFFT,dF,theCRTemplateFFTs_deconv[cr],theImpTemplateFFT);
-    double* theCRTemplate_deconv_y = FFTtools::doInvFFT(length,theCRTemplateFFTs_deconv[cr]);
-    theCRTemplates_deconv[cr] = new TGraph(length,theCRTemplates[cr]->GetX(),theCRTemplate_deconv_y);
-    name.str("");
-    name << "deconvCR" << cr;
-    theCRTemplates_deconv[cr]->SetName(name.str().c_str());
-  }
-  
+  if(!fUseAverageCRTemplate)
+  {
+    for (int cr = 0; cr<numCRTemplates; cr++ ) {
+      theCRTemplateFFTs_deconv[cr] = (FFTWComplex*)malloc(lengthFFT*sizeof(FFTWComplex));
+      for (int i=0; i<(length/2 + 1); i++) {
+        theCRTemplateFFTs_deconv[cr][i] = theCRTemplateFFTs[cr][i];
+      }				    
+      deconv->deconvolve(lengthFFT,dF,theCRTemplateFFTs_deconv[cr],theImpTemplateFFT);
+      double* theCRTemplate_deconv_y = FFTtools::doInvFFT(length,theCRTemplateFFTs_deconv[cr]);
+      theCRTemplates_deconv[cr] = new TGraph(length,theCRTemplates[cr]->GetX(),theCRTemplate_deconv_y);
+      name.str("");
+      name << "deconvCR" << cr;
+      theCRTemplates_deconv[cr]->SetName(name.str().c_str());
+    }
+  } 
+
+  if(fUseAverageCRTemplate)
+  {
+    char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
+    TString crfname = Form("%s/share/AnitaAnalysisFramework/templates/deconvolvedCRA3average.txt", installDir);
+    
+    TGraph* grTemplateCut = new TGraph(crfname.Data());
+    TGraph *grTemplate = FFTtools::normalizeWaveform(grTemplateCut);
+    delete grTemplateCut;
+
+    //give it a name
+    grTemplate->SetName("disp0");
+
+    //and get the FFT of it as well, since we don't want to do this every single event
+    FFTWComplex *theTemplateFFT=FFTtools::doFFT(grTemplate->GetN(),grTemplate->GetY());
+    theCRTemplates_deconv[0] = grTemplate;
+    theCRTemplateFFTs_deconv[0] = theTemplateFFT;
+  } 
 
   kTmpltsDeconv = true;
 
@@ -401,9 +464,33 @@ void AnitaTemplateMachine::doTemplateAnalysis(const AnalysisWaveform *waveform, 
 
 
   //Cosmic Ray Templates
-  for (int i=0; i<numCRTemplates; i++) {
-    if (!do_cr) break; 
-    dCorr = FFTtools::getCorrelationFromFFT(length,theCRTemplateFFTs[i],coherentFFT);
+  if(!fUseAverageCRTemplate)
+  {
+    for (int i=0; i<numCRTemplates; i++) {
+      if (!do_cr) break; 
+      dCorr = FFTtools::getCorrelationFromFFT(length,theCRTemplateFFTs[i],coherentFFT);
+      maxValue = TMath::MaxElement(length,dCorr);
+      minValue = TMath::Abs(TMath::MinElement(length,dCorr));
+      if (TMath::Max(maxValue,minValue) == maxValue) {
+        value = maxValue;
+        value_loc = TMath::LocMax(length,dCorr);
+        value_pol = true;
+      }
+      else {
+        value = minValue;
+        value_loc = TMath::LocMin(length,dCorr);
+        value_pol = false;
+      }
+      templateSummary->coherent[poli][dir].cRay[i] = value;
+      templateSummary->coherent[poli][dir].cRay_loc[i] = value_loc;
+      templateSummary->coherent[poli][dir].cRay_pol[i] = value_pol;
+
+      delete[] dCorr;
+    }
+  }
+  if(fUseAverageCRTemplate && do_cr)
+  {
+    dCorr = FFTtools::getCorrelationFromFFT(length,theCRTemplateFFTs[0],coherentFFT);
     maxValue = TMath::MaxElement(length,dCorr);
     minValue = TMath::Abs(TMath::MinElement(length,dCorr));
     if (TMath::Max(maxValue,minValue) == maxValue) {
@@ -416,13 +503,10 @@ void AnitaTemplateMachine::doTemplateAnalysis(const AnalysisWaveform *waveform, 
       value_loc = TMath::LocMin(length,dCorr);
       value_pol = false;
     }
-    templateSummary->coherent[poli][dir].cRay[i] = value;
-    templateSummary->coherent[poli][dir].cRay_loc[i] = value_loc;
-    templateSummary->coherent[poli][dir].cRay_pol[i] = value_pol;
-
-    delete[] dCorr;
+    templateSummary->coherent[poli][dir].cRay[0] = value;
+    templateSummary->coherent[poli][dir].cRay_loc[0] = value_loc;
+    templateSummary->coherent[poli][dir].cRay_pol[0] = value_pol;
   }
-
   
   delete[] coherentFFT;
 
@@ -514,9 +598,34 @@ void AnitaTemplateMachine::doDeconvolvedTemplateAnalysis(const AnalysisWaveform 
   }
 
   //Cosmic Ray Templates
-  for (int i=0; i<numCRTemplates; i++) {
-    if (!do_cr) break; 
-    dCorr = FFTtools::getCorrelationFromFFT(length,theCRTemplateFFTs_deconv[i],deconvolvedFFT);
+  if(!fUseAverageCRTemplate)
+  {
+    for (int i=0; i<numCRTemplates; i++) {
+      if (!do_cr) break; 
+      dCorr = FFTtools::getCorrelationFromFFT(length,theCRTemplateFFTs_deconv[i],deconvolvedFFT);
+      maxValue = TMath::MaxElement(length,dCorr);
+      minValue = TMath::Abs(TMath::MinElement(length,dCorr));
+      if (TMath::Max(maxValue,minValue) == maxValue) {
+        value = maxValue;
+        value_loc = TMath::LocMax(length,dCorr);
+        value_pol = true;
+      }
+      else {
+        value = minValue;
+        value_loc = TMath::LocMin(length,dCorr);
+        value_pol = false;
+      }
+      templateSummary->deconvolved[poli][dir].cRay[i]  = value;
+      templateSummary->deconvolved[poli][dir].cRay_loc[i] = value_loc;
+      templateSummary->deconvolved[poli][dir].cRay_pol[i] = value_pol;
+
+      delete[] dCorr;
+    }
+  }
+  
+  if(fUseAverageCRTemplate && do_cr)
+  {
+    dCorr = FFTtools::getCorrelationFromFFT(length,theCRTemplateFFTs_deconv[0],deconvolvedFFT);
     maxValue = TMath::MaxElement(length,dCorr);
     minValue = TMath::Abs(TMath::MinElement(length,dCorr));
     if (TMath::Max(maxValue,minValue) == maxValue) {
@@ -529,9 +638,9 @@ void AnitaTemplateMachine::doDeconvolvedTemplateAnalysis(const AnalysisWaveform 
       value_loc = TMath::LocMin(length,dCorr);
       value_pol = false;
     }
-    templateSummary->deconvolved[poli][dir].cRay[i]  = value;
-    templateSummary->deconvolved[poli][dir].cRay_loc[i] = value_loc;
-    templateSummary->deconvolved[poli][dir].cRay_pol[i] = value_pol;
+    templateSummary->deconvolved[poli][dir].cRay[0]  = value;
+    templateSummary->deconvolved[poli][dir].cRay_loc[0] = value_loc;
+    templateSummary->deconvolved[poli][dir].cRay_pol[0] = value_pol;
 
     delete[] dCorr;
   }
