@@ -441,7 +441,11 @@ void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat, const TruthAnit
     mc.energy = truth->nuMom; // I guess this won't be true if icemc ever simulates non-relativistic neutrinos :P
     mc.triggerSNR[0] = truth->maxSNRAtTriggerH; 
     mc.triggerSNR[1] = truth->maxSNRAtTriggerV; 
-    mc.nuDirection.SetXYZ(truth->nuDir[0], truth->nuDir[1], truth->nuDir[2]); 
+    TVector3 v(truth->nuDir[0], truth->nuDir[1], truth->nuDir[2]); 
+    TVector3 p(truth->nuPos[0], truth->nuPos[1], truth->nuPos[2]); 
+    pat->getThetaAndPhiWaveOfRayAtInfinity(p,v,mc.nuTheta,mc.nuPhi, true, 1e-5*TMath::DegToRad(), 1e7,&mc.nuDirection ); 
+    mc.nuTheta *= TMath::RadToDeg(); 
+    mc.nuPhi *= TMath::RadToDeg(); 
   }
 }
 

@@ -361,11 +361,12 @@ class AnitaEventSummary : public TObject
     Double_t weight;
     Double_t energy;
     Double_t triggerSNR[2]; 
-    TVector3 nuDirection; 
+    TVector3 nuDirection; //in earth centered fixed coordinates (i.e. Cartesian coordinates of neutrino far away)
+    double nuTheta, nuPhi; //neutrino (not RF!) direction in payload coordinates 
     void reset();
     virtual ~MCTruth() { ; } 
 
-    ClassDefNV(MCTruth,7);
+    ClassDefNV(MCTruth,8);
   };
 
 
@@ -503,7 +504,7 @@ class AnitaEventSummary : public TObject
   void resetNonPersistent() const;
   const SourceHypothesis* sourceFromTag() const;
 
-  ClassDefNV(AnitaEventSummary, 40);
+  ClassDefNV(AnitaEventSummary, 41);
 };
 
 #endif
