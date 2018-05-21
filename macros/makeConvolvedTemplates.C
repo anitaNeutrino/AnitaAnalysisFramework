@@ -2,58 +2,58 @@
 #include "TMath.h"
 #include "TString.h"
 #include "TGraph.h"
-#include "AnalysisWaveform.h"
 #include "FFTtools.h"
+#include "AnitaTemplates.h"
 #include <stdio.h>
 #include <sys/stat.h>
 
 void convolveTemplates(char config, const char * numbers)
 {
-  TString tempname;
   TString outname;
-  tempname = Form("%s/share/AnitaAnalysisFramework/templates/crTmpltsA3.root", getenv("ANITA_UTIL_INSTALL_DIR"));
-  TFile f(tempname);
 
   outname = Form("data/templates/crTmpltsA4_%s.root", numbers);
   TFile* fOut = new TFile(outname.Data(), "RECREATE");
+  
+  TFile* inf = new TFile("data/templates/crTmpltsA3.root");
 
-  TFile convfile(Form("%s/share/AnitaAnalysisFramework/tuffModels/config%c.root", getenv("ANITA_UTIL_INSTALL_DIR"), config));
-  TGraph* gReal = (TGraph*) convfile.Get("gReal");
-  TGraph* gImag = (TGraph*) convfile.Get("gImag");
-  double phaseShift = TMath::ATan2(gImag->Eval(0), gReal->Eval(0));
+  TGraph* gconv = new TGraph(Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/averages/%s.imp", getenv("ANITA_UTIL_INSTALL_DIR"), numbers));
+  AnalysisWaveform awfc(gconv->GetN(), gconv->GetX(), gconv->GetY(), .1);
+  awfc.forceEvenSize(10000);
+  (void) awfc.freq();
+  double dfc = awfc.deltaF();
+  int Nfreqc = awfc.Nfreq();
+  FFTWComplex* freqc = awfc.updateFreq();
 
   for(int disp = 0; disp < 32; disp++)
   {
-    TGraph* g = (TGraph*) f.Get(Form("disp%d", disp));
+    TGraph* g = (TGraph*) inf->Get(Form("efield%d", disp));
 
-    AnalysisWaveform awfH(g->GetN(), g->GetY(), g->GetX()[1] - g->GetX()[0], 0);
+    AnalysisWaveform awfH(g->GetN(), g->GetX(), g->GetY(), .1);
+    awfH.forceEvenSize(10000);
     (void) awfH.freq();
     double dfH = awfH.deltaF();
     int NfreqH = awfH.Nfreq();
     FFTWComplex* freqH = awfH.updateFreq();
-
+    
     //convolve w tuff response
     for(int i = 0; i < NfreqH; i++)
     {
-      if(dfH*i > 1.5) continue;
-      double reTemp = gReal->Eval(dfH*i);
-      double imTemp = gImag->Eval(dfH*i);
-      FFTWComplex temp(reTemp,imTemp);
-      temp.setMagPhase(temp.getAbs(), temp.getPhase() - phaseShift);
-      freqH[i] *= temp;
+      //if( dfH*i > 1.4) continue;
+      freqH[i] *= freqc[i];
     }
     TGraph* gOut = new TGraph(awfH.even()->GetN(), awfH.even()->GetX(), awfH.even()->GetY());
     gOut->SetName(Form("disp%d", disp));
     fOut->cd();
     gOut->Write();
 
-    delete g;
     delete gOut;
+    delete g;
   }
-
+  inf->Close();
   fOut->Close();
-  f.Close();
-  convfile.Close();
+  delete gconv;
+  delete inf;
+  delete fOut;
 }
 
 void makeConvolvedTemplates()

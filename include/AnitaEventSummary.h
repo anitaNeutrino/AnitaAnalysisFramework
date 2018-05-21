@@ -272,7 +272,8 @@ class AnitaEventSummary : public TObject
       LDB,
       SIPLE,
       TD,
-      WAIS_V // the Vpol wais in A4
+      WAIS_V, // the Vpol wais in A4
+      HICAL // HICAL2 flag
     };
 
     Int_t isGood;
@@ -317,7 +318,7 @@ class AnitaEventSummary : public TObject
     Int_t middleOrBottomAnt[numBlastPowerBands];
     Int_t middleOrBottomPol[numBlastPowerBands];
 
-    ClassDefNV(EventFlags,14);
+    ClassDefNV(EventFlags,15);
   };
 
 
@@ -501,7 +502,7 @@ class AnitaEventSummary : public TObject
   void resetNonPersistent() const;
   const SourceHypothesis* sourceFromTag() const;
 
-  ClassDefNV(AnitaEventSummary, 39);
+  ClassDefNV(AnitaEventSummary, 40);
 };
 
 #endif

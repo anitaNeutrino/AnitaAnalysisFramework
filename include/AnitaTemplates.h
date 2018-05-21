@@ -75,7 +75,7 @@ class AnitaTemplateMachine : public TObject {
   
 
   /** Filling the stored templates **/
-  void loadTemplates( unsigned int evTime = 0);
+  void loadTemplates( unsigned int evTime = 0, int version = AnitaVersion::get());
   void deconvolveTemplates(AnitaResponse::DeconvolutionMethod *deconv);
   
 
@@ -93,17 +93,24 @@ class AnitaTemplateMachine : public TObject {
 
   /** Write templates to file **/
   void writeTemplatesToFile(TFile *outFile);
+
+  void setUseAverageCRTemplate(bool opt) { fUseAverageCRTemplate = opt; }
   
  private:
   /* flags to see what you still might need to do */
   bool kTmpltsLoaded;
   bool kTmpltsDeconv;
+  bool fUseAverageCRTemplate;
 
   std::string fNotchStr;
+  std::vector<int> payloadTimes;
+  std::vector<std::string> notchConfigs;
+
+  void fillNotchConfigs();
   
   /* hidden functions for filling the templates one at a time */
   void getImpulseResponseTemplate(int version);
-  void getWaisTemplate();
+  void getWaisTemplate(int version);
   void getCRTemplates(int version);
   
   
