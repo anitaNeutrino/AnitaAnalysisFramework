@@ -155,7 +155,7 @@ void AnitaTemplateMachine::getCRTemplates(int version) {
   }
   else if(version == 4 && fUseAverageCRTemplate)
   {
-    fname = Form("%s/share/AnitaAnalysisFramework/templates/averageA3CR_%s.txt", installDir, fNotchStr.c_str());
+    fname = Form("%s/share/AnitaAnalysisFramework/templates/averageA4CR_%s.txt", installDir, fNotchStr.c_str());
   }
   else if(version != 4 && fUseAverageCRTemplate)
   {
@@ -217,9 +217,41 @@ void AnitaTemplateMachine::getCRTemplates(int version) {
     FFTWComplex *theTemplateFFT=FFTtools::doFFT(grTemplate->GetN(),grTemplate->GetY());
     theCRTemplates[0] = grTemplate;
     theCRTemplateFFTs[0] = theTemplateFFT;
-  }
     
-  return;
+    //this second one is for polarity tests 
+    fname = Form("%s/share/AnitaAnalysisFramework/templates/crTmpltsA4_%s.root", installDir, fNotchStr.c_str());
+    TFile *inFile = TFile::Open(fname.Data());
+    std::stringstream name;
+
+    //want to get graphs 13 through 24 (like in makeTemplate.C)
+    int wave = 13; //peak seems to be at around the 13th one, then by 23 it is basically zero
+    name.str("");
+    name << "disp" << wave;
+    TGraph *grTemplateRaw = (TGraph*)inFile->Get(name.str().c_str());
+
+    //waveforms are super long so we can just cut it to the window dimentions
+    int peakHilb = -1;
+    grTemplateCut = WindowingTools::windowCut(grTemplateRaw,length);
+    delete grTemplateRaw;
+
+    //Make them start at zero
+    double xStart = grTemplateCut->GetX()[0];
+    for (int pt=0; pt<grTemplateCut->GetN(); pt++) grTemplateCut->GetX()[pt] -= xStart;
+
+
+    //and finally normalize it (last step!)
+    grTemplate = FFTtools::normalizeWaveform(grTemplateCut);
+    delete grTemplateCut;
+
+    //give it a name
+    grTemplate->SetName(name.str().c_str());
+
+    //and get the FFT of it as well, since we don't want to do this every single event
+    theTemplateFFT=FFTtools::doFFT(grTemplate->GetN(),grTemplate->GetY());
+    theCRTemplates[1] = grTemplate;
+    theCRTemplateFFTs[1] = theTemplateFFT;
+  }
+    return;
 }
 
 
@@ -357,7 +389,7 @@ void AnitaTemplateMachine::deconvolveTemplates(AnitaResponse::DeconvolutionMetho
   if(fUseAverageCRTemplate)
   {
     char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
-    TString crfname = Form("%s/share/AnitaAnalysisFramework/templates/deconvolvedCRA3average.txt", installDir);
+    TString crfname = Form("%s/share/AnitaAnalysisFramework/templates/deconvolvedCRA4average.txt", installDir);
     
     TGraph* grTemplateCut = new TGraph(crfname.Data());
     TGraph *grTemplate = FFTtools::normalizeWaveform(grTemplateCut);
@@ -370,6 +402,17 @@ void AnitaTemplateMachine::deconvolveTemplates(AnitaResponse::DeconvolutionMetho
     FFTWComplex *theTemplateFFT=FFTtools::doFFT(grTemplate->GetN(),grTemplate->GetY());
     theCRTemplates_deconv[0] = grTemplate;
     theCRTemplateFFTs_deconv[0] = theTemplateFFT;
+
+    theCRTemplateFFTs_deconv[1] = (FFTWComplex*)malloc(lengthFFT*sizeof(FFTWComplex));
+    for (int i=0; i<(length/2 + 1); i++) {
+      theCRTemplateFFTs_deconv[1][i] = theCRTemplateFFTs[1][i];
+    }				    
+    deconv->deconvolve(lengthFFT,dF,theCRTemplateFFTs_deconv[1],theImpTemplateFFT);
+    double* theCRTemplate_deconv_y = FFTtools::doInvFFT(length,theCRTemplateFFTs_deconv[1]);
+    theCRTemplates_deconv[1] = new TGraph(length,theCRTemplates[1]->GetX(),theCRTemplate_deconv_y);
+    name.str("");
+    name << "deconvCR" << 1;
+    theCRTemplates_deconv[1]->SetName(name.str().c_str());
   } 
 
   kTmpltsDeconv = true;
@@ -625,24 +668,26 @@ void AnitaTemplateMachine::doDeconvolvedTemplateAnalysis(const AnalysisWaveform 
   
   if(fUseAverageCRTemplate && do_cr)
   {
-    dCorr = FFTtools::getCorrelationFromFFT(length,theCRTemplateFFTs_deconv[0],deconvolvedFFT);
-    maxValue = TMath::MaxElement(length,dCorr);
-    minValue = TMath::Abs(TMath::MinElement(length,dCorr));
-    if (TMath::Max(maxValue,minValue) == maxValue) {
-      value = maxValue;
-      value_loc = TMath::LocMax(length,dCorr);
-      value_pol = true;
-    }
-    else {
-      value = minValue;
-      value_loc = TMath::LocMin(length,dCorr);
-      value_pol = false;
-    }
-    templateSummary->deconvolved[poli][dir].cRay[0]  = value;
-    templateSummary->deconvolved[poli][dir].cRay_loc[0] = value_loc;
-    templateSummary->deconvolved[poli][dir].cRay_pol[0] = value_pol;
+    for (int i=0; i<2; i++) {
+      dCorr = FFTtools::getCorrelationFromFFT(length,theCRTemplateFFTs_deconv[i],deconvolvedFFT);
+      maxValue = TMath::MaxElement(length,dCorr);
+      minValue = TMath::Abs(TMath::MinElement(length,dCorr));
+      if (TMath::Max(maxValue,minValue) == maxValue) {
+        value = maxValue;
+        value_loc = TMath::LocMax(length,dCorr);
+        value_pol = true;
+      }
+      else {
+        value = minValue;
+        value_loc = TMath::LocMin(length,dCorr);
+        value_pol = false;
+      }
+      templateSummary->deconvolved[poli][dir].cRay[i]  = value;
+      templateSummary->deconvolved[poli][dir].cRay_loc[i] = value_loc;
+      templateSummary->deconvolved[poli][dir].cRay_pol[i] = value_pol;
 
-    delete[] dCorr;
+      delete[] dCorr;
+    }
   }
   
   delete[] deconvolvedFFT;
