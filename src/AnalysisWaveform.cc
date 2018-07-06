@@ -1062,6 +1062,55 @@ AnalysisWaveform::AnalysisWaveform(const AnalysisWaveform & other)
 
 }
 
+
+AnalysisWaveform * AnalysisWaveform::convolution(const AnalysisWaveform *A, const AnalysisWaveform *B, int npad, double scale) 
+{
+  if (A->Nfreq() != B->Nfreq()) 
+  {
+    fprintf(stderr,"convolution does not handle the case where A and B are of different lengths (%d vs. %d)!\n", A->Nfreq(), B->Nfreq()); 
+    return 0; 
+  }
+
+  double offset = A->even()->GetX()[0] - B->even()->GetX()[0]; 
+
+  AnalysisWaveform * answer = new AnalysisWaveform(A->Neven(), A->freq(), 
+                                                   A->deltaF(), A->even()->GetX()[0]); 
+
+  int N = answer->even()->GetN(); 
+  FFTWComplex * update = answer->updateFreq(); 
+
+  const FFTWComplex * Bfreq = B->freq(); 
+  double inv = 1./(N*scale); 
+  
+  //TODO this can be vectorized 
+  for (int i = 0; i < B->Nfreq(); i++) 
+  {
+    FFTWComplex vA = update[i]; 
+    FFTWComplex vB = Bfreq[i]; 
+    update[i] = vA * vB; 
+  }
+
+  answer->padFreq(npad); 
+
+  N = answer->even()->GetN(); 
+  TGraphAligned g(N); 
+
+  double dt = answer->deltaT(); 
+  memcpy(g.GetY(), answer->even()->GetY() + N/2, N/2 * sizeof(double)); 
+  memcpy(g.GetY()+ N/2, answer->even()->GetY(), N/2 * sizeof(double)); 
+
+  for (int i = 0; i < N; i++) 
+  {
+    g.GetX()[i] =(i - N/2) * dt + offset; 
+  }
+
+
+  answer->updateEven(&g); 
+
+  return answer; 
+}
+
+
 AnalysisWaveform * AnalysisWaveform::correlation(const AnalysisWaveform *A, const AnalysisWaveform *B, int npad, double scale) 
 {
   if (A->Nfreq() != B->Nfreq()) 

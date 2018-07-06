@@ -148,6 +148,8 @@ class AnalysisWaveform
      **/ 
     static AnalysisWaveform * correlation(const AnalysisWaveform * A, const AnalysisWaveform * B, int npadfreq = 0, double scale =1 ); 
 
+    static AnalysisWaveform * convolution(const AnalysisWaveform * A, const AnalysisWaveform * B, int npadfreq = 0, double scale =1 ); 
+
     /* Enables or disables (check) and nagging on attemptoin correlation
      * without zero padding. Useful if you actually want to do a circular
      * correlation or if the check is too expensive for your tastes.
