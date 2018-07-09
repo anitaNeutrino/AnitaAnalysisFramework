@@ -46,22 +46,29 @@ void fillSinglePoisson(int lambda, TH1 * fill, int N = 10000)
   for (int i = 0; i < N; i++) fill->Fill(gammarnd(lambda,1)); 
 
 }
-void fillABCD(int nbg, int nsiglike_sideband, int nsideband, TH1 * fill, int N = 100) 
+void fillABCD(int nbg, int nsiglike_sideband, int nsideband, TH1 * fill, int N = 10000) 
 {
   for (int i = 0; i < N; i++) fill->Fill(gammarnd(nbg,1) * gammarnd(nsiglike_sideband,1) / gammarnd(nsideband,1)); 
 }
 
 
-void poissonPosterior(int nbg=1, int nsiglike_sideband = 10, int nsideband =100000) 
+void poissonPosterior(int nbg=1, int nsiglike_sideband = 10, int nsideband =100) 
 {
-  TH1I fillme("posterior","Posterior test", 100,0,10); 
+  TH1I fillme("posterior","Posterior test", 100,0,5); 
   fillABCD(1,10,100,&fillme); 
   fillme.DrawCopy(); 
 
   const double probsum[]={0.16,0.5,0.84} ; 
   double q[3]; 
   fillme.GetQuantiles(3,q,probsum); 
+
+  printf(" Multiplying posteriors of individual poissons for: \n"); 
+  printf("   (nbg=%d) * ( nsiglike_sideband=%d ) / (nsideband =%d)\n", nbg, nsiglike_sideband, nsideband); 
+  printf(" Mean: %g\n",fillme.GetMean()); 
+  printf(" RMS: %g\n",fillme.GetRMS()); 
   printf(" Median: %g\n",q[1]); 
-  printf(" -1 sigma: %g\n",q[1]-q[0]); 
-  printf(" +1 sigma: %g\n",q[2]-q[1]); 
+  printf(" 16th percentile: %g\n",q[0]); 
+  printf(" 84th percentile: %g\n",q[2]); 
+  printf(" Median-1 sigma: %g\n",q[1]-q[0]); 
+  printf(" Median+1 sigma: %g\n",q[2]-q[1]); 
 }
