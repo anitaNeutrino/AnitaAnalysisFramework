@@ -78,7 +78,7 @@ void fillABCD(int nbg, int nsiglike_sideband, int nsideband, TH1 * fill, int pri
 //      fill->Fill(gRandom->Poisson(nbg) * gRandom->Poisson(nsiglike_sideband) / gRandom->Poisson(nsideband)); 
       fill->Fill(gammarnd(nbg+1,1) * gammarnd(nsiglike_sideband+1,1) / gammarnd(nsideband+1,1)); 
     }
-    if (prior == JEFFREYS_PRIOR) 
+    else if (prior == JEFFREYS_PRIOR) 
     {
       fill->Fill(gammarnd(nbg+0.5,1) * gammarnd(nsiglike_sideband+0.5,1) / gammarnd(nsideband+0.5,1)); 
     }
