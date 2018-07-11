@@ -49,7 +49,7 @@ double gammarnd(double alpha, double beta)
 
 
 
-void fillSinglePoisson(int lambda, TH1 * fill,int prior = FLAT_PRIOR , int N = 10000) 
+void fillSinglePoisson(int lambda, TH1 * fill,int prior = JEFFREYS_PRIOR , int N = 10000) 
 {
   for (int i = 0; i < N; i++) 
   {
@@ -69,7 +69,7 @@ void fillSinglePoisson(int lambda, TH1 * fill,int prior = FLAT_PRIOR , int N = 1
   }
 
 }
-void fillABCD(int nbg, int nsiglike_sideband, int nsideband, TH1 * fill, int prior = FLAT_PRIOR, int N = 10000) 
+void fillABCD(int nbg, int nsiglike_sideband, int nsideband, TH1 * fill, int prior = JEFFREYS_PRIOR, int N = 10000) 
 {
   for (int i = 0; i < N; i++)
   {
@@ -90,11 +90,12 @@ void fillABCD(int nbg, int nsiglike_sideband, int nsideband, TH1 * fill, int pri
 }
 
 
-void poissonPosterior(int nbg=1, int nsiglike_sideband = 10, int nsideband =100, int prior = JEFFREYS_PRIOR) 
+void poissonPosterior(int nbg=1, int nsiglike_sideband = 10, int nsideband =100, int prior = JEFFREYS_PRIOR, int N = 100000) 
 {
-  TH1I fillme("posterior","Posterior test", 100,0,5*nbg*nsiglike_sideband/nsideband); 
-  fillABCD(1,10,100,&fillme,prior); 
-  fillme.DrawCopy("norml"); 
+  TH1D fillme("posterior","Posterior test", 100,0,5*nbg*nsiglike_sideband/nsideband); 
+  fillABCD(1,10,100,&fillme,prior, N); 
+  fillme.Scale(1./N); 
+  fillme.DrawCopy(); 
 
   const double probsum[]={0.16,0.5,0.84} ; 
   double q[3]; 
