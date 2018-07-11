@@ -6,7 +6,7 @@ const int FLAT_PRIOR = 0;
 const int JEFFREYS_PRIOR = 1; 
 const int GAMMA_UNINFORMATIVE_PRIOR = 2; 
 
-const char * priors[] = {"FLAT PRIOR, prior = Gamma(alpha = 1, beta = 0)", "JEFFREYS PRIOR, prior = Gamma(alpha = 0.5, beta = 0)", "GAMMA VAGUE PRIOR, prior = Gamma(alpha = 0, beta = 0)"} ; 
+const char * priors[] = {"FLAT PRIOR = Gamma(#alpha = 1, #beta = 0)", "JEFFREYS PRIOR = Gamma(#alpha = 0.5, #beta = 0)", "GAMMA VAGUE PRIOR = Gamma(#alpha = 0, #beta = 0)"} ; 
 
 //generates a gamma random variate 
 double gammarnd(double alpha, double beta) 
@@ -95,6 +95,9 @@ void poissonPosterior(int nbg=1, int nsiglike_sideband = 10, int nsideband =100,
   TH1D fillme("posterior","Posterior test", 100,0,5*nbg*nsiglike_sideband/nsideband); 
   fillABCD(1,10,100,&fillme,prior, N); 
   fillme.Scale(1./N); 
+  TString str;
+  str.Form("NBG=%d, NSB_SIGLIKE = %d, NSB=%d, %s", nbg, nsiglike_sideband, nsideband, priors[prior]); 
+  fillme.SetTitle(str.Data()); 
   fillme.DrawCopy(); 
 
   const double probsum[]={0.16,0.5,0.84} ; 
