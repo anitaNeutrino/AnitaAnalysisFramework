@@ -6,7 +6,7 @@ const int FLAT_PRIOR = 0;
 const int JEFFREYS_PRIOR = 1; 
 const int GAMMA_UNINFORMATIVE_PRIOR = 2; 
 
-const char * priors[] = {"FLAT PRIOR, prior = Gamma(alpha = 1, beta = 0)", "JEFFREYS PRIOR, prior = Gamma(alpha = 0.5, beta = 0)", "GAMMA VAGUE PRIOR, prior = Gamma(alpha = 0, beta = 0)"} ; 
+const char * priors[] = {"FLAT PRIOR = Gamma(#alpha = 1, #beta = 0)", "JEFFREYS PRIOR = Gamma(#alpha = 0.5, #beta = 0)", "GAMMA VAGUE PRIOR = Gamma(#alpha = 0, #beta = 0)"} ; 
 
 //generates a gamma random variate 
 double gammarnd(double alpha, double beta) 
@@ -49,7 +49,7 @@ double gammarnd(double alpha, double beta)
 
 
 
-void fillSinglePoisson(int lambda, TH1 * fill,int prior = FLAT_PRIOR , int N = 10000) 
+void fillSinglePoisson(int lambda, TH1 * fill,int prior = JEFFREYS_PRIOR , int N = 10000) 
 {
   for (int i = 0; i < N; i++) 
   {
@@ -69,7 +69,7 @@ void fillSinglePoisson(int lambda, TH1 * fill,int prior = FLAT_PRIOR , int N = 1
   }
 
 }
-void fillABCD(int nbg, int nsiglike_sideband, int nsideband, TH1 * fill, int prior = FLAT_PRIOR, int N = 10000) 
+void fillABCD(int nbg, int nsiglike_sideband, int nsideband, TH1 * fill, int prior = JEFFREYS_PRIOR, int N = 10000) 
 {
   for (int i = 0; i < N; i++)
   {
@@ -78,7 +78,7 @@ void fillABCD(int nbg, int nsiglike_sideband, int nsideband, TH1 * fill, int pri
 //      fill->Fill(gRandom->Poisson(nbg) * gRandom->Poisson(nsiglike_sideband) / gRandom->Poisson(nsideband)); 
       fill->Fill(gammarnd(nbg+1,1) * gammarnd(nsiglike_sideband+1,1) / gammarnd(nsideband+1,1)); 
     }
-    if (prior == JEFFREYS_PRIOR) 
+    else if (prior == JEFFREYS_PRIOR) 
     {
       fill->Fill(gammarnd(nbg+0.5,1) * gammarnd(nsiglike_sideband+0.5,1) / gammarnd(nsideband+0.5,1)); 
     }
@@ -90,11 +90,15 @@ void fillABCD(int nbg, int nsiglike_sideband, int nsideband, TH1 * fill, int pri
 }
 
 
-void poissonPosterior(int nbg=1, int nsiglike_sideband = 10, int nsideband =100, int prior = JEFFREYS_PRIOR) 
+void poissonPosterior(int nbg=1, int nsiglike_sideband = 10, int nsideband =100, int prior = JEFFREYS_PRIOR, int N = 100000) 
 {
-  TH1I fillme("posterior","Posterior test", 100,0,5*nbg*nsiglike_sideband/nsideband); 
-  fillABCD(1,10,100,&fillme,prior); 
-  fillme.DrawCopy("norml"); 
+  TH1D fillme("posterior","Posterior test", 100,0,5*nbg*nsiglike_sideband/nsideband); 
+  fillABCD(1,10,100,&fillme,prior, N); 
+  fillme.Scale(1./N); 
+  TString str;
+  str.Form("NBG=%d, NSB_SIGLIKE = %d, NSB=%d, %s", nbg, nsiglike_sideband, nsideband, priors[prior]); 
+  fillme.SetTitle(str.Data()); 
+  fillme.DrawCopy(); 
 
   const double probsum[]={0.16,0.5,0.84} ; 
   double q[3]; 
