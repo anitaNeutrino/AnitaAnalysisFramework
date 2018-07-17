@@ -16,15 +16,15 @@ void convolveTUFF(int ant=1, char tmb='B', char config='B', const char* outdir="
 	TString outNameV;
 	if(ant < 10)
 	{
-		impnameH = Form("%s/share/AnitaAnalysisFramework/responses/A4noNotches/fullTF_0%d%cH.txt", getenv("ANITA_UTIL_INSTALL_DIR"), ant, tmb);
-		impnameV = Form("%s/share/AnitaAnalysisFramework/responses/A4noNotches/fullTF_0%d%cV.txt", getenv("ANITA_UTIL_INSTALL_DIR"), ant, tmb);
+		impnameH = Form("%s/share/AnitaAnalysisFramework/responses/A4noNotches/0%d%cH.imp", getenv("ANITA_UTIL_INSTALL_DIR"), ant, tmb);
+		impnameV = Form("%s/share/AnitaAnalysisFramework/responses/A4noNotches/0%d%cV.imp", getenv("ANITA_UTIL_INSTALL_DIR"), ant, tmb);
 		outNameH = Form("data/responses/A4ImpulseTUFFs/%s/0%d%cH.imp", outdir, ant, tmb);
 		outNameV = Form("data/responses/A4ImpulseTUFFs/%s/0%d%cV.imp", outdir, ant, tmb);
 	} 
 	else
 	{
-		impnameH = Form("%s/share/AnitaAnalysisFramework/responses/A4noNotches/fullTF_%d%cH.txt", getenv("ANITA_UTIL_INSTALL_DIR"), ant, tmb);
-		impnameV = Form("%s/share/AnitaAnalysisFramework/responses/A4noNotches/fullTF_%d%cV.txt", getenv("ANITA_UTIL_INSTALL_DIR"), ant, tmb);
+		impnameH = Form("%s/share/AnitaAnalysisFramework/responses/A4noNotches/%d%cH.imp", getenv("ANITA_UTIL_INSTALL_DIR"), ant, tmb);
+		impnameV = Form("%s/share/AnitaAnalysisFramework/responses/A4noNotches/%d%cV.imp", getenv("ANITA_UTIL_INSTALL_DIR"), ant, tmb);
 		outNameH = Form("data/responses/A4ImpulseTUFFs/%s/%d%cH.imp", outdir, ant, tmb);
 		outNameV = Form("data/responses/A4ImpulseTUFFs/%s/%d%cV.imp", outdir, ant, tmb);
 	}
@@ -49,10 +49,10 @@ void convolveTUFF(int ant=1, char tmb='B', char config='B', const char* outdir="
 	//convolve w tuff response
 	for(int i = 0; i < NfreqH; i++)
 	{
-		if(dfH*i > 1.5) continue;
+		//if(dfH*i > 1.5) continue;
 		double reTemp = gReal->Eval(dfH*i);
 		double imTemp = gImag->Eval(dfH*i);
-		FFTWComplex temp(reTemp,imTemp);
+		FFTWComplex temp(reTemp, imTemp);
 		temp.setMagPhase(temp.getAbs(), temp.getPhase() - phaseShift);
 		freqH[i] *= temp;
 		freqV[i] *= temp;

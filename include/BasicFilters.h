@@ -113,6 +113,7 @@ class HybridFilter : public FilterOperation
     const char * tag () const { return "HybridFilter"; } 
     const char * description () const { return "Hybrid Filter"; } 
     virtual void process(FilteredAnitaEvent * event); 
+		virtual void processOne(AnalysisWaveform * awf, const RawAnitaHeader * header=0, int ant=0, int pol = 0);
 };
 
 class SumDifferenceFilter : public FilterOperation

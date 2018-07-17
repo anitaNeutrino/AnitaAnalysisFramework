@@ -50,6 +50,9 @@ AnitaTemplateMachine::AnitaTemplateMachine(int inLength)
   //initialize the TGraphs to NULL at least, the FFTs are allocated in the "get" stuff.
   theImpTemplate = NULL;
   theWaisTemplate = NULL;
+  fUseAverageCRTemplate = false;
+  fDoWindow = false;
+
   for (int i=0; i < numCRTemplates; i++) {
     theCRTemplates[i] = NULL;
   }
@@ -397,22 +400,13 @@ void AnitaTemplateMachine::deconvolveTemplates(AnitaResponse::DeconvolutionMetho
 
     //give it a name
     grTemplate->SetName("disp0");
+    int phl = -1;
+    if(fDoWindow) grTemplate = WindowingTools::windowWave(grTemplate, phl, 30, 30, 50, 50);
 
     //and get the FFT of it as well, since we don't want to do this every single event
     FFTWComplex *theTemplateFFT=FFTtools::doFFT(grTemplate->GetN(),grTemplate->GetY());
     theCRTemplates_deconv[0] = grTemplate;
     theCRTemplateFFTs_deconv[0] = theTemplateFFT;
-
-    theCRTemplateFFTs_deconv[1] = (FFTWComplex*)malloc(lengthFFT*sizeof(FFTWComplex));
-    for (int i=0; i<(length/2 + 1); i++) {
-      theCRTemplateFFTs_deconv[1][i] = theCRTemplateFFTs[1][i];
-    }				    
-    deconv->deconvolve(lengthFFT,dF,theCRTemplateFFTs_deconv[1],theImpTemplateFFT);
-    double* theCRTemplate_deconv_y = FFTtools::doInvFFT(length,theCRTemplateFFTs_deconv[1]);
-    theCRTemplates_deconv[1] = new TGraph(length,theCRTemplates[1]->GetX(),theCRTemplate_deconv_y);
-    name.str("");
-    name << "deconvCR" << 1;
-    theCRTemplates_deconv[1]->SetName(name.str().c_str());
   } 
 
   kTmpltsDeconv = true;
@@ -582,10 +576,15 @@ void AnitaTemplateMachine::doDeconvolvedTemplateAnalysis(const AnalysisWaveform 
   delete deconvolved;
 
   //normalize deconvolvedly summed waveform
+  int phl = -1;
+  if(fDoWindow)
+  {
+    deconvolvedPad = WindowingTools::windowWave(deconvolvedPad, phl, 30, 30, 50, 50);
+    phl = -1;
+  }
   TGraph *normDeconvolved = FFTtools::normalizeWaveform(deconvolvedPad);
   delete deconvolvedPad;
   FFTWComplex *deconvolvedFFT=FFTtools::doFFT(length,normDeconvolved->GetY());
-  delete normDeconvolved; 
 
 
 
@@ -668,8 +667,27 @@ void AnitaTemplateMachine::doDeconvolvedTemplateAnalysis(const AnalysisWaveform 
   
   if(fUseAverageCRTemplate && do_cr)
   {
-    for (int i=0; i<2; i++) {
-      dCorr = FFTtools::getCorrelationFromFFT(length,theCRTemplateFFTs_deconv[i],deconvolvedFFT);
+    if(fDoWindow) {
+      TGraph* gCorr = FFTtools::getCorrelationGraph(normDeconvolved, theCRTemplates_deconv[0]);
+      double normalization = 1./(normDeconvolved->GetRMS(2) * theCRTemplates_deconv[0]->GetRMS(2) * normDeconvolved->GetN()/TMath::Power(2, int(TMath::Log2(normDeconvolved->GetN()))));
+      maxValue = normalization * TMath::MaxElement(gCorr->GetN(), gCorr->GetY());
+      minValue = normalization * TMath::Abs(TMath::MinElement(gCorr->GetN(), gCorr->GetY()));
+      if (TMath::Max(maxValue,minValue) == maxValue) {
+        value = maxValue;
+        value_loc = TMath::LocMax(gCorr->GetN(), gCorr->GetY());
+        value_pol = true;
+      }
+      else {
+        value = minValue;
+        value_loc = TMath::LocMin(gCorr->GetN(), gCorr->GetY());
+        value_pol = false;
+      }
+
+      delete gCorr;
+    }
+
+    else {
+      dCorr = FFTtools::getCorrelationFromFFT(length,theCRTemplateFFTs_deconv[0],deconvolvedFFT);
       maxValue = TMath::MaxElement(length,dCorr);
       minValue = TMath::Abs(TMath::MinElement(length,dCorr));
       if (TMath::Max(maxValue,minValue) == maxValue) {
@@ -682,15 +700,17 @@ void AnitaTemplateMachine::doDeconvolvedTemplateAnalysis(const AnalysisWaveform 
         value_loc = TMath::LocMin(length,dCorr);
         value_pol = false;
       }
-      templateSummary->deconvolved[poli][dir].cRay[i]  = value;
-      templateSummary->deconvolved[poli][dir].cRay_loc[i] = value_loc;
-      templateSummary->deconvolved[poli][dir].cRay_pol[i] = value_pol;
-
       delete[] dCorr;
     }
+
+    templateSummary->deconvolved[poli][dir].cRay[0]  = value;
+    templateSummary->deconvolved[poli][dir].cRay_loc[0] = value_loc;
+    templateSummary->deconvolved[poli][dir].cRay_pol[0] = value_pol;
+
   }
   
   delete[] deconvolvedFFT;
+  delete normDeconvolved; 
   
   return;
   
