@@ -41,7 +41,7 @@ class AnitaEventSummary : public TObject
   static const Int_t maxDirectionsPerPol = 5; /// The maximum number of hypotheses storable per polarization */
   static const Int_t peaksPerSpectrum = 3; /// The maximum number of frequency peaks per waveform spectrum
   static const Int_t numFracPowerWindows = 5;
-  static const Int_t numBlastPowerBands = 2;
+  static const Int_t numBlastPowerBands = 3;
 
   //------------------------------------------------------------------------------------
   /*************************************************************************************
