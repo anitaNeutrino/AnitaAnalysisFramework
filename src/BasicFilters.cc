@@ -53,6 +53,10 @@ void HybridFilter::process(FilteredAnitaEvent * event)
 
 }
 
+void HybridFilter::processOne(AnalysisWaveform* g, const RawAnitaHeader* header, int ant, int pol) 
+{
+}
+
 void SumDifferenceFilter::process(FilteredAnitaEvent * event) 
 {
 #ifdef USE_OMP
