@@ -29,7 +29,6 @@ ClassImp(CorrelationSummaryAnita4);
 //Global ish things.
 AnitaGeomTool *fCSGeomToolAnita4=0;
 
-
 CorrelationSummaryAnita4::CorrelationSummaryAnita4( )
 {
 
