@@ -16,6 +16,7 @@ namespace polarimetry
     public:
 
       StokesAnalysis(const AnalysisWaveform * H, const AnalysisWaveform *V); 
+      StokesAnalysis(const StokesAnalysis & other); 
       ~StokesAnalysis() { ; } 
 
       /** This computes the windowed averages over the window around Imax where I/Imax >= minIfrac 
