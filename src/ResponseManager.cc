@@ -423,6 +423,7 @@ void AnitaResponse::ResponseManager::checkTime(unsigned int evTime)
     loadResponsesFromDir(dir, savePad, evTime);
     fprintf(stderr, "changed responses\n");
   }
+  if(dp) closedir(dp); 
 }
 
 
