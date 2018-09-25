@@ -89,10 +89,31 @@ void fillABCD(int nbg, int nsiglike_sideband, int nsideband, TH1 * fill, int pri
   }
 }
 
+void fillPoisson(int nbg, int nsiglike_sideband, int nsideband, TH1 * fill, int prior = JEFFREYS_PRIOR, int N = 10000) 
+{
+  TRandom3 tr3(0);
+  for (int i = 0; i < N; i++)
+  {
+    if (prior == FLAT_PRIOR) 
+    {
+      fill->Fill(tr3.Poisson(gammarnd(nbg+1,1) * gammarnd(nsiglike_sideband+1,1) / gammarnd(nsideband+1,1))); 
+    }
+    else if (prior == JEFFREYS_PRIOR) 
+    {
+      fill->Fill(tr3.Poisson(gammarnd(nbg+0.5,1) * gammarnd(nsiglike_sideband+0.5,1) / gammarnd(nsideband+0.5,1))); 
+    }
+    else
+    {
+      fill->Fill(tr3.Poisson(gammarnd(nbg,1) * gammarnd(nsiglike_sideband,1) / gammarnd(nsideband,1))); 
+    }
+  }
+}
+
 
 void poissonPosterior(int nbg=1, int nsiglike_sideband = 10, int nsideband =100, int prior = JEFFREYS_PRIOR, int N = 100000) 
 {
-  TH1D fillme("posterior","Posterior test", 1000,0,5*nbg*nsiglike_sideband/nsideband); 
+  //TH1D fillme("posterior","Posterior test", 1000,0,5*nbg*nsiglike_sideband/nsideband); 
+  TH1D fillme("posterior","Posterior test", 1000,0,10); 
   fillABCD(nbg,nsiglike_sideband,nsideband,&fillme,prior, N); 
   fillme.Scale(1./N); 
   TString str;
@@ -114,4 +135,15 @@ void poissonPosterior(int nbg=1, int nsiglike_sideband = 10, int nsideband =100,
   printf(" 84th percentile: %g\n",q[2]); 
   printf(" Median-1 sigma: %g\n",q[1]-q[0]); 
   printf(" Median+1 sigma: %g\n",q[2]-q[1]); 
+}
+
+void observedQuantity(int nbg=1, int nsiglike_sideband = 10, int nsideband = 100, int prior = JEFFREYS_PRIOR, int N = 100000)
+{
+  TH1D fillme("posterior", "posterior test", 100, 0, 10);
+  fillPoisson(nbg, nsiglike_sideband, nsideband, &fillme, prior, N);
+  fillme.Scale(1./N);
+
+  fillme.DrawCopy();
+  printf(" >=5 events = %g\n", fillme.Integral(50, 100));
+
 }
