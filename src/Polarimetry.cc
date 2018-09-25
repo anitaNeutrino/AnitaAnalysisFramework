@@ -5,6 +5,37 @@
 #include "TAxis.h" 
 #include "FFTtools.h" 
 
+polarimetry::StokesAnalysis::StokesAnalysis(const StokesAnalysis & other) 
+{
+
+  avgI = other.avgI; 
+  avgQ = other.avgQ; 
+  avgQ = other.avgQ; 
+  avgV = other.avgV; 
+
+  dI = new TGraph(*other.dI); 
+  dQ = new TGraph(*other.dQ); 
+  dU = new TGraph(*other.dU); 
+  dV = new TGraph(*other.dV); 
+
+  cI = new TGraph(*other.cI); 
+  cQ = new TGraph(*other.cQ); 
+  cU = new TGraph(*other.cU); 
+  cV = new TGraph(*other.cV); 
+
+ instantaneous.Add(dI,"lp"); 
+ instantaneous.Add(dQ,"lp"); 
+ instantaneous.Add(dU,"lp"); 
+ instantaneous.Add(dV,"lp"); 
+ instantaneous.SetTitle("Instantaneous Stokes; Time (ns); Powerish"); 
+
+ cumulative.Add(cI,"lp"); 
+ cumulative.Add(cQ,"lp"); 
+ cumulative.Add(cU,"lp"); 
+ cumulative.Add(cV,"lp"); 
+ cumulative.SetTitle("Cumulative Stokes; Time (ns);Powerish"); 
+
+}
 
 
 polarimetry::StokesAnalysis::StokesAnalysis(const AnalysisWaveform * H, const AnalysisWaveform *V) 
