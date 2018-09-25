@@ -92,8 +92,8 @@ void fillABCD(int nbg, int nsiglike_sideband, int nsideband, TH1 * fill, int pri
 
 void poissonPosterior(int nbg=1, int nsiglike_sideband = 10, int nsideband =100, int prior = JEFFREYS_PRIOR, int N = 100000) 
 {
-  TH1D fillme("posterior","Posterior test", 100,0,5*nbg*nsiglike_sideband/nsideband); 
-  fillABCD(1,10,100,&fillme,prior, N); 
+  TH1D fillme("posterior","Posterior test", 1000,0,5*nbg*nsiglike_sideband/nsideband); 
+  fillABCD(nbg,nsiglike_sideband,nsideband,&fillme,prior, N); 
   fillme.Scale(1./N); 
   TString str;
   str.Form("NBG=%d, NSB_SIGLIKE = %d, NSB=%d, %s", nbg, nsiglike_sideband, nsideband, priors[prior]); 
