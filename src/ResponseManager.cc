@@ -140,6 +140,7 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
     if (!dot) 
     {
       fprintf(stderr, "Entry %s contains no .\n", entry); 
+      free(prefix);
       continue; 
     }
 
@@ -252,6 +253,7 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
       else
       {
         fprintf(stderr,"Something wrong with %s\n",prefix); 
+        free(prefix);
         continue; 
       }
 
@@ -273,6 +275,7 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
       else
       {
         fprintf(stderr,"Something wrong with %s\n",prefix); 
+        free(prefix);
         continue; 
       }
 
