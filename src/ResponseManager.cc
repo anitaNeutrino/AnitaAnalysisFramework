@@ -25,16 +25,20 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
   // Then try data/responses/ 
   // Then try ${ANITA_UTIL_INSTALL_DIR}/share/UCorrelator/responses
 
-  TString dir ; 
-  hasIndex = false;
-  dir.Form(raw_dir); 
-  dp = opendir(dir.Data()); 
+  TString dir;
   TString indexF;
   std::string str;
   std::string tempStr;
   long tempTime;
+
+  hasIndex = false;
+  dir.Form(raw_dir);
+  dp = opendir(dir.Data());
   if(dp)
   {
+    closedir(dp);
+    dp = NULL;
+
     indexF.Form("%s/index.txt", dir.Data());
     std::ifstream inf(indexF.Data());
     if(inf)
@@ -60,6 +64,9 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
     dp = opendir(dir.Data()); 
     if(dp)
     {
+      closedir(dp);
+      dp = NULL;
+
       indexF.Form("%s/index.txt", dir.Data());
       std::ifstream inf2(indexF.Data());
       if(inf2)
@@ -78,42 +85,43 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
         dp = opendir(dir.Data()); 
       }
     }
-    if (!dp)
-    {
-      dir.Form("%s/share/AnitaAnalysisFramework/responses/%s", getenv("ANITA_UTIL_INSTALL_DIR"), raw_dir); 
-      dp = opendir(dir.Data()); 
-      if(dp)
-      {
-        indexF.Form("%s/index.txt", dir.Data());
-        std::ifstream inf3(indexF.Data());
-        if(inf3)
-        {
-          hasIndex = true;
-          while(inf3 >> tempStr >> tempTime)
-          {
-            if(evTime < tempTime)
-            {
-              str = tempStr;
-              break;
-            }
-          }
-          indexF.Form(dir.Data());
-          dir.Form("%s/%s", indexF.Data(), str.c_str());
-          dp = opendir(dir.Data()); 
-        }
-      }
+  }
 
-      if (!dp)
+  if (!dp)
+  {
+    dir.Form("%s/share/AnitaAnalysisFramework/responses/%s", getenv("ANITA_UTIL_INSTALL_DIR"), raw_dir);
+    dp = opendir(dir.Data());
+    if(dp)
+    {
+      closedir(dp);
+      dp = NULL;
+
+      indexF.Form("%s/index.txt", dir.Data());
+      std::ifstream inf3(indexF.Data());
+      if(inf3)
       {
-        fprintf(stderr,"Could not open response dir %s\n",raw_dir);
-        fprintf(stderr,"Last directory checked: %s\n", dir.Data());
-        return 1; 
+        hasIndex = true;
+        while(inf3 >> tempStr >> tempTime)
+        {
+          if(evTime < tempTime)
+          {
+            str = tempStr;
+            break;
+          }
+        }
+        indexF.Form(dir.Data());
+        dir.Form("%s/%s", indexF.Data(), str.c_str());
+        dp = opendir(dir.Data());
       }
     }
   }
 
-
-
+  if (!dp)
+  {
+    fprintf(stderr,"Could not open response dir %s\n",raw_dir);
+    fprintf(stderr,"Last directory checked: %s\n", dir.Data());
+    return 1;
+  }
 
   std::map<const char *, AbstractResponse *> prefix_map; 
 
@@ -132,6 +140,7 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
     if (!dot) 
     {
       fprintf(stderr, "Entry %s contains no .\n", entry); 
+      free(prefix);
       continue; 
     }
 
@@ -244,6 +253,7 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
       else
       {
         fprintf(stderr,"Something wrong with %s\n",prefix); 
+        free(prefix);
         continue; 
       }
 
@@ -265,6 +275,7 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
       else
       {
         fprintf(stderr,"Something wrong with %s\n",prefix); 
+        free(prefix);
         continue; 
       }
 
