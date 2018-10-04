@@ -36,13 +36,12 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
   dp = opendir(dir.Data());
   if(dp)
   {
-    closedir(dp);
-    dp = NULL;
-
     indexF.Form("%s/index.txt", dir.Data());
     std::ifstream inf(indexF.Data());
     if(inf)
     {
+      closedir(dp);
+      dp = NULL;
       hasIndex = true;
       while(inf >> tempStr >> tempTime)
       {
@@ -64,13 +63,13 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
     dp = opendir(dir.Data()); 
     if(dp)
     {
-      closedir(dp);
-      dp = NULL;
 
       indexF.Form("%s/index.txt", dir.Data());
       std::ifstream inf2(indexF.Data());
       if(inf2)
       {
+        closedir(dp);
+        dp = NULL;
         hasIndex = true;
         while(inf2 >> tempStr >> tempTime)
         {
@@ -93,13 +92,12 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
     dp = opendir(dir.Data());
     if(dp)
     {
-      closedir(dp);
-      dp = NULL;
-
       indexF.Form("%s/index.txt", dir.Data());
       std::ifstream inf3(indexF.Data());
       if(inf3)
       {
+        closedir(dp);
+        dp = NULL;
         hasIndex = true;
         while(inf3 >> tempStr >> tempTime)
         {
