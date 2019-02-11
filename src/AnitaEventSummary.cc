@@ -112,7 +112,7 @@ void AnitaEventSummary::zeroInternals(){
   sun.reset();
   wais.reset(); 
   ldb.reset(); 
-  mc.reset(); 
+  mc.reset();
 
 }
 
@@ -419,34 +419,70 @@ void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat, const TruthAnit
   pat->getThetaAndPhiWaveLDB(ldb.theta, ldb.phi);
   ldb.distance = pat->getLDBTriggerTimeNs() * C_IN_M_NS; 
   ldb.theta *= 180/ TMath::Pi(); 
-  ldb.phi *= 180/ TMath::Pi(); 
+  ldb.phi *= 180/ TMath::Pi();
+  
+  pat->getThetaAndPhiWave(truth->sourceLon, truth->sourceLat, truth->sourceAlt, mc.theta,mc.phi);
+  mc.theta*=TMath::RadToDeg();
+  mc.phi*=TMath::RadToDeg();
 
-
-
+  // Calculate information about the associated positions from mc
+  // Store lat, long, alt and angles.
+  // Note: lat, long etc are already calculated for some positions in icemc using position.cc
+  //             This method converts the cartesian coords to lon/lat using usefulAdu5Pat
+  //             The results are very similar
+  AnitaGeomTool* geom  = AnitaGeomTool::Instance();
+  // nu interaction pos
+  Double_t nuPos[3];
+  nuPos[0] = truth->nuPos[0];
+  nuPos[1] = truth->nuPos[1];
+  nuPos[2] = truth->nuPos[2];
+  geom->getLatLonAltFromCartesian(nuPos,mc.interactionLat,mc.interactionLon,mc.interactionAlt);
+  pat->getThetaAndPhiWave(mc.interactionLon, mc.interactionLat, mc.interactionAlt, mc.interactionTheta,mc.interactionPhi);
+  mc.interactionTheta*=TMath::RadToDeg();
+  mc.interactionPhi*=TMath::RadToDeg();
+  // rfExit pos (in summary tree) calculated from raw cartesian coords from truth tree
+  // truth tree version = sourceLat/sourceLon/sourceAlt
+  Double_t rfExitPos[3];
+  rfExitPos[0] = truth->rfExitPos[2][0];
+  rfExitPos[1] = truth->rfExitPos[2][1];
+  rfExitPos[2] = truth->rfExitPos[2][2];
+  geom->getLatLonAltFromCartesian(rfExitPos,mc.rfExitLat,mc.rfExitLon,mc.rfExitAlt);
+  pat->getThetaAndPhiWave(mc.rfExitLon, mc.rfExitLat, mc.rfExitAlt, mc.rfExitTheta,mc.rfExitPhi);
+  mc.rfExitTheta*=TMath::RadToDeg();
+  mc.rfExitPhi*=TMath::RadToDeg();
+  // balloon pos (in summary tree) calculated from raw cartesian coords from truth tree
+  // truth tree version = latitude/longitude/altitude
+  Double_t balloonPos[3];
+  balloonPos[0] = truth->balloonPos[0];
+  balloonPos[1] = truth->balloonPos[1];
+  balloonPos[2] = truth->balloonPos[2];
+  geom->getLatLonAltFromCartesian(balloonPos,mc.balloonLat,mc.balloonLon,mc.balloonAlt);
+  
   if (truth) 
-  {
-    if (truth->payloadPhi > -999 ) 
     {
-      mc.theta = truth->payloadTheta; 
-      mc.phi = truth->payloadPhi; 
+      if (truth->payloadPhi > -999 ) 
+	{
+	  mc.theta = truth->payloadTheta; 
+	  mc.phi = truth->payloadPhi; 
+	}
+      else
+	{
+	  pat->getThetaAndPhiWave(truth->sourceLon, truth->sourceLat, truth->sourceAlt, mc.theta,mc.phi);
+	  mc.theta*=TMath::RadToDeg();
+	  mc.phi*=TMath::RadToDeg();
+	}
+      
+      mc.weight = truth->weight; 
+      mc.distance = pat->getTriggerTimeNsFromSource(truth->sourceLat, truth->sourceLon, truth->sourceAlt);
+      mc.energy = truth->nuMom; // I guess this won't be true if icemc ever simulates non-relativistic neutrinos :P
+      mc.triggerSNR[0] = truth->maxSNRAtTriggerH; 
+      mc.triggerSNR[1] = truth->maxSNRAtTriggerV; 
+      TVector3 v(truth->nuDir[0], truth->nuDir[1], truth->nuDir[2]); 
+      TVector3 p(truth->nuPos[0], truth->nuPos[1], truth->nuPos[2]); 
+      pat->getThetaAndPhiWaveOfRayAtInfinity(p,v,mc.nuTheta,mc.nuPhi, true, 1e-5*TMath::DegToRad(), 1e7,&mc.nuDirection ); 
+      mc.nuTheta *= TMath::RadToDeg(); 
+      mc.nuPhi *= TMath::RadToDeg(); 
     }
-    else
-    {
-      pat->getThetaAndPhiWave(truth->sourceLon, truth->sourceLat, truth->sourceAlt, mc.theta,mc.phi);
-      mc.theta*=TMath::RadToDeg();
-      mc.phi*=TMath::RadToDeg();
-    }
-    mc.weight = truth->weight; 
-    mc.distance = pat->getTriggerTimeNsFromSource(truth->sourceLat, truth->sourceLon, truth->sourceAlt);
-    mc.energy = truth->nuMom; // I guess this won't be true if icemc ever simulates non-relativistic neutrinos :P
-    mc.triggerSNR[0] = truth->maxSNRAtTriggerH; 
-    mc.triggerSNR[1] = truth->maxSNRAtTriggerV; 
-    TVector3 v(truth->nuDir[0], truth->nuDir[1], truth->nuDir[2]); 
-    TVector3 p(truth->nuPos[0], truth->nuPos[1], truth->nuPos[2]); 
-    pat->getThetaAndPhiWaveOfRayAtInfinity(p,v,mc.nuTheta,mc.nuPhi, true, 1e-5*TMath::DegToRad(), 1e7,&mc.nuDirection ); 
-    mc.nuTheta *= TMath::RadToDeg(); 
-    mc.nuPhi *= TMath::RadToDeg(); 
-  }
 }
 
 

@@ -363,7 +363,12 @@ class AnitaEventSummary : public TObject
     Double_t energy;
     Double_t triggerSNR[2]; 
     TVector3 nuDirection; //in earth centered fixed coordinates (i.e. Cartesian coordinates of neutrino far away)
-    double nuTheta, nuPhi; //neutrino (not RF!) direction in payload coordinates 
+    double nuTheta, nuPhi; //neutrino (not RF!) direction in payload coordinates -> ray at infinity
+    double interactionTheta, interactionPhi; //neutrino interaction angle to ANITA in payload coordinates
+    double interactionLon, interactionLat, interactionAlt;
+    double rfExitTheta, rfExitPhi; //rf exit
+    double rfExitLon, rfExitLat, rfExitAlt; 
+    double balloonLon, balloonLat, balloonAlt; //balloon co-ords
     void reset();
     virtual ~MCTruth() { ; } 
 
