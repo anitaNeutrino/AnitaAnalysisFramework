@@ -372,7 +372,7 @@ class AnitaEventSummary : public TObject
     void reset();
     virtual ~MCTruth() { ; } 
 
-    ClassDefNV(MCTruth,8);
+    ClassDefNV(MCTruth,9);
   };
 
 

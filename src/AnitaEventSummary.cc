@@ -437,6 +437,7 @@ void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat, const TruthAnit
   nuPos[1] = truth->nuPos[1];
   nuPos[2] = truth->nuPos[2];
   geom->getLatLonAltFromCartesian(nuPos,mc.interactionLat,mc.interactionLon,mc.interactionAlt);
+  // Note: This gets the angles from interaction pos to balloon pos, NOT interaction pos to rfExit pos.
   pat->getThetaAndPhiWave(mc.interactionLon, mc.interactionLat, mc.interactionAlt, mc.interactionTheta,mc.interactionPhi);
   mc.interactionTheta*=TMath::RadToDeg();
   mc.interactionPhi*=TMath::RadToDeg();
