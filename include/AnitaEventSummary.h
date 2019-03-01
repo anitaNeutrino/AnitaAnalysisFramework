@@ -179,6 +179,7 @@ class AnitaEventSummary : public TObject
     Double_t peakMoments[5];  /// moments about Peak  (1st - 5th moments)
 
     Double_t impulsivityMeasure; //[-1,1, 16]  /// A number that has something to do with how impulsive it is
+    Double_t bandwidthMeasure; 
     Double_t fracPowerWindowBegins[numFracPowerWindows]; //[0,128,16] /// Narrowest width containing {10%, 20%, 30%, 40%, 50%} of the total power
     Double_t fracPowerWindowEnds[numFracPowerWindows]; //[0,128,16] /// Narrowest width containing {10%, 20%, 30%, 40%, 50%} of the total power
 
@@ -211,7 +212,7 @@ class AnitaEventSummary : public TObject
     Double_t fracPowerWindowIntercept() const;
     Double_t fracPowerWindowChisquare() const;
 
-    ClassDefNV(WaveformInfo, 16);
+    ClassDefNV(WaveformInfo, 17);
 
    private:
     friend class AnitaEventSummary;
