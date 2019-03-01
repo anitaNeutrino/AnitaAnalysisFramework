@@ -38,7 +38,7 @@ polarimetry::StokesAnalysis::StokesAnalysis(const StokesAnalysis & other)
 }
 
 
-polarimetry::StokesAnalysis::StokesAnalysis(const AnalysisWaveform * H, const AnalysisWaveform *V) 
+polarimetry::StokesAnalysis::StokesAnalysis(const AnalysisWaveform * H, const AnalysisWaveform *V, double xcorr) 
 {
   //figure out if we need to resample both to the same time base
   
@@ -46,26 +46,50 @@ polarimetry::StokesAnalysis::StokesAnalysis(const AnalysisWaveform * H, const An
   AnalysisWaveform *Vre = 0;
 
 
+  bool need_to_resample =V->deltaT() != H->deltaT() ||  H->even()->GetX()[0] != V->even()->GetX()[0] ;
+
   //we need to resample both onto the same base 
-  if (V->deltaT() != H->deltaT()
-      ||  H->even()->GetX()[0] != V->even()->GetX()[0] 
-     )
+  if ( need_to_resample    || xcorr)
   {
+    if (need_to_resample) 
+    {
+      double dt = TMath::Min(H->deltaT(), V->deltaT()); 
+      double t0 = TMath::Max(H->even()->GetX()[0], V->even()->GetX()[0]); 
+      double t1 = TMath::Min(H->even()->GetX()[H->Neven()-1], V->even()->GetX()[V->Neven()-1]); 
 
-    double dt = TMath::Min(H->deltaT(), V->deltaT()); 
-    double t0 = TMath::Max(H->even()->GetX()[0], V->even()->GetX()[0]); 
-    double t1 = TMath::Min(H->even()->GetX()[H->Neven()-1], V->even()->GetX()[V->Neven()-1]); 
+      int N = (t1-t0)/dt; 
 
-    int N = (t1-t0)/dt; 
+      Hre = new AnalysisWaveform(N, t0, dt); 
+      Vre = new AnalysisWaveform(N, t0, dt); 
 
-    Hre = new AnalysisWaveform(N, t0, dt); 
-    Vre = new AnalysisWaveform(N, t0, dt); 
+      TGraphAligned * gHre = Hre->updateEven(); 
+      TGraphAligned * gVre = Vre->updateEven(); 
+        
+      H->evalEven(N, gHre->GetX(), gHre->GetY()); 
+      V->evalEven(N, gVre->GetX(), gVre->GetY()); 
+    }
 
-    TGraphAligned * gHre = Hre->updateEven(); 
-    TGraphAligned * gVre = Vre->updateEven(); 
+    if (xcorr) 
+    {
+      if (!H->checkIfPaddedInTime() || !V->checkIfPaddedInTime())
+      {
+        if (!Hre) Hre = new AnalysisWaveform(*H); 
+        if (!Vre) Vre = new AnalysisWaveform(*V); 
+        Hre->padEven(1); 
+        Vre->padEven(1); 
+      }
+
+      AnalysisWaveform * xc = AnalysisWaveform::correlation(Hre,Vre); 
+      double dt = xc->deltaT(); 
+      int loc = 0; 
+      int half = xc->Neven()/2;
+      int min = TMath::Max(0, half-int(xcorr/dt)); 
+      int max = TMath::Min(half+int(xcorr/dt), xc->Neven()-1); 
       
-    H->evalEven(N, gHre->GetX(), gHre->GetY()); 
-    V->evalEven(N, gVre->GetX(), gVre->GetY()); 
+      xc->even()->peakVal(&loc,min,max,true); 
+      Vre->updateEven()->shift(loc,true); 
+      delete xc; 
+    }
 
     H = Hre; 
     V = Vre; 

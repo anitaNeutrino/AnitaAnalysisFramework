@@ -15,7 +15,7 @@ namespace polarimetry
 
     public:
 
-      StokesAnalysis(const AnalysisWaveform * H, const AnalysisWaveform *V); 
+      StokesAnalysis(const AnalysisWaveform * H, const AnalysisWaveform *V, double correlate=0); 
       StokesAnalysis(const StokesAnalysis & other); 
       ~StokesAnalysis() { ; } 
 
