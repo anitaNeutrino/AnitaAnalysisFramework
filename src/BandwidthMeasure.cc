@@ -272,3 +272,26 @@ double bandwidth::fillPowers(const TGraphAligned* powdb, std::vector<double> &po
 
   return norm;
 }
+
+
+double bandwidth::lowness(const AnalysisWaveform * wf, double min, double max) 
+{
+
+  double sum = 0; 
+  double sumsum =0; 
+  int n = 0; 
+
+  const TGraphAligned * g = wf->power(); 
+
+  for (int i = 0; i < g->GetN(); i++) 
+  {
+    if (g->GetX()[i] < min) continue; 
+    if (g->GetX()[i] > max) break; 
+
+    sum += g->GetY()[i] ; 
+    sumsum+= sum; 
+    n++;
+  }
+
+  return sumsum/(sum*n);
+} 
