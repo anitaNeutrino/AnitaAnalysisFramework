@@ -143,10 +143,14 @@ class AnalysisWaveform
     /** Computes the (circular) correlation (in the frequency domain) of the two waveforms as a new waveform. Note that if you want to
      * correlate two traces, they should be padded first. This does not pad them for you, but will complain if they are not! To turn off the nagging, see below function. It is also assumed the two are of the same length.
      *
-     * There is no normalization done at all, the frequency values are simply multiplied appropriately
+     * By default is no normalization done at all, the frequency values are simply multiplied appropriately and then everything is divided by 1/scale. 
+     *
+     * If window_normalize is non-zero, then the total power of the overlapping window of at least size window_normalize at each point is used to scale. 
+     * Smaller window sizes will use the smallest window size power ot normalize. An overall factor of scale is still applied.
+     * 
      *
      **/ 
-    static AnalysisWaveform * correlation(const AnalysisWaveform * A, const AnalysisWaveform * B, int npadfreq = 0, double scale =1 ); 
+    static AnalysisWaveform * correlation(const AnalysisWaveform * A, const AnalysisWaveform * B, int npadfreq = 0, double scale =1 , int window_normalize = 0); 
 
     static AnalysisWaveform * convolution(const AnalysisWaveform * A, const AnalysisWaveform * B, int npadfreq = 0, double scale =1 ); 
 
