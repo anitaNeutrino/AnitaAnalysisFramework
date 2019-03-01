@@ -53,6 +53,10 @@ class TGraphAligned : public TGraph {
 
 
 
+    //Shift the values by a number of samples. 
+    //by default will set any new values to zero, unless wrap is true
+    void shift(int nsamples, bool zero = true); 
+
     void getMeanAndRMS(Double_t * mean, Double_t *  rms, Int_t istart = 0, Int_t iend = -1) const; 
     Double_t getSumV2(Int_t istart = 0, Int_t iend = -1) const; 
 
