@@ -83,11 +83,12 @@ polarimetry::StokesAnalysis::StokesAnalysis(const AnalysisWaveform * H, const An
       double dt = xc->deltaT(); 
       int loc = 0; 
       int half = xc->Neven()/2;
-      int min = TMath::Max(0, half-int(xcorr/dt)); 
-      int max = TMath::Min(half+int(xcorr/dt), xc->Neven()-1); 
+      int min = TMath::Max(0, int(half-ceil(xcorr/dt))); 
+      int max = TMath::Min(int(half+ceil(xcorr/dt)), xc->Neven()-1); 
+
       
       xc->even()->peakVal(&loc,min,max,true); 
-      Vre->updateEven()->shift(loc,true); 
+      Vre->updateEven()->shift(half-loc,true); 
       delete xc; 
     }
 
