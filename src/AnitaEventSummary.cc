@@ -21,8 +21,8 @@ static double impulsivityFractionThreshold = -1; //modifies behavior of mostImpu
  *
  * Default constructor for ROOT
  */
-AnitaEventSummary::AnitaEventSummary()
-    : anitaLocation()
+  AnitaEventSummary::AnitaEventSummary()
+: anitaLocation()
 {
   zeroInternals();
 }
@@ -36,8 +36,8 @@ AnitaEventSummary::AnitaEventSummary()
  *
  * Takes care of copying the header info into the event summary
  */
-AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header)
-    : anitaLocation()
+  AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header)
+: anitaLocation()
 {
   zeroInternals();
 
@@ -58,8 +58,8 @@ AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header)
  *
  * Takes care of copying the header and GPS info into the event summary
  */
-AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header, UsefulAdu5Pat* pat, const TruthAnitaEvent * truth)
-    : anitaLocation(dynamic_cast<Adu5Pat*>(pat))
+  AnitaEventSummary::AnitaEventSummary(const RawAnitaHeader* header, UsefulAdu5Pat* pat, const TruthAnitaEvent * truth)
+: anitaLocation(dynamic_cast<Adu5Pat*>(pat))
 {
 
   zeroInternals();
@@ -112,7 +112,7 @@ void AnitaEventSummary::zeroInternals(){
   sun.reset();
   wais.reset(); 
   ldb.reset(); 
-  mc.reset(); 
+  mc.reset();
 
 }
 
@@ -362,7 +362,7 @@ void AnitaEventSummary::setTriggerInfomation(const RawAnitaHeader* header){
   // setting to zero, for testing this function.
   flags.isVPolTrigger = 0;
   flags.isHPolTrigger = 0;
-  
+
   // need two adjacent L3 phi-sectors to trigger ANITA-3
   for(Int_t phi=0; phi<NUM_PHI; phi++){
     Int_t phi2 = (phi+1)%NUM_PHI; // adjacent phi-sector
@@ -393,7 +393,7 @@ void AnitaEventSummary::setTriggerInfomation(const RawAnitaHeader* header){
   flags.isSoftwareTrigger = header->getTriggerBitSoftExt();
   flags.isMinBiasTrigger = flags.isAdu5Trigger || flags.isG12Trigger || header->getTriggerBitG12() || flags.isSoftwareTrigger;
 
-  
+
 }
 
 
@@ -419,13 +419,51 @@ void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat, const TruthAnit
   pat->getThetaAndPhiWaveLDB(ldb.theta, ldb.phi);
   ldb.distance = pat->getLDBTriggerTimeNs() * C_IN_M_NS; 
   ldb.theta *= 180/ TMath::Pi(); 
-  ldb.phi *= 180/ TMath::Pi(); 
-
+  ldb.phi *= 180/ TMath::Pi();
 
 
   if (truth) 
   {
-    if (truth->payloadPhi > 0) 
+    pat->getThetaAndPhiWave(truth->sourceLon, truth->sourceLat, truth->sourceAlt, mc.theta,mc.phi);
+    mc.theta*=TMath::RadToDeg();
+    mc.phi*=TMath::RadToDeg();
+
+    // Calculate information about the associated positions from mc
+    // Store lat, long, alt and angles.
+    // Note: lat, long etc are already calculated for some positions in icemc using position.cc
+    //             This method converts the cartesian coords to lon/lat using usefulAdu5Pat
+    //             The results are very similar
+    AnitaGeomTool* geom  = AnitaGeomTool::Instance();
+    // nu interaction pos
+    Double_t nuPos[3];
+    nuPos[0] = truth->nuPos[0];
+    nuPos[1] = truth->nuPos[1];
+    nuPos[2] = truth->nuPos[2];
+    geom->getLatLonAltFromCartesian(nuPos,mc.interactionLat,mc.interactionLon,mc.interactionAlt);
+    // Note: This gets the angles from interaction pos to balloon pos, NOT interaction pos to rfExit pos.
+    pat->getThetaAndPhiWave(mc.interactionLon, mc.interactionLat, mc.interactionAlt, mc.interactionTheta,mc.interactionPhi);
+    mc.interactionTheta*=TMath::RadToDeg();
+    mc.interactionPhi*=TMath::RadToDeg();
+    // rfExit pos (in summary tree) calculated from raw cartesian coords from truth tree
+    // truth tree version = sourceLat/sourceLon/sourceAlt
+    Double_t rfExitPos[3];
+    rfExitPos[0] = truth->rfExitPos[2][0];
+    rfExitPos[1] = truth->rfExitPos[2][1];
+    rfExitPos[2] = truth->rfExitPos[2][2];
+    geom->getLatLonAltFromCartesian(rfExitPos,mc.rfExitLat,mc.rfExitLon,mc.rfExitAlt);
+    pat->getThetaAndPhiWave(mc.rfExitLon, mc.rfExitLat, mc.rfExitAlt, mc.rfExitTheta,mc.rfExitPhi);
+    mc.rfExitTheta*=TMath::RadToDeg();
+    mc.rfExitPhi*=TMath::RadToDeg();
+    // balloon pos (in summary tree) calculated from raw cartesian coords from truth tree
+    // truth tree version = latitude/longitude/altitude
+    Double_t balloonPos[3];
+    balloonPos[0] = truth->balloonPos[0];
+    balloonPos[1] = truth->balloonPos[1];
+    balloonPos[2] = truth->balloonPos[2];
+    geom->getLatLonAltFromCartesian(balloonPos,mc.balloonLat,mc.balloonLon,mc.balloonAlt);
+
+
+    if (truth->payloadPhi > 0 ) 
     {
       mc.theta = truth->payloadTheta; 
       mc.phi = truth->payloadPhi; 
@@ -436,6 +474,7 @@ void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat, const TruthAnit
       mc.theta*=TMath::RadToDeg();
       mc.phi*=TMath::RadToDeg();
     }
+
     mc.weight = truth->weight; 
     mc.distance = pat->getTriggerTimeNsFromSource(truth->sourceLat, truth->sourceLon, truth->sourceAlt);
     mc.energy = truth->nuMom; // I guess this won't be true if icemc ever simulates non-relativistic neutrinos :P
@@ -492,22 +531,22 @@ void AnitaEventSummary::WaveformInfo::cacheQuantitiesDerivedFromNarrowestWidths(
     // want least squres gradient = sum over (x - xbar)(y - ybar) / ((x - xbar)^{2})
     const double gradDenom = 0.1; //0.04 + 0.01 + 0 + 0.01 + 0.04 = sum over (x[i] - mean_x)^{2}
 
-    // gradNumerator = sum over (x[i] - mean_x)*(y[i] - mean_y), skip third term since x[i] - mean_x  = 0
-    double gradNumerator = - 0.2*(fracPowerWindow[0] - nwMeanCache) + -0.1*(fracPowerWindow[1] - nwMeanCache)
-                           + 0.1*(fracPowerWindow[3] - nwMeanCache) + 0.2*(fracPowerWindow[4] - nwMeanCache);
-    nwGradCache = gradNumerator/gradDenom;
+  // gradNumerator = sum over (x[i] - mean_x)*(y[i] - mean_y), skip third term since x[i] - mean_x  = 0
+  double gradNumerator = - 0.2*(fracPowerWindow[0] - nwMeanCache) + -0.1*(fracPowerWindow[1] - nwMeanCache)
+    + 0.1*(fracPowerWindow[3] - nwMeanCache) + 0.2*(fracPowerWindow[4] - nwMeanCache);
+  nwGradCache = gradNumerator/gradDenom;
 
-    // then the intercept
-    nwInterceptCache = nwMeanCache - nwGradCache*0.3; // 0.3 = mean power fraction
+  // then the intercept
+  nwInterceptCache = nwMeanCache - nwGradCache*0.3; // 0.3 = mean power fraction
 
-    // finally the chisquare
-    nwChisquareCache = 0;
-    for(int i=0; i < numFracPowerWindows; i++){
-      double f = 0.1*(i+1);
-      double y = nwGradCache*f + nwInterceptCache;
-      double dy = (y - fracPowerWindow[i]);
-      nwChisquareCache += dy*dy;
-    }
+  // finally the chisquare
+  nwChisquareCache = 0;
+  for(int i=0; i < numFracPowerWindows; i++){
+    double f = 0.1*(i+1);
+    double y = nwGradCache*f + nwInterceptCache;
+    double dy = (y - fracPowerWindow[i]);
+    nwChisquareCache += dy*dy;
+  }
   }
 }
 
@@ -582,7 +621,7 @@ double AnitaEventSummary::WaveformInfo::linearPolFrac() const {
  */
 
 double AnitaEventSummary::WaveformInfo::linearPolAngle() const {
-  
+
   double value = (TMath::ATan(U/Q)/2)*TMath::RadToDeg();
 
   return value;
@@ -600,7 +639,7 @@ double AnitaEventSummary::WaveformInfo::linearPolAngle() const {
  */
 
 double AnitaEventSummary::WaveformInfo::circPolFrac() const {
-  
+
   double value = TMath::Abs(V)/I;
 
   return value;
@@ -616,7 +655,7 @@ double AnitaEventSummary::WaveformInfo::circPolFrac() const {
  */
 
 double AnitaEventSummary::WaveformInfo::totalPolFrac() const {
-  
+
   double value = TMath::Sqrt(pow(Q,2) + pow(U,2) + pow(V,2))/I;
 
   return value;
@@ -648,7 +687,7 @@ double AnitaEventSummary::WaveformInfo::instantaneousLinearPolFrac() const {
  */
 
 double AnitaEventSummary::WaveformInfo::instantaneousLinearPolAngle() const {
-  
+
   double value = (TMath::ATan(max_dU/max_dQ)/2)*TMath::RadToDeg();
 
   return value;
@@ -666,7 +705,7 @@ double AnitaEventSummary::WaveformInfo::instantaneousLinearPolAngle() const {
  */
 
 double AnitaEventSummary::WaveformInfo::instantaneousCircPolFrac() const {
-  
+
   double value = TMath::Abs(max_dV)/max_dI;
 
   return value;
@@ -682,7 +721,7 @@ double AnitaEventSummary::WaveformInfo::instantaneousCircPolFrac() const {
  */
 
 double AnitaEventSummary::WaveformInfo::instantaneousTotalPolFrac() const {
-  
+
   double value = TMath::Sqrt(pow(max_dQ,2) + pow(max_dU,2) + pow(max_dV,2))/max_dI;
 
   return value;
@@ -741,7 +780,7 @@ void AnitaEventSummary::SourceHypothesis::reset() {
   memset(mapHistoryVal,0,NUM_POLS*sizeof(Double_t));
   memset(mapValue,0,NUM_POLS*sizeof(Double_t));
 }
-  
+
 
 
 
@@ -766,10 +805,10 @@ void AnitaEventSummary::PayloadLocation::update(const Adu5Pat* pat){
     latitude = pat->latitude;
     longitude = pat->longitude;
     altitude = pat->altitude;
-    
+
     prevHeading = heading;
     heading = pat->heading;
-    
+
   }
   else{
     reset();
@@ -805,8 +844,8 @@ double AnitaEventSummary::PointingHypothesis::dPhi(double phi2) const{
 
   if(dPhi < -180 || dPhi >= 180){
     std::cerr << "Warning in " << __PRETTY_FUNCTION__ << " dPhi = " << dPhi
-              << " is outside expected range, peak phi = " << phi << ", source phi = "
-              << phi2 << std::endl;
+      << " is outside expected range, peak phi = " << phi << ", source phi = "
+      << phi2 << std::endl;
   }
 
   return dPhi;
@@ -865,10 +904,10 @@ double AnitaEventSummary::PointingHypothesis::bearing() const{
 
     bearing = bearing < 0 ? bearing + 360 : bearing;
     bearing = bearing >= 360 ? bearing - 360 : bearing;
-  
+
     if(bearing < 0 || bearing >= 360){
       std::cerr << "Warning in " << __PRETTY_FUNCTION__ << ", peak bearing = "
-                << bearing << ", phi = " << phi << ", heading = " << sum->anitaLocation.heading << std::endl;
+        << bearing << ", phi = " << phi << ", heading = " << sum->anitaLocation.heading << std::endl;
     }
   }
   return bearing;
@@ -946,10 +985,10 @@ const AnitaEventSummary::WaveformInfo& AnitaEventSummary::trainingDeconvolvedFil
 const AnitaEventSummary* AnitaEventSummary::PointingHypothesis::getContainer(const char* funcName) const{
   if(!fContainer){
     std::cerr << "Error in " << funcName << ", don't have access to AnitaEventSummary that contains me!\n" 
-	      << "To fix this error, try calling AnitaEventSummary()::update() as the first argument of the cuts in TTree::Draw(),\n"
-	      << "Note: update() always returns true, so TTree::Draw(\"sum.peak[0][0].dPhiWais()\", "
-	      << "\"sum.update() && TMath::Abs(sum.peak[0][0].dPhiWais()) < 5\") will select all events within 5 degrees of phi of WAIS.\n"
-              << std::endl;
+      << "To fix this error, try calling AnitaEventSummary()::update() as the first argument of the cuts in TTree::Draw(),\n"
+      << "Note: update() always returns true, so TTree::Draw(\"sum.peak[0][0].dPhiWais()\", "
+      << "\"sum.update() && TMath::Abs(sum.peak[0][0].dPhiWais()) < 5\") will select all events within 5 degrees of phi of WAIS.\n"
+      << std::endl;
   }
   return fContainer;
 }
@@ -1076,7 +1115,7 @@ void AnitaEventSummary::findMostImpulsive(int whichMetric) const {
         // select which impulsivity measure to use...
         // 0 -> Cosmin's impulsivityMeasure
         // 1 -> Ben's fracPowerWindowGradient()
-	
+
         // VERY IMPORTANT FACTOR OF -1 HERE
         // as lower == better for this metric
         // 2 -> Cosmins's impulsivityMeasure * peak.value 
@@ -1140,8 +1179,8 @@ void AnitaEventSummary::findMostImpulsive(int whichMetric) const {
  */
 const AnitaEventSummary::SourceHypothesis* AnitaEventSummary::sourceFromTag() const {
   switch(flags.pulser){
-  case EventFlags::WAIS_V:
-  case EventFlags::WAIS:
+    case EventFlags::WAIS_V:
+    case EventFlags::WAIS:
       // std::cerr << "wais" << std::endl;
       return &wais;
     case EventFlags::LDB:  
@@ -1185,63 +1224,63 @@ void AnitaEventSummary::findTrainingPeak() const {
           const double dPhiClose = 5.5;
           const double dThetaClose = 3.5;
           if(peak[polInd][peakInd].closeToTagged(dPhiClose, dThetaClose)){
-	    // double fpwg = deconvolved_filtered[polInd][peakInd].fracPowerWindowGradient();
-	    // if(fpwg  < lowestCloseFracPowWinGrad){
-	    double mp = peak[polInd][peakInd].value;
-	    if(mp > highestClosePeakVal){
-	      // lowestCloseFracPowWinGrad = fpwg;
-	      highestClosePeakVal = mp;
-	      fTrainingPeakIndex = peakInd;
-	      fTrainingPol = pol;
-	    }
+            // double fpwg = deconvolved_filtered[polInd][peakInd].fracPowerWindowGradient();
+            // if(fpwg  < lowestCloseFracPowWinGrad){
+            double mp = peak[polInd][peakInd].value;
+            if(mp > highestClosePeakVal){
+              // lowestCloseFracPowWinGrad = fpwg;
+              highestClosePeakVal = mp;
+              fTrainingPeakIndex = peakInd;
+              fTrainingPol = pol;
+            }
+          }
           }
         }
       }
-    }
-    if(fTrainingPeakIndex < 0){
-      // didn't find one or no tagged source
-      // so, just do highest peak in map
+      if(fTrainingPeakIndex < 0){
+        // didn't find one or no tagged source
+        // so, just do highest peak in map
 
-      findHighestPeak();
-      fTrainingPeakIndex = fHighestPeakIndex;
-      fTrainingPol = fHighestPol;
+        findHighestPeak();
+        fTrainingPeakIndex = fHighestPeakIndex;
+        fTrainingPol = fHighestPol;
 
-      // const int metric = 1;
-      // findMostImpulsive(metric);
-      // fTrainingPeakIndex = fMostImpulsiveIndex;
-      // fTrainingPol = fMostImpulsivePol;
-    }
-  }
-}
-
-
-
-/** 
- * Reset the mutable "interesting" indices to defaults
- * The default values trigger the loop through peaks in findHighestPeak() and findTrainingPeak().
- */
-void AnitaEventSummary::resetNonPersistent() const{
-  if(fLastEventNumber!=eventNumber){
-    fHighestPeakIndex = -1;
-    fHighestPol = AnitaPol::kNotAPol;
-    fMostImpulsiveIndex = -1;
-    fMostImpulsivePol = AnitaPol::kNotAPol;
-    fTrainingPeakIndex = -1;
-    fTrainingPol = AnitaPol::kNotAPol;
-    for(Int_t polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
-      for(Int_t dir=0; dir < maxDirectionsPerPol; dir++){
-        peak[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
-        coherent[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
-        coherent_filtered[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.                    
-        deconvolved[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
-        deconvolved_filtered[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
+        // const int metric = 1;
+        // findMostImpulsive(metric);
+        // fTrainingPeakIndex = fMostImpulsiveIndex;
+        // fTrainingPol = fMostImpulsivePol;
       }
     }
-    fLastEventNumber=eventNumber;
   }
-}
 
-void AnitaEventSummary::setThresholdForMostImpulsive(double threshold)
-{
-	impulsivityFractionThreshold = threshold;
-}
+
+
+  /** 
+   * Reset the mutable "interesting" indices to defaults
+   * The default values trigger the loop through peaks in findHighestPeak() and findTrainingPeak().
+   */
+  void AnitaEventSummary::resetNonPersistent() const{
+    if(fLastEventNumber!=eventNumber){
+      fHighestPeakIndex = -1;
+      fHighestPol = AnitaPol::kNotAPol;
+      fMostImpulsiveIndex = -1;
+      fMostImpulsivePol = AnitaPol::kNotAPol;
+      fTrainingPeakIndex = -1;
+      fTrainingPol = AnitaPol::kNotAPol;
+      for(Int_t polInd=0; polInd < AnitaPol::kNotAPol; polInd++){
+        for(Int_t dir=0; dir < maxDirectionsPerPol; dir++){
+          peak[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
+          coherent[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
+          coherent_filtered[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.                    
+          deconvolved[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
+          deconvolved_filtered[polInd][dir].fContainer = const_cast<AnitaEventSummary*>(this); // Set non-persistent pointer to container in hacky fashion.
+        }
+      }
+      fLastEventNumber=eventNumber;
+    }
+  }
+
+  void AnitaEventSummary::setThresholdForMostImpulsive(double threshold)
+  {
+    impulsivityFractionThreshold = threshold;
+  }
