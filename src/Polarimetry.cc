@@ -71,6 +71,14 @@ polarimetry::StokesAnalysis::StokesAnalysis(const AnalysisWaveform * H, const An
 
     if (xcorr) 
     {
+
+      if (H->Neven()!= V->Neven())
+      {
+        if (!Hre) Hre = new AnalysisWaveform(*H); 
+        if (!Vre) Vre = new AnalysisWaveform(*V); 
+        Vre->forceEvenSize(Hre->Neven()); 
+      }
+
       if (!H->checkIfPaddedInTime() || !V->checkIfPaddedInTime())
       {
         if (!Hre) Hre = new AnalysisWaveform(*H); 
@@ -78,6 +86,7 @@ polarimetry::StokesAnalysis::StokesAnalysis(const AnalysisWaveform * H, const An
         Hre->padEven(1); 
         Vre->padEven(1); 
       }
+
 
       AnalysisWaveform * xc = AnalysisWaveform::correlation(Hre,Vre); 
       double dt = xc->deltaT(); 
