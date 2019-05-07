@@ -96,6 +96,7 @@ class AnitaTemplateMachine : public TObject {
 
   void setUseAverageCRTemplate(bool opt) { fUseAverageCRTemplate = opt; }
   void setDoWindow(bool opt) { fDoWindow = opt; }
+  std::string getNotchStr() { return fNotchStr ;}
   
  private:
   /* flags to see what you still might need to do */

@@ -152,7 +152,7 @@ class AnitaEventSummary : public TObject
     Double_t xPolPeakHilbert; //[0,4096,21]  /// Peak of xpol hilbert Envelope
 
     Double_t I,Q,U,V;  /// Integral Stokes Parameters (over the entire waveform) 
-    Double_t max_dI,max_dQ,max_dU,max_dV; /// instantanteous stokes parameters (computed near max_dI).
+    Double_t max_dI,max_dQ,max_dU,max_dV,polErr; /// instantanteous stokes parameters (computed near max_dI).
     Int_t NPointsMaxStokes; /// The number of points used in the above estimates 
 
     Double_t totalPower;  /// Total power in waveform
@@ -212,7 +212,7 @@ class AnitaEventSummary : public TObject
     Double_t fracPowerWindowIntercept() const;
     Double_t fracPowerWindowChisquare() const;
 
-    ClassDefNV(WaveformInfo, 17);
+    ClassDefNV(WaveformInfo, 18);
 
    private:
     friend class AnitaEventSummary;

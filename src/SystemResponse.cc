@@ -115,7 +115,71 @@ void AnitaResponse::ImpulseResponseXCorr::deconvolve(size_t N, double df, FFTWCo
   }
 }
 
+AnitaResponse::CLEAN::CLEAN() 
+{
+  fMaxLoops = 1000;
+  fLoopGain = 0.02;
+}
 
+void AnitaResponse::CLEAN::deconvolve(size_t N, double df, FFTWComplex * Y, const FFTWComplex * response) const 
+{
+  
+  AnalysisWaveform clean(2*(N-1), Y, df, 0);
+  for(int i = 0; i < clean.even()->GetN(); i++)
+  {
+    clean.updateEven()->GetY()[i] = 0;
+  }
+  AnalysisWaveform y(2*(N-1), Y, df, 0);
+  AnalysisWaveform r(2*(N-1), response, df, 0);
+  
+  double snr_est = (y.even()->pk2pk())/(y.even()->GetRMS(2)); 
+  double thresh = 1./snr_est;
+  double loop_gain = fLoopGain;
+  int max_loops = fMaxLoops;
+  double noise_level = snr_est/3.;
+  double E_i = y.even()->getSumV2();
+  double E_curr = E_i;
+
+  AnalysisWaveform* xc = 0;
+  double max_corr = 1;
+  double max_clean = 0;
+  int loc = TMath::LocMax(r.Neven(), r.even()->GetY());
+  r.updateEven()->shift(r.Neven()/2 - loc, false);
+  while(E_curr/E_i > thresh && max_loops != 0)
+  {
+    max_loops--;
+    max_corr = 0;
+    double rms1 = y.even()->GetRMS(2);
+    double rms2 = r.even()->GetRMS(2);
+    xc = AnalysisWaveform::correlation(&y, &r, 0, rms1 * rms2);
+    max_corr = TMath::MaxElement(xc->even()->GetN(), xc->even()->GetY());
+    double min_corr = TMath::MinElement(xc->even()->GetN(), xc->even()->GetY());
+    loc = (max_corr > abs(min_corr)) ? TMath::LocMax(xc->even()->GetN(), xc->even()->GetY()) : TMath::LocMin(xc->even()->GetN(), xc->even()->GetY());
+    max_corr = TMath::Max(max_corr, abs(min_corr));
+    //printf("adding clean component: %g\n", xc->even()->GetY()[loc] * loop_gain);
+    max_clean = TMath::Max(max_clean, max_corr*loop_gain);
+    clean.updateEven()->GetY()[loc] += xc->even()->GetY()[loc] * loop_gain;
+    r.updateEven()->shift(xc->Neven()/2 - loc, false);
+    for(int i = 0; i < y.even()->GetN(); i++)
+    {
+      y.updateEven()->GetY()[i] -= loop_gain * r.even()->GetY()[i] * xc->even()->GetY()[loc];
+    }
+    E_curr = y.even()->getSumV2();
+    //r.updateEven()->shift(-1*(xc->Neven()/2 - loc), true);
+    delete xc;
+  }
+  //printf("removing clean components below: %g\n", max_clean/noise_level);
+  for(int i = 0; i < clean.even()->GetN(); i++)
+  {
+    clean.updateEven()->GetY()[i] *= (abs(clean.updateEven()->GetY()[i]) > max_clean/noise_level) ? 1 : 0;
+    //clean.updateEven()->GetY()[i] += y.even()->GetY()[i];
+  }
+  for(int i = 0; i < N; i++)
+  {
+    Y[i] = clean.freq()[i];
+  }
+  //Y = clean.updateFreq();
+}
 
 void AnitaResponse::NaiveDeconvolution::deconvolve(size_t N, double df, FFTWComplex * Y, const FFTWComplex * response) const 
 {

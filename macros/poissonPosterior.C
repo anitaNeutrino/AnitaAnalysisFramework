@@ -110,10 +110,9 @@ void fillPoisson(int nbg, int nsiglike_sideband, int nsideband, TH1 * fill, int 
 }
 
 
-void poissonPosterior(int nbg=1, int nsiglike_sideband = 10, int nsideband =100, int prior = JEFFREYS_PRIOR, int N = 100000) 
+void poissonPosterior(int nbg=3, int nsiglike_sideband = 23, int nsideband =216, int prior = JEFFREYS_PRIOR, int N = 100000) 
 {
-  //TH1D fillme("posterior","Posterior test", 1000,0,5*nbg*nsiglike_sideband/nsideband); 
-  TH1D fillme("posterior","Posterior test", 1000,0,10); 
+  TH1D fillme("posterior","Posterior test", 1000,0,5*nbg*nsiglike_sideband/nsideband); 
   fillABCD(nbg,nsiglike_sideband,nsideband,&fillme,prior, N); 
   fillme.Scale(1./N); 
   TString str;
