@@ -1560,7 +1560,7 @@ double AnalysisWaveform::getRMS() const
     return rms; 
   }
 
-  if(!must_update_uneven) 
+  if(!must_update_uneven && !uneven_equals_even) 
   {
 
     double mean,rms; 
@@ -1579,7 +1579,7 @@ double AnalysisWaveform::getRMS() const
     sum2+= f[i].getAbsSq(); 
   }
 
-  return sqrt(sum2)/(2*N);  
+  return sqrt(sum2/2)/(N-1);  
 }
 
 
