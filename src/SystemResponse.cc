@@ -8,8 +8,24 @@
 static AnitaResponse::BandLimitedDeconvolution bld(0.18,1.1); 
 AnitaResponse::DeconvolutionMethod & AnitaResponse::kDefaultDeconvolution = bld; 
 
-void AnitaResponse::WienerDeconvolution::deconvolve(size_t N, double df, FFTWComplex * Y, const FFTWComplex * response) const 
+
+void AnitaResponse::DeconvolutionMethod::deconvolve(int Nf, double df, FFTWComplex * Y, const FFTWComplex * response) const
 {
+  AnalysisWaveform wf(2*(Nf-1),Y, df,0);
+  AnalysisWaveform r(2*(Nf-1),response, df,0);
+  deconvolve(&wf,&r); 
+
+}
+
+void AnitaResponse::WienerDeconvolution::deconvolve(AnalysisWaveform *wf, const AnalysisWaveform * response_wf) const 
+{
+
+  size_t N = wf->Nfreq(); 
+  double df = wf->deltaF(); 
+  FFTWComplex * Y = wf->updateFreq(); 
+
+  const FFTWComplex * response = response_wf->freq(); 
+
 
   FFTWComplex zero(0,0); 
   for (unsigned i = 0; i < N; i++) 
@@ -85,10 +101,13 @@ double AnitaResponse::WienerDeconvolution::snr(double f, double R2, int N ) cons
   return -1; 
 }
 
-void AnitaResponse::AllPassDeconvolution::deconvolve(size_t N, double df, FFTWComplex * Y, const FFTWComplex * response) const 
+void AnitaResponse::AllPassDeconvolution::deconvolve(AnalysisWaveform * wf, const AnalysisWaveform * response_wf) const 
 {
 
-  (void) df; 
+  size_t N = wf->Nfreq(); 
+  FFTWComplex * Y = wf->updateFreq(); 
+  const FFTWComplex * response = response_wf->freq();
+
   for (unsigned i = 0; i < N; i++) 
   {
     FFTWComplex r = response[i]; 
@@ -97,10 +116,12 @@ void AnitaResponse::AllPassDeconvolution::deconvolve(size_t N, double df, FFTWCo
   }
 }
 
-void AnitaResponse::ImpulseResponseXCorr::deconvolve(size_t N, double df, FFTWComplex * Y, const FFTWComplex * response) const 
+void AnitaResponse::ImpulseResponseXCorr::deconvolve(AnalysisWaveform * wf, const AnalysisWaveform * response_wf) const 
 {
 
-  (void) df; 
+  size_t N = wf->Nfreq(); 
+  FFTWComplex * Y = wf->updateFreq(); 
+  const FFTWComplex * response = response_wf->freq();
   double total_mag = 0; 
   for (unsigned i = 0; i < N; i++) 
   {
@@ -117,18 +138,26 @@ void AnitaResponse::ImpulseResponseXCorr::deconvolve(size_t N, double df, FFTWCo
 
 
 
-void AnitaResponse::NaiveDeconvolution::deconvolve(size_t N, double df, FFTWComplex * Y, const FFTWComplex * response) const 
+void AnitaResponse::NaiveDeconvolution::deconvolve(AnalysisWaveform * wf, const AnalysisWaveform * response_wf) const 
 {
 
-  (void) df; 
+  size_t N = wf->Nfreq(); 
+  FFTWComplex * Y = wf->updateFreq(); 
+  const FFTWComplex * response = response_wf->freq();
+
   for (unsigned i = 0; i < N; i++) 
   {
     Y[i]/=response[i]; 
   }
 }
 
-void AnitaResponse::BandLimitedDeconvolution::deconvolve(size_t N, double df, FFTWComplex * Y, const FFTWComplex * response) const 
+void AnitaResponse::BandLimitedDeconvolution::deconvolve(AnalysisWaveform * wf, const AnalysisWaveform * response_wf) const 
 {
+
+  size_t N = wf->Nfreq(); 
+  FFTWComplex * Y = wf->updateFreq(); 
+  double df = wf->deltaF(); 
+  const FFTWComplex * response = response_wf->freq();
 
   size_t min_i =(size_t) TMath::Max(0,int(min_freq / df)); 
   size_t max_i =(size_t) TMath::Min((int) N-1, int(max_freq / df)); 
@@ -353,30 +382,160 @@ AnalysisWaveform * AnitaResponse::AbstractResponse::deconvolve(const AnalysisWav
 
 /** caching vars */ 
 static __thread const AnitaResponse::AbstractResponse *cache_response = 0; 
-static __thread int cache_Nf= 0; 
+static __thread int cache_Nt= 0; 
 static __thread double cache_df= 0; 
 static __thread double cache_angle= 0; 
 static __thread FFTWComplex *cache_V = 0; 
+static __thread AnalysisWaveform * cache_response_wf = 0;
 
 
 void AnitaResponse::AbstractResponse::deconvolveInPlace(AnalysisWaveform * wf,  const DeconvolutionMethod * method, double off_axis_angle) const
 {
 //  printf("method: %p\n", method); 
-  int old_size = wf->Neven(); 
   wf->padEven(1,0); 
-  int nf = wf->Nfreq();
+  int nt = wf->Neven(); 
   double df = wf->deltaF(); 
-  if (!cache_response || cache_Nf != nf || cache_df != df || !cache_V || cache_angle != off_axis_angle) 
+  if (!cache_response || cache_Nt != nt || cache_df != df || !cache_V || cache_angle != off_axis_angle) 
   {
     cache_response = this; 
-    cache_Nf = nf; 
+    cache_Nt = nt; 
     cache_df = df; 
     cache_angle = off_axis_angle; 
     if (cache_V) delete [] cache_V; 
+    int nf = nt/2+1; 
     cache_V = getResponseArray(nf,df,off_axis_angle);
+    if (cache_response_wf) delete cache_response_wf; 
+    cache_response_wf = new AnalysisWaveform(nt, cache_V, df,0); 
   }
     
-  method->deconvolve(nf,df, wf->updateFreq(), cache_V); 
+  method->deconvolve(wf, cache_response_wf); 
 //  wf->updateEven()->Set(old_size); 
 
 }
+
+
+
+/// CLEAN 
+//
+void AnitaResponse::CLEANDeconvolution::deconvolveSavingIntermediate(AnalysisWaveform *y, const AnalysisWaveform * h, 
+    std::vector<double> *components, 
+    std::vector<AnalysisWaveform*> *save_xcorr, 
+    std::vector<AnalysisWaveform*> *save_ys 
+    ) const
+{
+
+
+
+  std::vector<double> local_components; 
+  if(!components) components=&local_components;
+
+  components->reserve(2./gain); 
+  
+  int Nt = y->Neven(); 
+  double dt = y->deltaT(); 
+  double T = dt *Nt; 
+  int Nf =h->Nfreq(); 
+  double df = 1./dt; 
+
+  bool done = false;
+
+  double hrms = h->getRMS(); 
+
+  while(!done) 
+  {
+     double yrms = y->getRMS(); 
+
+     AnalysisWaveform * xcorr = AnalysisWaveform::correlation(y,h,0,hrms*yrms);  
+
+     int where; 
+
+     double maxcorr = xcorr->even()->peakVal(&where,0,-1,true); 
+
+     double lag = xcorr->even()->GetX()[where]; 
+
+
+     //record the component here
+     components->push_back(lag); 
+
+
+     if (save_ys) 
+     {
+       save_ys->push_back(new AnalysisWaveform(*y)); 
+     }
+
+
+     //now subtract off impulse response with this offset 
+     //We are currently in the frequency domain so let's stay there! 
+     const std::complex<double> * H = (const std::complex<double>*) h->freq(); 
+     std::complex<double> * Y = (std::complex<double>*) y->updateFreq(); 
+     for (int i = 0; i < Nf; i++) 
+     {
+
+       Y[i] -= gain * (H[i]) * std::exp(std::complex<double>(0,-2*TMath::Pi())*(df*i)*lag);
+     }
+
+     if (save_xcorr) 
+     {
+       save_xcorr->push_back(xcorr) ; 
+     }
+     else 
+     {
+       delete xcorr; 
+     }
+
+     if (maxcorr < threshold) break; 
+  }
+ 
+
+  AnalysisWaveform * convolved = 0;
+ 
+  if (convolve_residuals) 
+  {
+
+    //we have to treat the restoring beam as a convolution. 
+    AnalysisWaveform tmp(Nt, dt,-T/2); 
+    TGraph * g = tmp.updateEven();
+
+    for (int i = 0; i < g->GetN(); i++) 
+    {
+      g->GetY()[i] += r->Eval(g->GetX()[i]); 
+    }
+
+    convolved= AnalysisWaveform::convolution(y,&tmp, 0, tmp.getRMS() *y->getRMS()); 
+
+    //need to crop this appropriately somehow... 
+  }
+  else 
+  {
+    //cheat to get the same time base as components 
+    AnalysisWaveform tmp(Nt,dt,-T/2); 
+    tmp.updateEven()->GetY()[(int)Nt/2] = 1; 
+    convolved= AnalysisWaveform::convolution(y,&tmp, 0, tmp.getRMS() *y->getRMS()); 
+  }
+  
+
+  // Finally, let's add the clean components to y! 
+
+  TGraphAligned * g = convolved->updateEven(); 
+  for (int i = 0; i < g->GetN(); i++) 
+  {
+    double t = g->GetX()[i]; 
+    for (unsigned j = 0; j < components->size(); j++) 
+    {
+      g->GetY()[i]+=gain*r->Eval((*components)[j]-t); 
+    }
+  }
+  
+
+  //now we want to center around the peak and the right number of points
+
+  int imax; 
+  g->peakVal(&imax,0,-1,true); 
+  int start = imax > Nt/2 ? Nt/2 : 0; 
+  AnalysisWaveform answer(Nt, g->GetY()+start, dt, g->GetX()[start]); 
+  memcpy(y->updateFreq(), answer.freq(), Nf*(2*sizeof(double))); 
+  delete convolved; 
+}
+
+
+

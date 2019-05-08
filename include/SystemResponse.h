@@ -25,8 +25,11 @@ namespace AnitaResponse{
   {
   
     public: 
-      virtual void deconvolve(size_t N, double df, FFTWComplex * Y, 
-                              const FFTWComplex * response) const = 0; 
+      virtual void deconvolve(AnalysisWaveform *wf, const AnalysisWaveform * response) const = 0; 
+
+      //compatibility interface
+      __attribute__((deprecated)) 
+      virtual void deconvolve(int Nf, double df, FFTWComplex *Y, const FFTWComplex * response) const; 
 
       virtual ~DeconvolutionMethod()  { ; } 
   }; 
@@ -37,10 +40,74 @@ namespace AnitaResponse{
 
     public: 
 
+      virtual void deconvolve(AnalysisWaveform *wf, const AnalysisWaveform *rwf) const ; 
+
+      virtual ~NaiveDeconvolution()  { ; } 
+
+  }; 
+
+
+
+  class CLEANDeconvolution : public DeconvolutionMethod 
+  {
+
+    public: 
+      // restoring function accepts a delta_t as parameter. Will be scaled by restoring component 
+      CLEANDeconvolution(const TF1 * restoring_beam, double gain = 0.05, double threshold = 0.1, bool convolve_residuals = true) 
+        : r(restoring_beam), gain(gain), threshold(threshold), convolve_residuals(convolve_residuals) {; } 
+
+
+      virtual void deconvolve(AnalysisWaveform *wf, const AnalysisWaveform *rwf) const  
+      {
+        deconvolveSavingIntermediate(wf,rwf,0,0,0); 
+      }
+
+
+      virtual void deconvolveSavingIntermediate(AnalysisWaveform *wf, 
+                              const AnalysisWaveform * response, 
+                              std::vector<double> * components = 0,
+                              std::vector<AnalysisWaveform*> *xcorr = 0,
+                              std::vector<AnalysisWaveform*> *ys = 0
+                              ) const ; 
+
+
+
+      static TGraph * makeComponentGraph(std::vector<double> * components) { return 0 ; }
+
+
+
+
+
+    private: 
+      const TF1 * r; 
+      double gain; 
+      double threshold; 
+      bool convolve_residuals;
+
+  }; 
+
+  /*
+  class RichardsonLucyDeconvolution : public DeconvolutionMethod
+  {
+    public: 
+      RichardsonLucyDeconvolution(int maxiter = 100, double thresh = 0.01) 
+        : maxiter(maxiter), thresh(thresh) {; }
       virtual void deconvolve(size_t N, double df, FFTWComplex * Y, 
                               const FFTWComplex * response) const ; 
 
-      virtual ~NaiveDeconvolution()  { ; } 
+    private: 
+      int maxiter; 
+      double thresh; 
+
+  }; 
+  */
+
+  class MinimumPhaseDeconvolution
+  {
+    public: 
+      virtual void deconvolve(AnalysisWaveform *wf, const AnalysisWaveform *rwf) const ; 
+      virtual ~MinimumPhaseDeconvolution() { ; } 
+
 
   }; 
 
@@ -66,8 +133,7 @@ namespace AnitaResponse{
       WienerDeconvolution (const TF1 * f); 
 
 
-      virtual void deconvolve(size_t N, double df, FFTWComplex * Y, 
-                              const FFTWComplex * response) const ; 
+      virtual void deconvolve(AnalysisWaveform *wf, const AnalysisWaveform *rwf) const ; 
 
     protected: 
       virtual double snr(double f, double R2, int N) const; 
@@ -89,8 +155,7 @@ namespace AnitaResponse{
       {
       }
 
-      virtual void deconvolve(size_t N, double df, FFTWComplex * Y, 
-                              const FFTWComplex * response) const; 
+      virtual void deconvolve(AnalysisWaveform *wf, const AnalysisWaveform *rwf) const ; 
 
       virtual ~BandLimitedDeconvolution() { ; } 
 
@@ -105,8 +170,7 @@ namespace AnitaResponse{
   {
     public: 
       AllPassDeconvolution() { ; } 
-      virtual void deconvolve(size_t N, double df, FFTWComplex * Y, 
-                              const FFTWComplex * response) const; 
+      virtual void deconvolve(AnalysisWaveform *wf, const AnalysisWaveform *rwf) const ; 
 
       virtual ~AllPassDeconvolution() { ; } 
 
@@ -117,8 +181,7 @@ namespace AnitaResponse{
 
     public: 
       ImpulseResponseXCorr() { ; } 
-      virtual void deconvolve(size_t N, double df, FFTWComplex * Y, 
-                              const FFTWComplex * response) const; 
+      virtual void deconvolve(AnalysisWaveform *wf, const AnalysisWaveform *rwf) const ; 
       virtual ~ImpulseResponseXCorr() { ; } 
 
   }; 
