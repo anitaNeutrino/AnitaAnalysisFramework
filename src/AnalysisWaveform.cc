@@ -1582,4 +1582,49 @@ double AnalysisWaveform::getRMS() const
   return sqrt(sum2/2)/(N-1);  
 }
 
+AnalysisWaveform * AnalysisWaveform::makeWf(const TGraph * g, bool even, AnalysisWaveform *wf) 
+{
+
+  double dt0 = g->GetX()[1]-g->GetX()[0]; 
+
+  //see if it's actually even
+  if (!even) 
+  {
+    even = true; //start by assuming it is
+    for (int i = 2; i < g->GetN(); i++) 
+    {
+      if (g->GetX()[i]-g->GetX()[i-1] != dt0) 
+      {
+        even = false; 
+        break; 
+      }
+    }
+  }
+
+  //find mean dt
+  if (!even) 
+  {
+    double sumdt = 0; 
+    for (int i = 1; i < g->GetN(); i++) 
+    {
+      sumdt += g->GetX()[i] - g->GetX()[i-1]; 
+    }
+    dt0 = sumdt / (g->GetN()-1.);
+  }
+  if (wf) 
+  {
+    wf->~AnalysisWaveform(); 
+  }
+  else
+  {
+    wf = (AnalysisWaveform*) malloc(sizeof(AnalysisWaveform)); 
+  }
+
+  if (even) return new (wf) AnalysisWaveform(g->GetN(), g->GetY(), dt0, g->GetX()[0]);
+  return new (wf) AnalysisWaveform(g->GetN(), g->GetX(), g->GetY(), dt0); 
+ 
+
+}
+
+
 

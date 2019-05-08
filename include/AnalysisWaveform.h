@@ -127,6 +127,10 @@ class AnalysisWaveform
     /** Constructor for evenly sampled waveform. Uneven waveform is set to even. */ 
     AnalysisWaveform(int Nt, const double * y, double dt, double t0);  
 
+    /** Constructor from TGraph. If even is true, it will assume it's evenly sampled, otherwise will check */
+    static AnalysisWaveform * makeWf(const TGraph * g, bool even = true, AnalysisWaveform * replace = 0); 
+
+
     /** Constructor from frequency domain (and uneven is set to be the same) */ 
     AnalysisWaveform(int Nt, const FFTWComplex * f, double df, double t0);  
 
