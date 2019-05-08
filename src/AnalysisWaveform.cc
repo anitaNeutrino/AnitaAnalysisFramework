@@ -41,7 +41,7 @@ static bool ALLOW_EVEN_TO_UNEVEN = false;
 void AnalysisWaveform::allowEvenToUnevenConversion( bool allow) { ALLOW_EVEN_TO_UNEVEN = allow; }
 
 
-static __thread bool nag_if_not_zero_padded = true; 
+static __thread bool nag_if_not_zero_padded = false; 
 
 
 /** give things unique names */ 

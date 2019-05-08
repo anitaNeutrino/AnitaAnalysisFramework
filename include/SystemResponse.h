@@ -127,15 +127,15 @@ namespace AnitaResponse{
   {
 
     public: 
-      CLEAN();
+      CLEAN(int max_loops = 1000, double loop_gain = 0.02, TString restoring_beam = "pow(x,2) * exp(-x/1.43)", bool add_residuals = 1);
       virtual void deconvolve(size_t N, double df, FFTWComplex * Y, 
                               const FFTWComplex * response) const; 
       virtual ~CLEAN() { ; } 
-      void setMaxLoops(int opt){fMaxLoops=opt;}
-      void setLoopGain(double opt){fLoopGain=opt;}
     private:
       int fMaxLoops;
       double fLoopGain;
+      TString fRestoringBeam;
+      bool fAddResiduals;
 
   }; 
 
