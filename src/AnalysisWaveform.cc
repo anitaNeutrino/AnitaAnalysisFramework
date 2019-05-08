@@ -1549,4 +1549,37 @@ void AnalysisWaveform::nameGraphs()
 }
 
 
+double AnalysisWaveform::getRMS() const
+{
+  // do it with the even waveform if we can! 
+
+  if (!must_update_even) 
+  {
+    double mean,rms; 
+    even()->getMeanAndRMS(&mean,&rms); 
+    return rms; 
+  }
+
+  if(!must_update_uneven) 
+  {
+
+    double mean,rms; 
+    uneven()->getMeanAndRMS(&mean,&rms); 
+    return rms; 
+  }
+
+  //otherwise do this in the frequency domain... 
+
+  int N = Nfreq(); 
+
+  double sum2 = 0; 
+  const FFTWComplex * f = freq(); 
+  for (int i = 1; i < N; i++) 
+  {
+    sum2+= f[i].getAbsSq(); 
+  }
+
+  return sqrt(sum2)/(2*N);  
+}
+
 

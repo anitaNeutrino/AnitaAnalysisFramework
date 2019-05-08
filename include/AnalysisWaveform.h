@@ -136,6 +136,8 @@ class AnalysisWaveform
     /** Copy constructor. Will not blindly copy everything (like it won't bother copying anything that will have to be recalculated on its next access */ 
     AnalysisWaveform(const AnalysisWaveform & other);  
 
+    /*  Computes the RMS, either in time or frequency domain to avoid an FFT*/ 
+    double getRMS() const;  
 
     AnalysisWaveform & operator=(const AnalysisWaveform & other); 
 
