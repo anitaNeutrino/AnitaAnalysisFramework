@@ -115,12 +115,13 @@ void AnitaResponse::ImpulseResponseXCorr::deconvolve(size_t N, double df, FFTWCo
   }
 }
 
-AnitaResponse::CLEAN::CLEAN(int max_loops, double loop_gain, TString restoring_beam, bool add_residuals) 
+AnitaResponse::CLEAN::CLEAN(int max_loops, double loop_gain, TString restoring_beam, bool add_residuals, bool only_return_residuals)
 {
   fMaxLoops = max_loops;
   fLoopGain = loop_gain;
   fRestoringBeam = restoring_beam;
   fAddResiduals = add_residuals;
+  fOnlyReturnResiduals = only_return_residuals;
 }
 
 void AnitaResponse::CLEAN::deconvolve(size_t N, double df, FFTWComplex * Y, const FFTWComplex * response) const 
@@ -159,8 +160,6 @@ void AnitaResponse::CLEAN::deconvolve(size_t N, double df, FFTWComplex * Y, cons
   double loop_gain = fLoopGain;
   int max_loops = fMaxLoops;
   double noise_level = snr_est/3.;
-  double E_i = y.even()->getSumV2();
-  double E_curr = E_i;
   double max_corr = 0;
   double max_clean = 0;
   
@@ -204,9 +203,11 @@ void AnitaResponse::CLEAN::deconvolve(size_t N, double df, FFTWComplex * Y, cons
   //shift response to middle for ease
   int loc = TMath::LocMax(r.Neven(), r.even()->GetY());
   r.updateEven()->shift(r.Neven()/2 - loc, false);
+  double E_i = y.even()->getSumV2();
+  double E_curr = E_i;
 
   //start CLEANING
-  while(E_curr/E_i > thresh && max_loops != 0)
+  while(((E_curr/E_i) > thresh) && (max_loops != 0))
   {
     max_loops--;
     double rms1 = y.even()->GetRMS(2);
@@ -232,7 +233,14 @@ void AnitaResponse::CLEAN::deconvolve(size_t N, double df, FFTWComplex * Y, cons
     y.updateEven()->GetY()[i] *= 1./normalize;
     clean.updateEven()->GetY()[i] *= (fabs(clean.updateEven()->GetY()[i]) > max_clean/noise_level) ? 1./normalize : 0;
   }
-  if(fRestoringBeam.Length() > 0)
+  if(fOnlyReturnResiduals)
+  {
+    for(int i = 0; i < N; i++)
+    {
+      Y[i] = y.freq()[i];
+    }
+  }
+  else if(fRestoringBeam.Length() > 0)
   {
     //convolve clean components w/ restoring beam
     xc = AnalysisWaveform::convolution(&rbeam, &clean);
