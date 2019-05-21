@@ -115,10 +115,11 @@ void AnitaResponse::ImpulseResponseXCorr::deconvolve(size_t N, double df, FFTWCo
   }
 }
 
-AnitaResponse::CLEAN::CLEAN(int max_loops, double loop_gain, TString restoring_beam, bool add_residuals, bool only_return_residuals)
+AnitaResponse::CLEAN::CLEAN(int max_loops, double loop_gain, double thresh_factor, TString restoring_beam, bool add_residuals, bool only_return_residuals)
 {
   fMaxLoops = max_loops;
   fLoopGain = loop_gain;
+  fThreshFactor = thresh_factor;
   fRestoringBeam = restoring_beam;
   fAddResiduals = add_residuals;
   fOnlyReturnResiduals = only_return_residuals;
@@ -153,7 +154,7 @@ void AnitaResponse::CLEAN::deconvolve(size_t N, double df, FFTWComplex * Y, cons
   noise_mean /= n_noise;
   noise_est = sqrt(noise_est/n_noise - (noise_mean * noise_mean));
   //double noise_est = TMath::RMS(y.Neven(), y.even()->GetY());
-  double snr_est = (y.even()->pk2pk())/(2*noise_est); 
+  double snr_est = (1./fThreshFactor) * (y.even()->pk2pk())/(2*noise_est); 
   //printf("snr est = %g, rms = %g, nt1 = %d, vpp = %g\n", snr_est, noise_est, n_noise, y.even()->pk2pk());
 
   double thresh = 1./snr_est;
@@ -243,9 +244,19 @@ void AnitaResponse::CLEAN::deconvolve(size_t N, double df, FFTWComplex * Y, cons
   else if(fRestoringBeam.Length() > 0)
   {
     //convolve clean components w/ restoring beam
-    xc = AnalysisWaveform::convolution(&rbeam, &clean);
+    //xc = AnalysisWaveform::convolution(&rbeam, &clean);
     //xc->even()->peakVal(&loc, 0, -1, true);
     //xc->updateEven()->shift(xc->Neven()/2 - loc, false);
+    xc = new AnalysisWaveform(clean.Neven(), clean.freq(), clean.deltaF(), clean.even()->GetX()[0]);
+    for(int i = 0; i < xc->Nfreq(); i++)
+    {
+      xc->updateFreq()[i] *= rbeam.freq()[i];
+    }
+    double scale_clean = fabs(clean.even()->peakVal(0, 0, -1, 1)/xc->even()->peakVal(0,0,-1,1));
+    for(int i = 0; i < xc->Neven(); i++)
+    {
+      xc->updateEven()->GetY()[i] *= scale_clean;
+    }
     //add back residuals
     if(fAddResiduals)
     {
