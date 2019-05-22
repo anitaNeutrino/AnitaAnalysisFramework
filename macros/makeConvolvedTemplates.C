@@ -16,7 +16,7 @@ void convolveTemplates(char config, const char * numbers)
   
   TFile* inf = new TFile("data/templates/crTmpltsA3.root");
 
-  TGraph* gconv = new TGraph(Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/averages/%s.imp", getenv("ANITA_UTIL_INSTALL_DIR"), numbers));
+  TGraph* gconv = new TGraph(Form("%s/share/AnitaAnalysisFramework/responses/A4ImpulseTUFFs/averages/%s.imp", getenv("ANITA_UTIL_INSTALL_DIR"), numbers));
   AnalysisWaveform awfc(gconv->GetN(), gconv->GetX(), gconv->GetY(), .1);
   awfc.forceEvenSize(10000);
   (void) awfc.freq();
