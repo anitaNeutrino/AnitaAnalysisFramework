@@ -88,8 +88,8 @@ void convolveTUFF(int ant=1, char tmb='B', char config='B', const char* outdir="
 
 void makeAverage(const char* indir = "", const char* outdir="")
 {
-	mkdir(Form("data/responses/TUFFs/%s", outdir), 0777);
-	TString inf = Form("data/responses/TUFFs/%s/", indir);
+	mkdir(Form("data/responses/A4ImpulseTUFFs/%s", outdir), 0777);
+	TString inf = Form("data/responses/A4ImpulseTUFFs/%s/", indir);
   char* dir = gSystem->ExpandPathName(inf.Data());
   void* dirp = gSystem->OpenDirectory(dir);
   const char* entry;
@@ -102,7 +102,7 @@ void makeAverage(const char* indir = "", const char* outdir="")
     if(str.EndsWith(".imp")) fname[n++] = gSystem->ConcatFileName(dir, entry);
   }
   TGraph* gOut = new TGraph(fname[0]);
-  for(int i = 0; i < n; i++)
+  for(int i = 1; i < n; i++)
   {
     TGraph gTemp(fname[i]);
     for(int j=0; j < gOut->GetN(); j++)
@@ -114,7 +114,7 @@ void makeAverage(const char* indir = "", const char* outdir="")
   {
     gOut->GetY()[j] /= n;
   }
-	TString oName = Form("data/responses/TUFFs/%s/%s.imp", outdir, indir);
+	TString oName = Form("data/responses/A4ImpulseTUFFs/%s/%s.imp", outdir, indir);
 	ofstream outf(oName.Data());
 	for(int i = 0; i < gOut->GetN(); i++)
 	{
