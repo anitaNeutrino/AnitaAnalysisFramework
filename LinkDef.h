@@ -54,6 +54,7 @@
 #pragma link C++ class AnitaResponse::DeconvolutionMethod+;
 #pragma link C++ class AnitaResponse::NaiveDeconvolution+;
 #pragma link C++ class AnitaResponse::BandLimitedDeconvolution+;
+#pragma link C++ class AnitaResponse::CLEANDeconvolution+;
 #pragma link C++ class AnitaResponse::AbstractResponse+;
 #pragma link C++ class AnitaResponse::Response+;
 #pragma link C++ class AnitaResponse::ResponseManager+;

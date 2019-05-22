@@ -13,8 +13,8 @@
 #include "TMutex.h" 
 #include "FFTWComplex.h" 
 #include <map>
+#include "AnalysisWaveform.h" 
 
-class AnalysisWaveform; 
 class TGraph; 
 class TF1; 
 
@@ -48,41 +48,44 @@ namespace AnitaResponse{
 
 
 
+  //NOT THREAD-SAFE!! need one instance per thread!!! 
   class CLEANDeconvolution : public DeconvolutionMethod 
   {
 
     public: 
       // restoring function accepts a delta_t as parameter. Will be scaled by restoring component 
-      CLEANDeconvolution(const TF1 * restoring_beam, double gain = 0.05, double threshold = 0.1, bool convolve_residuals = true) 
-        : r(restoring_beam), gain(gain), threshold(threshold), convolve_residuals(convolve_residuals) {; } 
+      CLEANDeconvolution(const TF1 * restoring_beam, double gain = 0.05, double threshold = 0.1, double noiselevel = 10,  bool convolve_residuals = true, int maxiter = 500) 
+        : r(restoring_beam), gain(gain), threshold(threshold), noiselevel(noiselevel), convolve_residuals(convolve_residuals), max_iter(maxiter), debug(false), cached_restoring(0) {; } 
 
 
-      virtual void deconvolve(AnalysisWaveform *wf, const AnalysisWaveform *rwf) const  
-      {
-        deconvolveSavingIntermediate(wf,rwf,0,0,0); 
-      }
+      virtual void deconvolve(AnalysisWaveform *wf, const AnalysisWaveform *rwf) const;  
 
 
-      virtual void deconvolveSavingIntermediate(AnalysisWaveform *wf, 
-                              const AnalysisWaveform * response, 
-                              std::vector<double> * components = 0,
-                              std::vector<AnalysisWaveform*> *xcorr = 0,
-                              std::vector<AnalysisWaveform*> *ys = 0
-                              ) const ; 
-
-
-
-      static TGraph * makeComponentGraph(std::vector<double> * components) { return 0 ; }
+      void enableSaveIntermediate(bool enable = true) { debug = enable; } 
+      std::vector<AnalysisWaveform*> * getIntermediateXcorrs() const { return debug ? &save_xcorr : 0;}
+      std::vector<AnalysisWaveform*> * getIntermediateYs() const { return debug ? &save_ys : 0;}
+      std::vector<AnalysisWaveform*> * getIntermediateSubs() const { return debug ? &save_subtracted : 0;}
+      AnalysisWaveform * getComponents() const { return &cmp; }  
 
 
 
 
+      virtual ~CLEANDeconvolution() { clearIntermediate(); if (cached_restoring) delete cached_restoring; } 
 
     private: 
       const TF1 * r; 
       double gain; 
       double threshold; 
+      double noiselevel;
       bool convolve_residuals;
+      int max_iter; 
+      bool debug; 
+      mutable std::vector<AnalysisWaveform*> save_xcorr;
+      mutable std::vector<AnalysisWaveform*> save_ys;
+      mutable std::vector<AnalysisWaveform*> save_subtracted;
+      mutable AnalysisWaveform cmp; 
+      mutable AnalysisWaveform * cached_restoring; 
+      void clearIntermediate() const; 
 
   }; 
 
@@ -193,8 +196,8 @@ namespace AnitaResponse{
 
    public: 
       virtual FFTWComplex getResponse(double f, double angle = 0) const = 0; 
-      virtual FFTWComplex * getResponseArray(int N, const double  * f, double angle = 0) const; 
-      virtual FFTWComplex * getResponseArray(int N, double df, double angle = 0) const ; 
+      virtual FFTWComplex * getResponseArray(int N, const double  * f, double angle = 0, FFTWComplex * answer = 0) const; 
+      virtual FFTWComplex * getResponseArray(int N, double df, double angle = 0, FFTWComplex * answer = 0) const ; 
       virtual double getMagnitude(double f, double angle= 0) const;  
       virtual double getPhase(double f, double angle = 0) const; 
 

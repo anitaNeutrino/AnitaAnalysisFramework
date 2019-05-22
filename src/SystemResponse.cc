@@ -225,17 +225,17 @@ AnitaResponse::Response::Response(int Nfreq, double df, const FFTWComplex * resp
 }
 
 
-FFTWComplex * AnitaResponse::AbstractResponse::getResponseArray(int N, const double * f, double angle) const
+FFTWComplex * AnitaResponse::AbstractResponse::getResponseArray(int N, const double * f, double angle, FFTWComplex *answer) const
 {
-  FFTWComplex * answer = new FFTWComplex[N]; 
+  if (!answer)  answer = new FFTWComplex[N]; 
   for (int i = 0; i < N; i++) answer[i] = getResponse(f[i], angle); 
   return answer; 
 
 }
 
-FFTWComplex * AnitaResponse::AbstractResponse::getResponseArray(int N, double  df, double angle) const
+FFTWComplex * AnitaResponse::AbstractResponse::getResponseArray(int N, double  df, double angle, FFTWComplex *answer) const
 {
-  FFTWComplex * answer = new FFTWComplex[N]; 
+  if (!answer) answer = new FFTWComplex[N]; 
   for (int i = 0; i < N; i++) answer[i] = getResponse(i*df, angle); 
   return answer; 
 }
@@ -417,50 +417,78 @@ void AnitaResponse::AbstractResponse::deconvolveInPlace(AnalysisWaveform * wf,  
 
 /// CLEAN 
 //
-void AnitaResponse::CLEANDeconvolution::deconvolveSavingIntermediate(AnalysisWaveform *y, const AnalysisWaveform * h, 
-    std::vector<double> *components, 
-    std::vector<AnalysisWaveform*> *save_xcorr, 
-    std::vector<AnalysisWaveform*> *save_ys 
-    ) const
+
+void AnitaResponse::CLEANDeconvolution::clearIntermediate() const
+{
+
+  for (unsigned i = 0; i < save_xcorr.size(); i++) delete save_xcorr[i]; 
+  for (unsigned i = 0; i < save_ys.size(); i++) delete save_ys[i]; 
+  for (unsigned i = 0; i < save_subtracted.size(); i++) delete save_subtracted[i]; 
+  save_xcorr.clear(); 
+  save_ys.clear(); 
+  save_subtracted.clear(); 
+}
+
+void AnitaResponse::CLEANDeconvolution::deconvolve(AnalysisWaveform *y, const AnalysisWaveform * h) const
 {
 
 
-
-  std::vector<double> local_components; 
-  if(!components) components=&local_components;
-
-  components->reserve(2./gain); 
-  
   int Nt = y->Neven(); 
   double dt = y->deltaT(); 
+  double t0 = y->even()->GetX()[0]; 
   double T = dt *Nt; 
   int Nf =h->Nfreq(); 
-  double df = 1./dt; 
+  double df = 1./dt/Nt; 
+
+  //now let's evaluate the restoring beam
+  //TODO: cache the last one since usually we'll be doing the same one over and over again 
+
+  if (!cached_restoring || Nt != cached_restoring->Neven() || dt != cached_restoring->deltaT())
+  {
+    if (cached_restoring) delete cached_restoring;
+    cached_restoring = new AnalysisWaveform(Nt,dt,-T/2); 
+    TGraphAligned * grestore = cached_restoring->updateEven(); 
+    for (int i = 0; i < Nt; i++) 
+    {
+      grestore->GetY()[i] = r->Eval(i*dt); 
+    }
+  }
+
 
   bool done = false;
 
   double hrms = h->getRMS(); 
+  double yrms = y->getRMS(); 
+  double power_ratio = yrms/hrms; 
+
+  cmp = AnalysisWaveform(Nt,dt,t0); 
+
+  int iter = 0; 
+
+  clearIntermediate(); 
+  double sqrt_threshold = sqrt(threshold);
 
   while(!done) 
   {
-     double yrms = y->getRMS(); 
-
      AnalysisWaveform * xcorr = AnalysisWaveform::correlation(y,h,0,hrms*yrms);  
 
      int where; 
 
      double maxcorr = xcorr->even()->peakVal(&where,0,-1,true); 
+     if (xcorr->even()->GetY()[where] < 0) maxcorr *=-1; 
 
-     double lag = xcorr->even()->GetX()[where]; 
+     double lag = xcorr->even()->GetX()[where]-t0;
+
 
 
      //record the component here
-     components->push_back(lag); 
+     cmp.updateEven()->GetY()[(int) (lag/dt)]+= maxcorr * gain;
 
 
-     if (save_ys) 
+     if (debug) 
      {
-       save_ys->push_back(new AnalysisWaveform(*y)); 
+       save_ys.push_back(new AnalysisWaveform(*y)); 
+       save_ys.back()->setTitle(Form("iter%d pk2kpk = %g", iter, save_ys.back()->even()->pk2pk())); 
      }
 
 
@@ -468,73 +496,80 @@ void AnitaResponse::CLEANDeconvolution::deconvolveSavingIntermediate(AnalysisWav
      //We are currently in the frequency domain so let's stay there! 
      const std::complex<double> * H = (const std::complex<double>*) h->freq(); 
      std::complex<double> * Y = (std::complex<double>*) y->updateFreq(); 
+//     printf ("\nSTART %d\n",iter); 
+//
+    AnalysisWaveform * subtracted = debug ? new AnalysisWaveform(*h) : 0; 
+    if (debug) save_subtracted.push_back(subtracted); 
+    FFTWComplex * subtracted_freq = debug ?  subtracted->updateFreq() : 0; 
+
+     const double factor= (maxcorr*gain*power_ratio); 
+     const double expo = -2./Nt*TMath::Pi()*lag/dt; 
      for (int i = 0; i < Nf; i++) 
      {
-
-       Y[i] -= gain * (H[i]) * std::exp(std::complex<double>(0,-2*TMath::Pi())*(df*i)*lag);
+       //this can be sped up using multiple angle formulas! 
+       std::complex<double> subtract = factor * (H[i] * std::exp(std::complex<double>(0,i*expo)));
+ //      printf("%g:  %g %g ->", i *df, std::real(Y[i]), std::imag(Y[i]));
+       Y[i] -= subtract;
+       if (debug) subtracted_freq[i] = subtract; 
+  //     printf("%g %g\n", std::real(Y[i]), std::imag(Y[i]));
      }
 
-     if (save_xcorr) 
+
+     if (debug) 
      {
-       save_xcorr->push_back(xcorr) ; 
+       xcorr->setTitle(Form("lag=%g, max=%g",lag,maxcorr)); 
+       save_xcorr.push_back(xcorr) ; 
      }
      else 
      {
        delete xcorr; 
      }
 
-     if (maxcorr < threshold) break; 
+     if (y->getRMS()  / yrms < sqrt_threshold || iter++ > max_iter) break; 
   }
- 
 
-  AnalysisWaveform * convolved = 0;
- 
+
+  //now get rid of clean components below threshold
+
+  double cc_max = fabs(cmp.even()->peakVal(0,0,-1,true)); 
+  cmp.updateEven()->setBelow(cc_max/noiselevel); 
+
+
   if (convolve_residuals) 
   {
+    //add clean components to y before convolving 
 
-    //we have to treat the restoring beam as a convolution. 
-    AnalysisWaveform tmp(Nt, dt,-T/2); 
-    TGraph * g = tmp.updateEven();
 
-    for (int i = 0; i < g->GetN(); i++) 
+    FFTWComplex * yf = y->updateFreq(); 
+    const FFTWComplex *cf = cmp.freq(); 
+    for (int i = 0;  i < Nf; i++) 
     {
-      g->GetY()[i] += r->Eval(g->GetX()[i]); 
+
+      yf[i] += cf[i]; 
     }
+ 
 
-    convolved= AnalysisWaveform::convolution(y,&tmp, 0, tmp.getRMS() *y->getRMS()); 
+    AnalysisWaveform * convolved = AnalysisWaveform::convolution(y,&restoring, 0, restoring.getRMS() *y->getRMS()); 
+    *y = *convolved; 
+    delete convolved; 
 
-    //need to crop this appropriately somehow... 
   }
   else 
   {
-    //cheat to get the same time base as components 
-    AnalysisWaveform tmp(Nt,dt,-T/2); 
-    tmp.updateEven()->GetY()[(int)Nt/2] = 1; 
-    convolved= AnalysisWaveform::convolution(y,&tmp, 0, tmp.getRMS() *y->getRMS()); 
-  }
-  
-
-  // Finally, let's add the clean components to y! 
-
-  TGraphAligned * g = convolved->updateEven(); 
-  for (int i = 0; i < g->GetN(); i++) 
-  {
-    double t = g->GetX()[i]; 
-    for (unsigned j = 0; j < components->size(); j++) 
+    AnalysisWaveform * convolved = AnalysisWaveform::convolution(&cmp,&restoring, 0, restoring.getRMS() *cmp.getRMS()); 
+    
+    //now add to residuals 
+    //
+    TGraph * g = y->updateEven(); 
+    for (int i = 0;  i < Nt; i++) 
     {
-      g->GetY()[i]+=gain*r->Eval((*components)[j]-t); 
+      g->GetY()[i] += convolved->evalEven(g->GetX()[i]); 
     }
+ 
+
+    delete convolved; 
   }
   
-
-  //now we want to center around the peak and the right number of points
-
-  int imax; 
-  g->peakVal(&imax,0,-1,true); 
-  int start = imax > Nt/2 ? Nt/2 : 0; 
-  AnalysisWaveform answer(Nt, g->GetY()+start, dt, g->GetX()[start]); 
-  memcpy(y->updateFreq(), answer.freq(), Nf*(2*sizeof(double))); 
-  delete convolved; 
 }
 
 
