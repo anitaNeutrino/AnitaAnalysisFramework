@@ -66,8 +66,12 @@ class TGraphAligned : public TGraph {
     /** Makes a histogram of the Y-values */ 
     TH1 * valueHist(int nbins = 100, const double * weights =0,  TH1 * out = 0 ) const; 
 
+    void setPlottingLimits(double mult = 1.1, bool sym = true, double dt_from_peak =-1); 
+
     aligned_double_v GetX() const { return fX; } 
     aligned_double_v GetY() const { return fY; } 
+
+    void setBelow(double val, bool abso=true, double to=0); 
 
     /** Destructor */ 
     virtual ~TGraphAligned();

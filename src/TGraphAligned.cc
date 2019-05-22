@@ -519,3 +519,40 @@ void TGraphAligned::shift(int nsamp, bool zero)
   }
 }
 
+
+void TGraphAligned::setPlottingLimits(double mult, bool sym, double dt) 
+{
+
+  int imax, imin; 
+  pk2pk(0,0,&imax,&imin); 
+
+  double val_max = GetY()[imax]; 
+  double val_min = GetY()[imin]; 
+
+  double abs_max = TMath::Max(val_max,-val_min); 
+
+
+  GetHistogram()->SetMaximum(mult * ( sym ? abs_max : val_max)); 
+  GetHistogram()->SetMinimum(mult * ( sym ? -abs_max : val_min)); 
+
+  if (dt > 0 ) 
+  {
+    double x0 = val_max > -val_min ? GetX()[imax] : GetX()[imin]; 
+    GetXaxis()->SetLimits(x0-dt, x0+dt); 
+  }
+  else
+  {
+    GetXaxis()->SetLimits(GetX()[0], GetX()[GetN()-1]);
+  }
+}
+
+void TGraphAligned::setBelow(double val, bool abso, double to) 
+{
+  for (int i = 0; i < GetN(); i++) 
+  {
+     if (GetY()[i] < val && (!abso || GetY()[i] > -val))
+     {
+       GetY()[i] = to; 
+     }
+  }
+}
