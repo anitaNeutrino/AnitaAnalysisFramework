@@ -15,14 +15,16 @@ namespace polarimetry
 
     public:
 
-      StokesAnalysis(const AnalysisWaveform * H, const AnalysisWaveform *V); 
+      StokesAnalysis(const AnalysisWaveform * H, const AnalysisWaveform *V, double correlate=0); 
       StokesAnalysis(const StokesAnalysis & other); 
       ~StokesAnalysis() { ; } 
 
       /** This computes the windowed averages over the window around Imax where I/Imax >= minIfrac 
        *  It returns the number of points used. 
+       *  The last argument is an attempt at implementing Peter's polarization errors
        * */ 
-      int computeWindowedAverage(double minIfrac, double * I = 0, double * Q = 0, double * U = 0 ,double * V = 0) const; 
+      int computeWindowedAverage(double minIfrac, double * I = 0, double * Q = 0, double * U = 0 ,double * V = 0, double * PoPerr = 0) const; 
+
 
 
       TGraph  & instI() { return *dI; } 

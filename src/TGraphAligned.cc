@@ -497,3 +497,25 @@ void TGraphAligned::zeroMean()
   mean /= GetN(); 
   for (int i = 0; i < GetN(); i++) GetY()[i]-=mean;
 }
+
+void TGraphAligned::shift(int nsamp, bool zero) 
+{
+
+  //this does the rotation 
+  std::rotate(GetY(), GetY()+((GetN() + nsamp) % GetN()), GetY() + GetN()); 
+
+
+  //now do some zeroing
+  if (zero) 
+  {
+    if (nsamp > 0) 
+    {
+      for (int i = GetN()-nsamp; i < GetN(); i++) GetY()[i] = 0;
+    }
+    else
+    {
+      for (int i = 0; i < nsamp; i++) GetY()[i] = 0; 
+    }
+  }
+}
+

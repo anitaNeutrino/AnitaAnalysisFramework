@@ -38,7 +38,7 @@ polarimetry::StokesAnalysis::StokesAnalysis(const StokesAnalysis & other)
 }
 
 
-polarimetry::StokesAnalysis::StokesAnalysis(const AnalysisWaveform * H, const AnalysisWaveform *V) 
+polarimetry::StokesAnalysis::StokesAnalysis(const AnalysisWaveform * H, const AnalysisWaveform *V, double xcorr) 
 {
   //figure out if we need to resample both to the same time base
   
@@ -46,26 +46,60 @@ polarimetry::StokesAnalysis::StokesAnalysis(const AnalysisWaveform * H, const An
   AnalysisWaveform *Vre = 0;
 
 
+  bool need_to_resample =V->deltaT() != H->deltaT() ||  H->even()->GetX()[0] != V->even()->GetX()[0] ;
+
   //we need to resample both onto the same base 
-  if (V->deltaT() != H->deltaT()
-      ||  H->even()->GetX()[0] != V->even()->GetX()[0] 
-     )
+  if ( need_to_resample    || xcorr)
   {
+    if (need_to_resample) 
+    {
+      double dt = TMath::Min(H->deltaT(), V->deltaT()); 
+      double t0 = TMath::Max(H->even()->GetX()[0], V->even()->GetX()[0]); 
+      double t1 = TMath::Min(H->even()->GetX()[H->Neven()-1], V->even()->GetX()[V->Neven()-1]); 
 
-    double dt = TMath::Min(H->deltaT(), V->deltaT()); 
-    double t0 = TMath::Max(H->even()->GetX()[0], V->even()->GetX()[0]); 
-    double t1 = TMath::Min(H->even()->GetX()[H->Neven()-1], V->even()->GetX()[V->Neven()-1]); 
+      int N = (t1-t0)/dt; 
 
-    int N = (t1-t0)/dt; 
+      Hre = new AnalysisWaveform(N, t0, dt); 
+      Vre = new AnalysisWaveform(N, t0, dt); 
 
-    Hre = new AnalysisWaveform(N, t0, dt); 
-    Vre = new AnalysisWaveform(N, t0, dt); 
+      TGraphAligned * gHre = Hre->updateEven(); 
+      TGraphAligned * gVre = Vre->updateEven(); 
+        
+      H->evalEven(N, gHre->GetX(), gHre->GetY()); 
+      V->evalEven(N, gVre->GetX(), gVre->GetY()); 
+    }
 
-    TGraphAligned * gHre = Hre->updateEven(); 
-    TGraphAligned * gVre = Vre->updateEven(); 
+    if (xcorr) 
+    {
+
+      if (H->Neven()!= V->Neven())
+      {
+        if (!Hre) Hre = new AnalysisWaveform(*H); 
+        if (!Vre) Vre = new AnalysisWaveform(*V); 
+        Vre->forceEvenSize(Hre->Neven()); 
+      }
+
+      if (!H->checkIfPaddedInTime() || !V->checkIfPaddedInTime())
+      {
+        if (!Hre) Hre = new AnalysisWaveform(*H); 
+        if (!Vre) Vre = new AnalysisWaveform(*V); 
+        Hre->padEven(1); 
+        Vre->padEven(1); 
+      }
+
+
+      AnalysisWaveform * xc = AnalysisWaveform::correlation(Hre,Vre); 
+      double dt = xc->deltaT(); 
+      int loc = 0; 
+      int half = xc->Neven()/2;
+      int min = TMath::Max(0, int(half-ceil(xcorr/dt))); 
+      int max = TMath::Min(int(half+ceil(xcorr/dt)), xc->Neven()-1); 
+
       
-    H->evalEven(N, gHre->GetX(), gHre->GetY()); 
-    V->evalEven(N, gVre->GetX(), gVre->GetY()); 
+      xc->even()->peakVal(&loc,min,max,true); 
+      Vre->updateEven()->shift(half-loc,true); 
+      delete xc; 
+    }
 
     H = Hre; 
     V = Vre; 
@@ -127,9 +161,10 @@ polarimetry::StokesAnalysis::StokesAnalysis(const AnalysisWaveform * H, const An
 }
 
 
-int polarimetry::StokesAnalysis::computeWindowedAverage(double Ifrac, double *I, double *Q, double  *U, double *V) const
+int polarimetry::StokesAnalysis::computeWindowedAverage(double Ifrac, double *I, double *Q, double  *U, double *V, double *PoPerr) const
 {
   int Imax = TMath::LocMax(dI->GetN(), dI->GetY()); 
+  double I0 = dI->GetY()[Imax];
 
   double thresh = dI->GetY()[Imax] * Ifrac; 
 
@@ -138,9 +173,16 @@ int polarimetry::StokesAnalysis::computeWindowedAverage(double Ifrac, double *I,
   double Usum = 0; 
   double Vsum = 0; 
 
+  double I2sum = 0; 
+  double Q2sum = 0; 
+  double U2sum = 0; 
+  double V2sum = 0; 
+
   int n = 0; 
+  int Iend = 0;
   for (int i = Imax; i < dI->GetN(); i++)
   {
+    Iend = i;
     if (dI->GetY()[i] < thresh) break; 
     Isum += dI->GetY()[i]; 
     Qsum += dQ->GetY()[i]; 
@@ -158,16 +200,53 @@ int polarimetry::StokesAnalysis::computeWindowedAverage(double Ifrac, double *I,
     Vsum += dV->GetY()[i]; 
     n++;
   }
+  Isum = Isum/n;
+  Qsum = Qsum/n;
+  Usum = Usum/n;
+  Vsum = Vsum/n;
 
-  if (I) *I = Isum/n; 
-  if (Q) *Q = Qsum/n; 
-  if (U) *U = Usum/n; 
-  if (V) *V = Vsum/n; 
+
+  double ret_err = 0;
+  if(PoPerr)
+  {
+    for (int i = Imax; i < dI->GetN(); i++)
+    {
+      if (dI->GetY()[i] < thresh) break; 
+      I2sum += (dI->GetY()[i]/I0 - Isum/I0)*(dI->GetY()[i]/I0 - Isum/I0); 
+      Q2sum += (dQ->GetY()[i]/I0 - Qsum/I0)*(dQ->GetY()[i]/I0 - Qsum/I0); 
+      U2sum += (dU->GetY()[i]/I0 - Usum/I0)*(dU->GetY()[i]/I0 - Usum/I0); 
+      V2sum += (dV->GetY()[i]/I0 - Vsum/I0)*(dV->GetY()[i]/I0 - Vsum/I0); 
+    }
+
+    for (int i = Imax-1; i >= 0; i--)
+    {
+      if (dI->GetY()[i] < thresh) break; 
+      I2sum += (dI->GetY()[i]/I0 - Isum/I0)*(dI->GetY()[i]/I0 - Isum/I0); 
+      Q2sum += (dQ->GetY()[i]/I0 - Qsum/I0)*(dQ->GetY()[i]/I0 - Qsum/I0); 
+      U2sum += (dU->GetY()[i]/I0 - Usum/I0)*(dU->GetY()[i]/I0 - Usum/I0); 
+      V2sum += (dV->GetY()[i]/I0 - Vsum/I0)*(dV->GetY()[i]/I0 - Vsum/I0); 
+    }
+
+    I2sum = I2sum/n;
+    Q2sum = Q2sum/n;
+    U2sum = U2sum/n;
+    V2sum = V2sum/n;
+
+    //printf("max ind = %d\n", Imax);
+    double Qc = TMath::Abs(cQ->GetY()[Iend])/cI->GetY()[Iend];
+    double Uc = TMath::Abs(cU->GetY()[Iend])/cI->GetY()[Iend];
+
+    ret_err = U2sum * pow(.5 * Qc/((Qc * Qc) + (Uc * Uc)), 2) + Q2sum * pow(.5 * Uc/((Qc * Qc) + (Uc * Uc)), 2);
+    //printf("errc = %g\n", sqrt(ret_err) * 180./TMath::Pi());
+  }
+
+  if (I) *I = Isum; 
+  if (Q) *Q = Qsum; 
+  if (U) *U = Usum; 
+  if (V) *V = Vsum; 
+
+  if (PoPerr) *PoPerr = sqrt(ret_err) * 180./TMath::Pi(); 
 
   return n; 
 }
-
-
-
-
 

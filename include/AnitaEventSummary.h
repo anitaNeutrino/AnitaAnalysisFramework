@@ -152,7 +152,7 @@ class AnitaEventSummary : public TObject
     Double_t xPolPeakHilbert; //[0,4096,21]  /// Peak of xpol hilbert Envelope
 
     Double_t I,Q,U,V;  /// Integral Stokes Parameters (over the entire waveform) 
-    Double_t max_dI,max_dQ,max_dU,max_dV; /// instantanteous stokes parameters (computed near max_dI).
+    Double_t max_dI,max_dQ,max_dU,max_dV,polErr; /// instantanteous stokes parameters (computed near max_dI).
     Int_t NPointsMaxStokes; /// The number of points used in the above estimates 
 
     Double_t totalPower;  /// Total power in waveform
@@ -179,6 +179,7 @@ class AnitaEventSummary : public TObject
     Double_t peakMoments[5];  /// moments about Peak  (1st - 5th moments)
 
     Double_t impulsivityMeasure; //[-1,1, 16]  /// A number that has something to do with how impulsive it is
+    Double_t bandwidthMeasure; 
     Double_t fracPowerWindowBegins[numFracPowerWindows]; //[0,128,16] /// Narrowest width containing {10%, 20%, 30%, 40%, 50%} of the total power
     Double_t fracPowerWindowEnds[numFracPowerWindows]; //[0,128,16] /// Narrowest width containing {10%, 20%, 30%, 40%, 50%} of the total power
 
@@ -211,7 +212,7 @@ class AnitaEventSummary : public TObject
     Double_t fracPowerWindowIntercept() const;
     Double_t fracPowerWindowChisquare() const;
 
-    ClassDefNV(WaveformInfo, 16);
+    ClassDefNV(WaveformInfo, 18);
 
    private:
     friend class AnitaEventSummary;
@@ -363,11 +364,16 @@ class AnitaEventSummary : public TObject
     Double_t energy;
     Double_t triggerSNR[2]; 
     TVector3 nuDirection; //in earth centered fixed coordinates (i.e. Cartesian coordinates of neutrino far away)
-    double nuTheta, nuPhi; //neutrino (not RF!) direction in payload coordinates 
+    double nuTheta, nuPhi; //neutrino (not RF!) direction in payload coordinates -> ray at infinity
+    double interactionTheta, interactionPhi; //neutrino interaction angle to ANITA in payload coordinates
+    double interactionLon, interactionLat, interactionAlt;
+    double rfExitTheta, rfExitPhi; //rf exit
+    double rfExitLon, rfExitLat, rfExitAlt; 
+    double balloonLon, balloonLat, balloonAlt; //balloon co-ords
     void reset();
     virtual ~MCTruth() { ; } 
 
-    ClassDefNV(MCTruth,8);
+    ClassDefNV(MCTruth,9);
   };
 
 

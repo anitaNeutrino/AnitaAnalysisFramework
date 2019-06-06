@@ -51,6 +51,11 @@ namespace bandwidth
    */
   double powerInBand(const AnalysisWaveform * wf, double minFreq=.17, double maxFreq=.26);
 
+
+  /** Area under CDF starting in a frequency range starting at the end*/
+  double lowness(const AnalysisWaveform *wf, double minf = 0.17, double maxf = 0.6) ; 
+
+
   /** This stuff is all used by the various metrics, not actually useful for anything else */
   void checkNotches(int timeCheck, double& notch0, double& notch1, double& notch2);
   double fillPowers(const TGraphAligned* powd, std::vector<double> &powers, double notch0, double notch1, double notch2);

@@ -41,7 +41,7 @@ static bool ALLOW_EVEN_TO_UNEVEN = false;
 void AnalysisWaveform::allowEvenToUnevenConversion( bool allow) { ALLOW_EVEN_TO_UNEVEN = allow; }
 
 
-static __thread bool nag_if_not_zero_padded = true; 
+static __thread bool nag_if_not_zero_padded = false; 
 
 
 /** give things unique names */ 
@@ -162,7 +162,6 @@ AnalysisWaveform::AnalysisWaveform(int N, const double * y, double dt, double t0
   just_padded = false; 
   uid = __sync_fetch_and_add(&counter,1); 
   nameGraphs(); 
-  df = 0; 
 }
 
 
@@ -287,6 +286,8 @@ void AnalysisWaveform::updateEven(const TGraph * replace)
   just_padded = false; 
   hilbert_dirty = true; 
   hilbert_envelope_dirty = true; 
+  dt = replace->GetX()[1]-replace->GetX()[0]; 
+  df = 1./(Neven() * dt); 
 }
 
 
@@ -1080,7 +1081,7 @@ AnalysisWaveform * AnalysisWaveform::convolution(const AnalysisWaveform *A, cons
   FFTWComplex * update = answer->updateFreq(); 
 
   const FFTWComplex * Bfreq = B->freq(); 
-  double inv = 1./(N*scale); 
+//  double inv = 1./(N*scale); 
   
   //TODO this can be vectorized 
   for (int i = 0; i < B->Nfreq(); i++) 
@@ -1107,11 +1108,12 @@ AnalysisWaveform * AnalysisWaveform::convolution(const AnalysisWaveform *A, cons
 
   answer->updateEven(&g); 
 
+
   return answer; 
 }
 
 
-AnalysisWaveform * AnalysisWaveform::correlation(const AnalysisWaveform *A, const AnalysisWaveform *B, int npad, double scale) 
+AnalysisWaveform * AnalysisWaveform::correlation(const AnalysisWaveform *A, const AnalysisWaveform *B, int npad, double scale, int window_normalize) 
 {
   if (A->Nfreq() != B->Nfreq()) 
   {
@@ -1154,6 +1156,54 @@ AnalysisWaveform * AnalysisWaveform::correlation(const AnalysisWaveform *A, cons
   double dt = answer->deltaT(); 
   memcpy(g.GetY(), answer->even()->GetY() + N/2, N/2 * sizeof(double)); 
   memcpy(g.GetY()+ N/2, answer->even()->GetY(), N/2 * sizeof(double)); 
+
+
+  //  we need to calculate the integral sumv2 of the inputs
+  if (window_normalize) 
+  {
+
+    std::vector <double> sum2A(A->Neven()); 
+    std::vector <double> sum2B(B->Neven()); 
+
+    const double * Ay = A->even()->GetY(); 
+    const double * By = B->even()->GetY(); 
+
+    for (int i = 0; i < A->Neven(); i++) 
+    {
+      sum2A[i] = (i == 0 ? 0 : sum2A[i-1]) + Ay[i]*Ay[i]; 
+    }
+
+    for (int i = B->Neven()-1; i >= 0; i--) 
+    {
+      sum2B[i] = (i == B->Neven()-1 ? 0 : sum2B[i+1]) + By[i]*By[i]; 
+    }
+
+
+    //find first and last non-zero sample 
+    int start = 0; 
+    int end = g.GetN()-1; 
+
+    while(!g.GetY()[start]) start++; 
+    while(!g.GetY()[end]) end--; 
+
+    for (int i = start+window_normalize; i <= end-window_normalize+1; i++) 
+    {
+      double this_norm = sqrt (sum2A[i] * sum2B[i])/(i-start);
+      if (this_norm > 0) 
+      {
+        g.GetY()[i]/=this_norm; 
+        if ( i == window_normalize + start) 
+        {
+          for (int ii = start; ii < i; ii++) g.GetY()[ii]/=this_norm;
+        }
+
+        if (i == end-window_normalize + 1) 
+        {
+          for (int ii = end-window_normalize+2; ii <= end; ii++) g.GetY()[ii]/=this_norm; 
+        }
+      }
+    }
+  }
 
   for (int i = 0; i < N; i++) 
   {

@@ -26,15 +26,20 @@ class TFile;
  
 namespace AnitaTMVA
 {
-
+  enum MVAPurpose 
+    {
+      PURPOSE_NORMAL = 0, 
+      PURPOSE_SPECTATOR =1, 
+      PURPOSE_TARGET = 2
+   };
   /** A variable to be used for multivariable analysis */
   struct MVAVar
   {
-    MVAVar(const char * expr, const char * name, char type='F', bool spectator=false)  :  expression(expr), name(name), type(type), spectator(spectator)  {;} 
+    MVAVar(const char * expr, const char * name, char type='F', MVAPurpose p=PURPOSE_NORMAL)  :  expression(expr), name(name), type(type), purpose(p)  {;} 
     const char * expression;  /* A valid formula for this variable (made with TTree::Draw) */
     const char * name;  /* a name you assign to this variable  (no spaces, will be used for branch name( */ 
     char type; /*F' or 'I'. TMVA converts everything to float internally, so doubles will be converted to floats. Sorry.  */
-    bool spectator; 
+    MVAPurpose purpose;
   }; 
 
 
@@ -46,13 +51,13 @@ namespace AnitaTMVA
     MVAVarSet() { ;} 
 
     /* make from arrays */ 
-    MVAVarSet( int nvars,  const char * varNames[], const char * varExpr[], const char * type = 0, const bool * spectator = 0); //defaults to 'F'  
+    MVAVarSet( int nvars,  const char * varNames[], const char * varExpr[], const char * type = 0, const MVAPurpose * purposes = 0); //defaults to 'F'  
 
     /* Make from a text file 
      * 
      * format is: 
      * #comment 
-     * varname @ varExpr @ (type = F ) @ (spectator = 0) 
+     * varname @ varExpr @ (type = F ) @ (usage = 0) 
      *
      * */
     MVAVarSet(const char * ifile); 
@@ -66,10 +71,12 @@ namespace AnitaTMVA
     { 
       for (unsigned i = 0; i < vars.size(); i++) 
       {
-        if (!vars[i].spectator)
-          t->AddVariable(vars[i].name, vars[i].type); 
+        if (vars[i].purpose == PURPOSE_TARGET)
+          t->AddTarget(vars[i].name); 
+        else if (vars[i].purpose == PURPOSE_SPECTATOR) 
+          t->AddSpectator(vars[i].name); 
         else
-          t->AddSpectator(vars[i].name, vars[i].type); 
+          t->AddVariable(vars[i].name, vars[i].type); 
       }
     }
 

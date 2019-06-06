@@ -115,7 +115,179 @@ void AnitaResponse::ImpulseResponseXCorr::deconvolve(size_t N, double df, FFTWCo
   }
 }
 
+AnitaResponse::CLEAN::CLEAN(int max_loops, double loop_gain, double thresh_factor, TString restoring_beam, bool add_residuals, bool only_return_residuals)
+{
+  fMaxLoops = max_loops;
+  fLoopGain = loop_gain;
+  fThreshFactor = thresh_factor;
+  fRestoringBeam = restoring_beam;
+  fAddResiduals = add_residuals;
+  fOnlyReturnResiduals = only_return_residuals;
+}
 
+void AnitaResponse::CLEAN::deconvolve(size_t N, double df, FFTWComplex * Y, const FFTWComplex * response) const 
+{
+  //set up analysis waveforms
+  AnalysisWaveform clean(2*(N-1), Y, df, 0);
+  for(int i = 0; i < clean.even()->GetN(); i++)
+  {
+    clean.updateEven()->GetY()[i] = 0;
+  }
+  AnalysisWaveform y(2*(N-1), Y, df, 0);
+  AnalysisWaveform rbeam(2*(N-1), Y, df, 0);
+  AnalysisWaveform r(2*(N-1), response, df, 0);
+  AnalysisWaveform* xc = 0;
+
+  //set up hyperparameters
+  double noise_est=0;
+  double noise_mean=0;
+  double n_noise=0;
+  for(int i = 0; i < y.Neven(); i++)
+  {
+    if(y.even()->GetX()[i] < 25 || y.even()->GetX()[i] > 70)
+    {
+      noise_est += y.even()->GetY()[i] * y.even()->GetY()[i];
+      noise_mean +=  y.even()->GetY()[i];
+      n_noise++;
+    }
+  }
+  noise_mean /= n_noise;
+  noise_est = sqrt(noise_est/n_noise - (noise_mean * noise_mean));
+  //double noise_est = TMath::RMS(y.Neven(), y.even()->GetY());
+  double snr_est = (1./fThreshFactor) * (y.even()->pk2pk())/(2*noise_est); 
+  //printf("snr est = %g, rms = %g, nt1 = %d, vpp = %g\n", snr_est, noise_est, n_noise, y.even()->pk2pk());
+
+  double thresh = 1./snr_est;
+  double loop_gain = fLoopGain;
+  int max_loops = fMaxLoops;
+  double noise_level = snr_est/3.;
+  double max_corr = 0;
+  double max_clean = 0;
+  
+  //rescale template to WF
+  double max_y = y.even()->peakVal(0, 0, -1, true);
+  double max_r = r.even()->peakVal(0, 0, -1, true);
+
+  double scale_to_wf = (TMath::Abs(max_y))/(TMath::Abs(max_r));
+
+  for(int i = 0; i < r.Neven(); i++)
+  {
+    r.updateEven()->GetY()[i] *= scale_to_wf;
+  }
+
+  //rescale
+  double normalize = 1./sqrt(y.even()->getSumV2() + r.even()->getSumV2());
+  for(int i = 0; i < y.Neven(); i++)
+  {
+    y.updateEven()->GetY()[i] *= normalize;
+  }
+  for(int i = 0; i < r.Neven(); i++)
+  {
+    r.updateEven()->GetY()[i] *= normalize;
+  }
+  if(fRestoringBeam.Length() > 0)
+  {
+    TF1 restore("restoring_beam", fRestoringBeam.Data(), y.even()->GetX()[0], y.even()->GetX()[y.Neven()-1]); 
+    for(int i = 0; i < rbeam.Neven(); i++)
+    {
+      rbeam.updateEven()->GetY()[i] = restore.Eval(rbeam.updateEven()->GetX()[i]);
+    }
+
+    //normalize to unit sum
+    double restore_norm = rbeam.even()->getSumV2();
+    for(int i = 0; i < rbeam.Neven(); i++)
+    {
+      rbeam.updateEven()->GetY()[i] /= restore_norm;
+    }
+  }
+
+  //shift response to middle for ease
+  int loc = TMath::LocMax(r.Neven(), r.even()->GetY());
+  r.updateEven()->shift(r.Neven()/2 - loc, false);
+  double E_i = y.even()->getSumV2();
+  double E_curr = E_i;
+
+  //start CLEANING
+  while(((E_curr/E_i) > thresh) && (max_loops != 0))
+  {
+    max_loops--;
+    double rms1 = y.even()->GetRMS(2);
+    double rms2 = r.even()->GetRMS(2);
+    xc = AnalysisWaveform::correlation(&y, &r, 0, rms1 * rms2);
+    max_corr = xc->even()->peakVal(&loc, 0, -1, true);
+    clean.updateEven()->GetY()[loc] += xc->even()->GetY()[loc] * loop_gain;
+    //shift template to align with peak of correlation
+    r.updateEven()->shift(xc->Neven()/2 - loc, false);
+    //subtract impulse response from dirty waveform
+    for(int i = 0; i < y.even()->GetN(); i++)
+    {
+      y.updateEven()->GetY()[i] -= loop_gain * r.even()->GetY()[i] * xc->even()->GetY()[loc];
+    }
+    r.updateEven()->shift(-1*(xc->Neven()/2 - loc), false);
+    E_curr = y.even()->getSumV2();
+    delete xc;
+  }
+  max_clean = clean.even()->peakVal(0, 0, -1, true);
+  //rescale back up residuals and remove clean components below the noise floor or rescale back up ones that are above
+  for(int i = 0; i < y.Neven(); i++)
+  {
+    y.updateEven()->GetY()[i] *= 1./normalize;
+    clean.updateEven()->GetY()[i] *= (fabs(clean.updateEven()->GetY()[i]) > max_clean/noise_level) ? 1./normalize : 0;
+  }
+  if(fOnlyReturnResiduals)
+  {
+    for(int i = 0; i < N; i++)
+    {
+      Y[i] = y.freq()[i];
+    }
+  }
+  else if(fRestoringBeam.Length() > 0)
+  {
+    //convolve clean components w/ restoring beam
+    //xc = AnalysisWaveform::convolution(&rbeam, &clean);
+    //xc->even()->peakVal(&loc, 0, -1, true);
+    //xc->updateEven()->shift(xc->Neven()/2 - loc, false);
+    xc = new AnalysisWaveform(clean.Neven(), clean.freq(), clean.deltaF(), clean.even()->GetX()[0]);
+    for(int i = 0; i < xc->Nfreq(); i++)
+    {
+      xc->updateFreq()[i] *= rbeam.freq()[i];
+    }
+    double scale_clean = fabs(clean.even()->peakVal(0, 0, -1, 1)/xc->even()->peakVal(0,0,-1,1));
+    for(int i = 0; i < xc->Neven(); i++)
+    {
+      xc->updateEven()->GetY()[i] *= scale_clean;
+    }
+    //add back residuals
+    if(fAddResiduals)
+    {
+      for(int i = 0; i < xc->Neven(); i++)
+      {
+        xc->updateEven()->GetY()[i] += y.even()->GetY()[i];
+      }
+    }
+    //return the cleaned stuff
+    for(int i = 0; i < N; i++)
+    {
+      Y[i] = xc->freq()[i];
+    }
+    delete xc;
+  }
+  else
+  {
+    if(fAddResiduals)
+    {
+      for(int i = 0; i < clean.Neven(); i++)
+      {
+        clean.updateEven()->GetY()[i] += y.even()->GetY()[i];
+      }
+    }
+    //return the cleaned stuff
+    for(int i = 0; i < N; i++)
+    {
+      Y[i] = clean.freq()[i];
+    }
+  }
+}
 
 void AnitaResponse::NaiveDeconvolution::deconvolve(size_t N, double df, FFTWComplex * Y, const FFTWComplex * response) const 
 {

@@ -122,6 +122,24 @@ namespace AnitaResponse{
       virtual ~ImpulseResponseXCorr() { ; } 
 
   }; 
+  
+  class CLEAN : public DeconvolutionMethod
+  {
+
+    public: 
+      CLEAN(int max_loops = 1000, double loop_gain = 0.02, double thresh_factor = 1., TString restoring_beam = "(1./10) * pow(x,2) * exp(-x/1.43)", bool add_residuals = 1, bool only_return_residuals = 0);
+      virtual void deconvolve(size_t N, double df, FFTWComplex * Y, 
+                              const FFTWComplex * response) const; 
+      virtual ~CLEAN() { ; } 
+    private:
+      int fMaxLoops;
+      double fLoopGain;
+      double fThreshFactor;
+      TString fRestoringBeam;
+      bool fAddResiduals;
+      bool fOnlyReturnResiduals;
+
+  }; 
 
   extern DeconvolutionMethod & kDefaultDeconvolution; 
 

@@ -16,11 +16,11 @@ struct idiocy
 }; 
 
 
-AnitaTMVA::MVAVarSet::MVAVarSet(int n, const char * names[], const char * expr[], const char * type, const bool * spectator) 
+AnitaTMVA::MVAVarSet::MVAVarSet(int n, const char * names[], const char * expr[], const char * type, const MVAPurpose * purposes) 
 {
   for (int i = 0; i < n; i++) 
   {
-    add(MVAVar(expr[i], names[i], type ? type[i] :'F', spectator ? spectator[i] : false)); 
+    add(MVAVar(expr[i], names[i], type ? type[i] :'F', purposes ? purposes[i] : PURPOSE_NORMAL)); 
   }
 }
 
@@ -66,10 +66,10 @@ AnitaTMVA::MVAVarSet::MVAVarSet(const char * ifile)
     }
     
     char type = toks.size() > 2 ? toks[2].Data()[0] : 'F'; 
-    bool spectator = toks.size() > 3 ? atoi(toks[3].Data()) : false;
+    MVAPurpose purpose = toks.size() > 3 ? (MVAPurpose) atoi(toks[3].Data()) : PURPOSE_NORMAL;
 
-    printf("Adding: %s/%s/%c/%d\n", toks[1].Data(), toks[0].Data(), type,spectator); 
-    add(MVAVar(strdup(toks[1].Data()), strdup(toks[0].Data()), type ,spectator )); 
+    printf("Adding: %s/%s/%c/%d\n", toks[1].Data(), toks[0].Data(), type,purpose); 
+    add(MVAVar(strdup(toks[1].Data()), strdup(toks[0].Data()), type ,purpose )); 
   }
 
 
@@ -174,18 +174,18 @@ int AnitaTMVA::evaluateTMVA(TTree * tree, const AnitaTMVA::MVAVarSet & vars, con
       return 1; 
     }
 
-//    if (vars.at(i).spectator) continue; 
+    if (vars.at(i).purpose == PURPOSE_TARGET) continue; 
 
     switch(vars.at(i).type)
     {
       case 'I':
          tree->SetBranchAddress(vars.at(i).name, &mem[i].i); 
-         vars.at(i).spectator ? reader.AddSpectator(vars.at(i).name, &mem[i].f) : reader.AddVariable(vars.at(i).name, &mem[i].f);
+         vars.at(i).purpose == PURPOSE_SPECTATOR ? reader.AddSpectator(vars.at(i).name, &mem[i].f) : reader.AddVariable(vars.at(i).name, &mem[i].f);
          break; 
       case 'F':
       default:
          tree->SetBranchAddress(vars.at(i).name, &mem[i].f); 
-         vars.at(i).spectator ? reader.AddSpectator(vars.at(i).name, &mem[i].f) : reader.AddVariable(vars.at(i).name, &mem[i].f); //ugh ??!? 
+         vars.at(i).purpose == PURPOSE_SPECTATOR? reader.AddSpectator(vars.at(i).name, &mem[i].f) : reader.AddVariable(vars.at(i).name, &mem[i].f); //ugh ??!? 
          break;
     }
   }
@@ -212,7 +212,7 @@ int AnitaTMVA::evaluateTMVA(TTree * tree, const AnitaTMVA::MVAVarSet & vars, con
     }
 
     value = reader.EvaluateMVA(branch_name,aux); 
-    if (std::isnan(value)) value = -999; 
+    if (found_a_nan || std::isnan(value)) value = -999; 
     b->Fill(); 
   }
 
@@ -232,7 +232,7 @@ int AnitaTMVA::MVAVarSet::toFile(const char * ofile)
 
   for (int i = 0; i < N(); i++)
   {
-    fprintf(f,"%s @ %s @ %c @ %d\n", at(i).name, at(i).expression, at(i).type, at(i).spectator); 
+    fprintf(f,"%s @ %s @ %c @ %d\n", at(i).name, at(i).expression, at(i).type, (int) at(i).purpose); 
   }
   fclose(f); 
   return 0; 
