@@ -69,6 +69,7 @@
 
 #pragma link C++ class AnitaEventFaker+; 
 #pragma link C++ class SensitivityCalculator+; 
+#pragma link C++ class FreqDomainFunction+; 
 
 
 #endif
