@@ -13,6 +13,7 @@ FreqDomainFunction::FreqDomainFunction (  std::complex<double> (*fn) (double f, 
   debug = false;
   setParameters(&pars[0]); 
   causal_param = 0; 
+  dedisperse_response = false;
 }
 
 std::complex<double>* FreqDomainFunction::makeCausal(int N, const std::complex<double> *in, int how, std::complex<double> * out) 
@@ -102,7 +103,10 @@ void FreqDomainFunction::setParameters(const double * p)
     {
       for (int i = 0; i < nfreq; i++) 
       {
-        Y[i] *= std::complex<double> (response->getResponse(i*deltaf)); 
+        
+        std::complex<double> r = std::complex<double> (response->getResponse(i*deltaf)); 
+        if (dedisperse_response) r = std::complex<double>(std::abs(r), 0); 
+        Y[i] *= r; 
       }
     }
 
@@ -121,5 +125,43 @@ double FreqDomainFunction::eval(double x, const double * p)
   //see if we need to update wf
   setParameters(p); 
   return pars[0] * wf.evalEven(x-pars[1]) * wf.Nfreq(); 
+}
+
+std::complex<double> FreqDomainFunction::evalFreq(double f, const double * p) 
+{
+  //see if we need to update wf
+  setParameters(p); 
+  double df = wf.deltaF(); 
+  if (f >= wf.Nfreq() * df) return 0; 
+  const FFTWComplex * Y = wf.freq(); 
+  int ilow = f / df; 
+  int ihigh = ilow+1;
+  FFTWComplex Ylow = Y[ilow]; 
+  FFTWComplex Yhigh = Y[ihigh]; 
+  double frac = (ihigh *df-f)/df; 
+
+  std::complex<double> avg = Ylow * frac + Yhigh * (1-frac); 
+  
+  return avg * pars[0] * std::exp(std::complex<double>(0,-pars[1]*TMath::Pi()*2*f)); 
+}
+
+double FreqDomainFunction::evalPhase(double f, const double * p) 
+{
+  return std::arg(evalFreq(f,p)); 
+}
+
+double FreqDomainFunction::evalPower(double f, const double * p) 
+{
+  setParameters(p); 
+  double df = wf.deltaF(); 
+  if (f >= wf.Nfreq() * df) return 0; 
+  const FFTWComplex * Y = wf.freq(); 
+  int ilow = f / df; 
+  int ihigh = ilow+1; 
+  FFTWComplex Ylow = Y[ilow]; 
+  FFTWComplex Yhigh = Y[ihigh]; 
+  double frac = (ihigh *df-f)/df; 
+  double Yavg = (Ylow * frac + Yhigh * (1-frac)).getAbsSq();
+  return pars[0] * Yavg; 
 }
 
