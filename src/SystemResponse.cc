@@ -721,14 +721,14 @@ void AnitaResponse::CLEANDeconvolution::deconvolve(AnalysisWaveform *y, const An
     }
  
 
-    AnalysisWaveform * convolved = AnalysisWaveform::convolution(y,&restoring, 0, restoring.getRMS() *y->getRMS()); 
+    AnalysisWaveform * convolved = AnalysisWaveform::convolution(y,cached_restoring, 0, cached_restoring->getRMS() *y->getRMS()); 
     *y = *convolved; 
     delete convolved; 
 
   }
   else 
   {
-    AnalysisWaveform * convolved = AnalysisWaveform::convolution(&cmp,&restoring, 0, restoring.getRMS() *cmp.getRMS()); 
+    AnalysisWaveform * convolved = AnalysisWaveform::convolution(&cmp,cached_restoring, 0, cached_restoring->getRMS() *cmp.getRMS()); 
     
     //now add to residuals 
     //

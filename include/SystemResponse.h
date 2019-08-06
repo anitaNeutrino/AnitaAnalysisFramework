@@ -54,8 +54,9 @@ namespace AnitaResponse{
 
     public: 
       // restoring function accepts a delta_t as parameter. Will be scaled by restoring component 
-      CLEANDeconvolution(const TF1 * restoring_beam, double gain = 0.05, double threshold = 0.1, double noiselevel = 10,  bool convolve_residuals = true, int maxiter = 500) 
+      CLEANDeconvolution(const TF1 * restoring_beam, double gain = 0.05, double threshold = 0.01, double noiselevel = 10,  bool convolve_residuals = true, int maxiter = 5000) 
         : r(restoring_beam), gain(gain), threshold(threshold), noiselevel(noiselevel), convolve_residuals(convolve_residuals), max_iter(maxiter), debug(false), cached_restoring(0) {; } 
+      void setThreshold(double t) { threshold = t; } 
 
 
       virtual void deconvolve(AnalysisWaveform *wf, const AnalysisWaveform *rwf) const;  
