@@ -146,17 +146,17 @@ AnitaResponse::CLEAN::CLEAN(int max_loops, double loop_gain, double thresh_facto
   fOnlyReturnResiduals = only_return_residuals;
 }
 
-void AnitaResponse::CLEAN::deconvolve(size_t N, double df, FFTWComplex * Y, const FFTWComplex * response) const 
+void AnitaResponse::CLEAN::deconvolve(AnalysisWaveform * Y, const AnalysisWaveform * resp) const 
 {
   //set up analysis waveforms
-  AnalysisWaveform clean(2*(N-1), Y, df, 0);
+  AnalysisWaveform clean(*Y);
   for(int i = 0; i < clean.even()->GetN(); i++)
   {
     clean.updateEven()->GetY()[i] = 0;
   }
-  AnalysisWaveform y(2*(N-1), Y, df, 0);
-  AnalysisWaveform rbeam(2*(N-1), Y, df, 0);
-  AnalysisWaveform r(2*(N-1), response, df, 0);
+  AnalysisWaveform y(*Y);
+  AnalysisWaveform rbeam(*Y);
+  AnalysisWaveform r(*resp);
   AnalysisWaveform* xc = 0;
 
   //set up hyperparameters
@@ -257,9 +257,9 @@ void AnitaResponse::CLEAN::deconvolve(size_t N, double df, FFTWComplex * Y, cons
   }
   if(fOnlyReturnResiduals)
   {
-    for(int i = 0; i < N; i++)
+    for(int i = 0; i < Y->Nfreq(); i++)
     {
-      Y[i] = y.freq()[i];
+      Y->updateFreq()[i] = y.freq()[i];
     }
   }
   else if(fRestoringBeam.Length() > 0)
@@ -287,9 +287,9 @@ void AnitaResponse::CLEAN::deconvolve(size_t N, double df, FFTWComplex * Y, cons
       }
     }
     //return the cleaned stuff
-    for(int i = 0; i < N; i++)
+    for(int i = 0; i < Y->Nfreq(); i++)
     {
-      Y[i] = xc->freq()[i];
+      Y->updateFreq()[i] = xc->freq()[i];
     }
     delete xc;
   }
@@ -303,9 +303,9 @@ void AnitaResponse::CLEAN::deconvolve(size_t N, double df, FFTWComplex * Y, cons
       }
     }
     //return the cleaned stuff
-    for(int i = 0; i < N; i++)
+    for(int i = 0; i < Y->Nfreq(); i++)
     {
-      Y[i] = clean.freq()[i];
+      Y->updateFreq()[i] = clean.freq()[i];
     }
   }
 }
