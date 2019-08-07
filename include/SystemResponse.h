@@ -48,7 +48,9 @@ namespace AnitaResponse{
 
 
 
-  //NOT THREAD-SAFE!! need one instance per thread!!! 
+  /** 
+   * Cosmin's (incomplete) version of CLEAN. Needs to be tuned/debugged!!! 
+   */
   class CLEANDeconvolution : public DeconvolutionMethod 
   {
 
@@ -190,6 +192,7 @@ namespace AnitaResponse{
 
   }; 
   
+  /** Andrew's version of CLEAN (ported from Peter's Matlab version). USE THIS FOR NOW IF YOU'RE USING CLEAN!!!  */ 
   class CLEAN : public DeconvolutionMethod
   {
 
