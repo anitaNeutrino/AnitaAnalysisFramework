@@ -482,9 +482,9 @@ const AnalysisWaveform *FilteredAnitaEvent::getRawGraph(UInt_t phi,
 							AnitaRing::AnitaRing_t ring,
 							AnitaPol::AnitaPol_t pol) const {
 
-  Int_t chanIndex = AnitaGeomTool::getChanIndexFromRingPhiPol(ring,phi,pol);
-  return rawGraphs[chanIndex];
-  
+    // this works for A4 and should work for A3.
+    const Int_t ant = 16*ring + phi;
+    return rawGraphsByAntPol[pol][ant];
 }
 
 
@@ -493,8 +493,7 @@ const AnalysisWaveform *FilteredAnitaEvent::getRawGraph(UInt_t phi,
 const AnalysisWaveform * FilteredAnitaEvent::getFilteredGraph(UInt_t phi, 
 							      AnitaRing::AnitaRing_t ring, 
 							      AnitaPol::AnitaPol_t pol) const {
-
-  Int_t chanIndex = AnitaGeomTool::getChanIndexFromRingPhiPol(ring,phi,pol);
-  return filteredGraphs[chanIndex];
-  
+    // this works for A4 and should work for A3.
+    const Int_t ant = 16*ring + phi;
+    return filteredGraphsByAntPol[pol][ant];
 }
