@@ -429,6 +429,7 @@ void AnitaResponse::ResponseManager::checkTime(unsigned int evTime)
     {
       delete response_store[i]; 
     }
+    response_store.clear();
     loadResponsesFromDir(dir, savePad, evTime);
     fprintf(stderr, "changed responses\n");
   }
