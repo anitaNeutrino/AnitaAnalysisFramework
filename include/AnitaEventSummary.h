@@ -64,6 +64,7 @@ class AnitaEventSummary : public TObject
     Double_t theta; /// peak theta, degrees
     Double_t value; /// peak value
     Double_t snr; /// snr of peak
+
     Double_t mapRMS; /// rms of interferometric map
     Double_t mapHistoryVal; /// value of average of the peak location over the past 60 min-bias events
     Double_t hwAngle; /// angle with respect to triggering phi sector
@@ -146,6 +147,9 @@ class AnitaEventSummary : public TObject
     WaveformInfo() : fContainer(NULL), fLastEventNumberCache(0), nwMeanCache(-1),
                      nwGradCache(-1), nwInterceptCache(-1), nwChisquareCache(-1) {; }
     Double_t snr; //[0,100,16]  /// Signal to Noise of waveform
+    Double_t snr1; /// snr of peak - added for Binned Analysis
+    Double_t snr2; /// snr of peak - added for Binned Analysis
+    Double_t snr3; /// snr of peak - added for Binned Analysis
     Double_t peakHilbert;//[0,4096,21]  /// peak of hilbert envelope
     Double_t peakVal;  //[0,4096,21] /// peak value
     Double_t xPolPeakVal; //[0,4096,21]  /// Peak of xpol trace
@@ -212,6 +216,9 @@ class AnitaEventSummary : public TObject
     Double_t fracPowerWindowIntercept() const;
     Double_t fracPowerWindowChisquare() const;
 
+
+
+
     ClassDefNV(WaveformInfo, 18);
 
    private:
@@ -240,7 +247,6 @@ class AnitaEventSummary : public TObject
     Double_t avgPower;
     Double_t snr; //[0,100,16]/// Signal to Noise of waveform
     Double_t peakHilbert;//[0,4096,21]  /// peak of hilbert envelope
-
     Double_t getPhi() const;
     inline Int_t getAnt() const {return ant;}                // could add some errors on -1 here...
     inline AnitaPol::AnitaPol_t getPol() const {return pol;} // could add some errors on 2 here...
@@ -433,6 +439,10 @@ class AnitaEventSummary : public TObject
   WaveformInfo deconvolved[AnitaPol::kNotAPol][maxDirectionsPerPol]; /// Summaries of the (unfiltered) de-dispersed coherently summed waveforms, array index correponds to entry in peak[][]
   WaveformInfo coherent_filtered[AnitaPol::kNotAPol][maxDirectionsPerPol]; /// Summaries of the filtered, coherently summed waveforms, array index correponds to entry in peak[][]
   WaveformInfo deconvolved_filtered[AnitaPol::kNotAPol][maxDirectionsPerPol]; /// Summaries of the filtered, de-dispersed, coherently summed waveforms, array index correponds to entry in peak[][]
+  // Waveform info for input waveforms - added by sammy --------------------------
+  WaveformInfo inputWfRaw[AnitaPol::kNotAPol][NUM_SEAVEYS];
+  WaveformInfo inputWfFiltered[AnitaPol::kNotAPol][NUM_SEAVEYS];
+  // -----------------------------------------------------------------------------
   ChannelInfo channels[AnitaPol::kNotAPol][NUM_SEAVEYS]; /// Summaries of each channel's waveform.
   EventFlags flags; /// Flags corresponding the event quality, trigger type, calibration pulser timing, etc.
   SourceHypothesis sun; /// Contains location of sun in map coordinates at time of event
