@@ -15,6 +15,15 @@ const double C_IN_M_NS = 0.299792;
 static double impulsivityFractionThreshold = -1; //modifies behavior of mostImpulsive() set of utils
 
 
+static int use_prob_weight = 0; 
+
+void AnitaEventSummary::useProbWeight(int use) 
+{
+  use_prob_weight = use; 
+}
+
+
+
 //---------------------------------------------------------------------------------------------------------
 /**
  * @brief Default Constructor
@@ -475,7 +484,7 @@ void AnitaEventSummary::setSourceInformation(UsefulAdu5Pat* pat, const TruthAnit
       mc.phi*=TMath::RadToDeg();
     }
 
-    mc.weight = truth->weight; 
+    mc.weight = use_prob_weight ? truth->weight_prob :truth->weight; 
     mc.distance = pat->getTriggerTimeNsFromSource(truth->sourceLat, truth->sourceLon, truth->sourceAlt);
     mc.energy = truth->nuMom; // I guess this won't be true if icemc ever simulates non-relativistic neutrinos :P
     mc.triggerSNR[0] = truth->maxSNRAtTriggerH; 
