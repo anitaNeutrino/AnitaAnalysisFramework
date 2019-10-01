@@ -174,7 +174,7 @@ UsefulAnitaEvent * AnitaEventFaker::makePureNoiseEvent(double rms, UsefulAnitaEv
 
 
 
-void AnitaEventFaker::addSignal(UsefulAnitaEvent * event, double theta, double phi, double A, 
+void AnitaEventFaker::addSignal(UsefulAnitaEvent * event, double theta, double phi, double A, double extra_delay, 
                                 std::complex<double> jones_H, std::complex<double> jones_V) const
 {
   
@@ -205,6 +205,7 @@ void AnitaEventFaker::addSignal(UsefulAnitaEvent * event, double theta, double p
 
     double ts= (z * tan(th_rad) - R * cos(phi_rad-phi0_rad)) *  1e9 * cos(th_rad) / C_LIGHT; 
     ts+= offAxisDelay.Eval( phi-phi0, theta-10); 
+    ts += extra_delay; 
 
     for (int i = 0; i < event->fNumPoints[ich]; i++) 
     {

@@ -58,7 +58,7 @@ class AnitaEventFaker
      * @param jones_V   complex Jones V-pol coefficient
      */ 
     void addSignal(UsefulAnitaEvent * event, double theta_deg, double phi_deg, 
-                   double A = 10,  
+                   double A = 10,  double extra_delay = 0, 
                    std::complex<double> jones_H = std::complex<double>(1,0), 
                    std::complex<double> jones_V = std::complex<double>(0,0)
                    ) const; 
