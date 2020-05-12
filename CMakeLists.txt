@@ -68,7 +68,11 @@ include_directories(${PROJECT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS} ${PROJECT_SOURCE_
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXX_FLAGS}")
 file(GLOB HEADER_FILES
     "include/*.h"
-)
+    )
+
+file(GLOB_RECURSE SOURCE_FILES src/*.cc)
+
+set(DICTNAME G__${libname})
 
 #-- Wavelet Deconvolution using FoRWarD.
 option(WAVELETDECONV "Enable Wavelet Deconvolution." ON)
@@ -94,10 +98,6 @@ if (WAVELETDECONV)
     DESTINATION ${UTIL_INC_DIR})
 
 endif()
-
-file(GLOB_RECURSE SOURCE_FILES src/*.cc)
-
-set(DICTNAME G__${libname})
 
 ROOT_GENERATE_DICTIONARY(${DICTNAME} ${HEADER_FILES} LINKDEF LinkDef.h)
 
