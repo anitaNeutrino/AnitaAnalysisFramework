@@ -1,0 +1,3 @@
+[submodule "thirdparty/forward"]
+	path = thirdparty/forward
+	url = https://git.sr.ht/~rprechelt/forward
