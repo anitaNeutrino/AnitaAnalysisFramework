@@ -1,0 +1,3 @@
+[submodule "thirdparty/forward"]
+	path = thirdparty/forward
+	url = https://github.com/anitaNeutrino/forward
