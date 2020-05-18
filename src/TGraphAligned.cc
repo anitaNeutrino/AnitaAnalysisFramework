@@ -433,7 +433,7 @@ Double_t TGraphAligned::pk2pk(Int_t nth_max, Int_t nth_min, Int_t * location_max
   return max-min; 
 }
 
-Double_t TGraphAligned::peakVal(Int_t * location, Int_t istart, Int_t iend, bool abs) const
+Double_t TGraphAligned::peakVal(Int_t * location, Int_t istart, Int_t iend, bool use_abs) const
 {
 
   int start = istart < 0 ? GetN() + istart : istart; 
@@ -445,7 +445,7 @@ Double_t TGraphAligned::peakVal(Int_t * location, Int_t istart, Int_t iend, bool
 
   for (int i = start; i <= end; i++) 
   {
-    double val = abs ? fabs(y[i]) : y[i]; 
+    double val = use_abs ? fabs(y[i]) : y[i]; 
     if (max_index < 0 || val > max)
     {
       max = val; 
