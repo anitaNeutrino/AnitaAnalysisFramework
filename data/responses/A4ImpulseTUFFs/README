@@ -1,3 +1,24 @@
+This contains the new June 2020 A4 impulse responses that were rederived from the
+2019 impulse response measurements (explained below). This was performed independently
+by both Peter and Cosmin - this directory contains Peter's final responses. See the
+#antenna-theory channel on the ANITA slack for *a lot* more information.
+
+--Remy Prechelt 06/17/2020
+
+For legacy reasons, the trigger path responses are named `trigconfig*.imp` where
+the mapping from {A,B,C...} to frequency specifications is not easily accesible.
+The mapping is reproduced here:
+
+A: 260_0_0
+B: 260_375_0
+C: 260_0_460
+G: 260_385_0
+K: 0_0_0
+O: 260_365_0
+P: 260_375_460
+
+--Remy Prechelt 09/04/19
+
 These impulse responses were derived from new ANITA data taken in the
 UH anechoic chamber, summer 2019, using the UCLA Electrometrics  dual-ridge horn.
 the UCLA horn was separately calibrated for impulse response 
@@ -19,16 +40,3 @@ to 1024 samples total (102.4 ns), as in the case of the original impulse respons
 
 --Peter Gorham 7/25/19
 
-For legacy reasons, the trigger path responses are named `trigconfig*.imp` where
-the mapping from {A,B,C...} to frequency specifications is not easily accesible.
-The mapping is reproduced here:
-
-A: 260_0_0
-B: 260_375_0
-C: 260_0_460
-G: 260_385_0
-K: 0_0_0
-O: 260_365_0
-P: 260_375_460
-
---Remy Prechelt 09/04/19
