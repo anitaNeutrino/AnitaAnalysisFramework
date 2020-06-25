@@ -15,7 +15,7 @@ namespace polarimetry
 
     public:
 
-      StokesAnalysis(const AnalysisWaveform * H, const AnalysisWaveform *V, double correlate=0); 
+      StokesAnalysis(const AnalysisWaveform * H, const AnalysisWaveform *V, double correlate=0, double time_around_peak_to_correlate = 0); 
       StokesAnalysis(const StokesAnalysis & other); 
       ~StokesAnalysis() { ; } 
 
@@ -50,14 +50,16 @@ namespace polarimetry
       TMultiGraph & instGraphs() { return instantaneous; } 
       TMultiGraph & cumuGraphs() { return cumulative; } 
 
+      double getPeakCorrTime() const { return peak_corr_time; }
+      double getPeakCorrVal() const { return peak_corr_val; }
     private: 
       TGraph * dI, *dQ, *dU, *dV; 
       TGraph * cI, *cQ, *cU, *cV; 
       double avgI, avgQ, avgU, avgV; 
       TMultiGraph instantaneous; 
       TMultiGraph cumulative; 
-
-
+      double peak_corr_val;
+      double peak_corr_time;
   }; 
 
 
