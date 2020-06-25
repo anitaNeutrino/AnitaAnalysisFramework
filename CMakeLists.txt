@@ -75,7 +75,7 @@ file(GLOB_RECURSE SOURCE_FILES src/*.cc)
 set(DICTNAME G__${libname})
 
 #-- Wavelet Deconvolution using FoRWarD.
-option(WAVELETDECONV "Enable Wavelet Deconvolution." ON)
+option(WAVELETDECONV "Enable Wavelet Deconvolution." OFF)
 if (WAVELETDECONV)
 
   # the directory where we store the FoRWarD wrapper
