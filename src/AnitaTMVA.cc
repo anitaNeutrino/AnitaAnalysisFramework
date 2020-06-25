@@ -11,7 +11,7 @@
 
 struct idiocy
 {
-  int i;
+  Long_t i;
   float f;
 }; 
 
@@ -104,16 +104,16 @@ TTree* AnitaTMVA::makeTMVATree(int ntrees, TTree ** in, TFile * outf, const char
     switch(type)
     {
       case 'I': 
-        out->Branch(vars.at(i).name, &mem[i].i); break; 
+        out->Branch(vars.at(i).name, &mem[i].i, Form("%s/L",vars.at(i).name)); break; 
       case 'F': 
       default:
         out->Branch(vars.at(i).name, &mem[i].f);
     }
   }
 
-  out->Branch("entry", &mem[vars.N()].i); 
-  out->Branch("iteration", &mem[vars.N()+1].i); 
-  drawstr << "Entry$:Iteration$"; 
+  out->Branch("entry", &mem[vars.N()].i, "entry/L"); 
+  out->Branch("iteration", &mem[vars.N()+1].i, "iteration/L"); 
+  drawstr << "LocalEntry$:Iteration$"; 
 
   std::vector<int> Nout(ntrees); 
 //  printf("%s\n",drawstr.str().c_str()); 
