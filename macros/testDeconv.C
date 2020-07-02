@@ -1,4 +1,6 @@
-#include "FFTtools.h" 
+#include "FFTtools.h"
+#include "forward/forward.hpp"
+#include <vector>
 
 void testDeconv(int which=13, double noise_rms = 0.1)
 { 
@@ -10,13 +12,32 @@ void testDeconv(int which=13, double noise_rms = 0.1)
   TF1 * restoring_beam = new TF1("restoring","[0]*x*x*exp(-x/[1]) * (x > 0)",-100,100); 
 
   restoring_beam->SetParameters(1,1.43); 
-  AnitaResponse::CLEANDeconvolution clean(restoring_beam); 
+  AnitaResponse::CLEANDeconvolution clean(restoring_beam);
+
+  // ===== START WAVELET DECONVOLUTION
+
+  // do a 4-stage deconvolution
+  const unsigned int p{4};
+
+  // initialize a scaling array equal to 0.5 at all levels
+  const std::vector<double> scaling(p+1, 0.5);
+
+  // and a shrink parameter of 1. at all levels
+  const std::vector<double> rho(p+1, 1.);
+
+  // we want to use the Meyer basis
+  const auto type{forward::WaveletType::Meyer};
+
+  // and construct the wavelet deconvolver
+  auto wavelet{AnitaResponse::WaveletDeconvolution(p, type, noise_rms, scaling, rho)};
+
+  // ===== END WAVELET DECONVOLUTION
 
  // clean.enableSaveIntermediate(); 
 
 
   TCanvas * crestoring = new TCanvas("restore","restore"); 
-  restoring_beam->Draw(); 
+  restoring_beam->Draw();
   crestoring->SaveAs("clean_dbg/restoring.png"); 
 
   AnitaResponse::ResponseManager rm("SingleBRotter",1, &allpass); 
@@ -36,9 +57,9 @@ void testDeconv(int which=13, double noise_rms = 0.1)
   }
 
   orig->updateEven()->setPlottingLimits(1.1,true,100); 
-  AnitaResponse::DeconvolutionMethod  *  methods[] = { &allpass, &clean, &bandlimited }; 
-  const char  *  method_names[] = { "allpass", "CLEAN", "bandlimited" }; 
-  int nmethods = sizeof(methods)/sizeof(*methods); 
+  AnitaResponse::DeconvolutionMethod  *  methods[] = { &allpass, &clean, &bandlimited, &wavelet };
+  const char  *  method_names[] = { "allpass", "CLEAN", "bandlimited", "wavelet" };
+  int nmethods = sizeof(methods)/sizeof(*methods);
 
 
   const AnitaResponse::AbstractResponse * resp = rm.response(0,AnitaPol::kHorizontal); 
