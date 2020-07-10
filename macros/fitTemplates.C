@@ -121,8 +121,14 @@ void makeSeq(bool with_response = false)
 
 
 
-void fitTemplates(int event, int anita ) 
+void fitTemplates(int event, int anita = 3) 
 {
+
+  AnitaDataset d(150); 
+  d.getEvent(event); 
+
+  FilteredAnitaEvent fev
+
 
 
 

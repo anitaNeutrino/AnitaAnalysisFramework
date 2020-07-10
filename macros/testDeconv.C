@@ -1,6 +1,6 @@
 #include "FFTtools.h" 
 
-void testDeconv(int which=13, double noise_rms = 0.1)
+void testDeconv(int which=13, double noise_rms = 0.2)
 { 
   FFTtools::loadWisdom("wisdom.fftw3"); 
 
@@ -9,8 +9,9 @@ void testDeconv(int which=13, double noise_rms = 0.1)
 
   TF1 * restoring_beam = new TF1("restoring","[0]*x*x*exp(-x/[1]) * (x > 0)",-100,100); 
 
-  restoring_beam->SetParameters(1,1.43); 
+  restoring_beam->SetParameters(1,0.143); 
   AnitaResponse::CLEANDeconvolution clean(restoring_beam); 
+  AnitaResponse::CLEAN clean2;
 
  // clean.enableSaveIntermediate(); 
 
@@ -36,8 +37,8 @@ void testDeconv(int which=13, double noise_rms = 0.1)
   }
 
   orig->updateEven()->setPlottingLimits(1.1,true,100); 
-  AnitaResponse::DeconvolutionMethod  *  methods[] = { &allpass, &clean, &bandlimited }; 
-  const char  *  method_names[] = { "allpass", "CLEAN", "bandlimited" }; 
+  AnitaResponse::DeconvolutionMethod  *  methods[] = { &allpass, &clean,&clean2, &bandlimited }; 
+  const char  *  method_names[] = { "allpass", "CLEAN","CLEAN_ABL", "bandlimited" }; 
   int nmethods = sizeof(methods)/sizeof(*methods); 
 
 
@@ -68,7 +69,7 @@ void testDeconv(int which=13, double noise_rms = 0.1)
     TStopwatch watch;
     AnalysisWaveform *dwf = resp->deconvolve(wf, methods[i]); 
     watch.Stop(); 
-    printf("method: %s\n", method_names[i]); 
+    printf("method: %s: %p\n", method_names[i], dwf); 
     watch.Print(); 
 
     dwf->setColor(2); 
