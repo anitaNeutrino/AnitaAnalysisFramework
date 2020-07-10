@@ -34,7 +34,7 @@ void AnitaResponse::WienerDeconvolution::deconvolve(AnalysisWaveform *wf, const 
 
     double H2 = response[i].getAbsSq(); 
     double SNR = snr(f,H2,N); 
-    printf("SNR(%f) = %f\n", f, SNR); 
+//    printf("SNR(%f) = %f\n", f, SNR); 
 
     if (SNR <=0)  Y[i] = zero; 
     else

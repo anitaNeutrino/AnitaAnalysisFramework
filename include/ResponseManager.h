@@ -34,6 +34,8 @@ class ResponseManager
   // check time is used to change which response you are using for time dependent responses (such as the TUFF ones)
   void checkTime(unsigned int evTime);
 
+  static std::string getConfigurationFromIndex(const char * indexFile, unsigned int evTime); 
+
   virtual ~ResponseManager(); 
 
       

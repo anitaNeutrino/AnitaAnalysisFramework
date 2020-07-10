@@ -327,6 +327,25 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
 
 // }
 
+
+const std::string getConfigurationFromIndex(const char * indexFile, unsigned int evTime) 
+{
+    std::ifstream inf(indexFile);
+    std::string tempStr; 
+    long timePrev = 0; 
+    long tempTime; 
+    if(inf)
+    {
+      while(inf >> tempStr >> tempTime)
+      {
+        if(evTime > timePrev && evTime < tempTime) return tempStr; 
+        timePrev = tempTime;
+      }
+    }
+    return "none"; 
+}
+
+
 void AnitaResponse::ResponseManager::checkTime(unsigned int evTime)
 {
   if(!hasIndex) return;

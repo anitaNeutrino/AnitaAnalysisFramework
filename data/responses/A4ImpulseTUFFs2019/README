@@ -1,0 +1,34 @@
+These impulse responses were derived from new ANITA data taken in the
+UH anechoic chamber, summer 2019, using the UCLA Electrometrics  dual-ridge horn.
+the UCLA horn was separately calibrated for impulse response 
+using a pair of TEM horns that were calibrated against each other. The UCLA response was 
+deconvolved from UCLA->TEMhorn data using both CLEAN and a Wiener deconvolution method,
+and the two were tested for best fidelity by re-convolving with the original data.
+In this case, CLEAN gave higher fidelity and was used for the UCLA horn impulse function.
+
+One channel, 07BV was not functional and thus we copy the 07BH data to 07BV as a proxy.
+
+A single Seavey ANITA-4 horn and preamp were used for these data, so no
+actual antenna or preamp differences are captured here. The horn and preamp
+were chosen as representative of the average, neither were outliers.
+
+The data is sampled at 10 Gs/s, and times are given in ns. The data are in
+two columns, time and data, space-separated. The peak of the waveform
+in each case occurs at about 5 ns into the waveform, and it is zero padded
+to 1024 samples total (102.4 ns), as in the case of the original impulse responses.
+
+--Peter Gorham 7/25/19
+
+For legacy reasons, the trigger path responses are named `trigconfig*.imp` where
+the mapping from {A,B,C...} to frequency specifications is not easily accesible.
+The mapping is reproduced here:
+
+A: 260_0_0
+B: 260_375_0
+C: 260_0_460
+G: 260_385_0
+K: 0_0_0
+O: 260_365_0
+P: 260_375_460
+
+--Remy Prechelt 09/04/19

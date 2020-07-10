@@ -68,11 +68,36 @@ include_directories(${PROJECT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS} ${PROJECT_SOURCE_
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXX_FLAGS}")
 file(GLOB HEADER_FILES
     "include/*.h"
-)
+    )
 
 file(GLOB_RECURSE SOURCE_FILES src/*.cc)
 
 set(DICTNAME G__${libname})
+
+#-- Wavelet Deconvolution using FoRWarD.
+option(WAVELETDECONV "Enable Wavelet Deconvolution." OFF)
+if (WAVELETDECONV)
+
+  # the directory where we store the FoRWarD wrapper
+  set(FORWARD_DIR "${PROJECT_SOURCE_DIR}/thirdparty/forward/anita/")
+
+  # due to a cylic dependency, we inject forwaord directly
+  # into the source and header tooling
+  list(APPEND SOURCE_FILES "${FORWARD_DIR}/WaveletDeconvolution.cc")
+  list(APPEND HEADER_FILES "${FORWARD_DIR}/WaveletDeconvolution.h")
+
+  # and then use the forward directory as an include
+  include_directories("${PROJECT_SOURCE_DIR}/thirdparty/forward/include")
+
+  # and then use the forward directory as an include
+  include_directories("${FORWARD_DIR}")
+
+  # and install FoRWarD into ANITA_UTIL_INSTALL_DIR
+  install(DIRECTORY
+    "${PROJECT_SOURCE_DIR}/thirdparty/forward/include/forward"
+    DESTINATION ${UTIL_INC_DIR})
+
+endif()
 
 ROOT_GENERATE_DICTIONARY(${DICTNAME} ${HEADER_FILES} LINKDEF LinkDef.h)
 
