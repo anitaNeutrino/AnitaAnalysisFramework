@@ -260,5 +260,23 @@ void DeglitchFilter::processOne(AnalysisWaveform * wf, const RawAnitaHeader * he
 }
 
 
+void IFFTDiffFilter::processOne(AnalysisWaveform* g, const RawAnitaHeader * header, int ant, int pol) {
 
+  int nfreq = g -> Nfreq(); 
+  double df = g -> deltaF();
 
+  double dw = 2 * M_PI * df;
+  double cosOrder = cos(order * (0.5 + 2 * branchOrder) * M_PI);  //  i^x = cos(x * (0.5 + 2 * k) * pi) + i * sin(x * (0.5 + 2 * k) * pi), k = ..., -1, 0, 1, ...
+  double sinOrder = sin(order * (0.5 + 2 * branchOrder) * M_PI);
+
+  FFTWComplex * vals = g -> updateFreq();
+  vals[0] = order ? 0 : vals[0];  //  Just in case the FFT itself (order == 0) is desired. But should be zero, anyway.
+  for (int i = 1; i < nfreq; i++) {
+
+    double wOrder = pow(i * dw, order);
+    vals[i].re = wOrder * (cosOrder * vals[i].re - sinOrder * vals[i].im);
+    vals[i].im = wOrder * (sinOrder * vals[i].re + cosOrder * vals[i].im);
+  }
+  if (fmod(order, 2) && !(nfreq % 2)) vals[nfreq - 1] = 0;  //  "For odd order and even [nfreq], the Nyquist mode is taken zero."
+
+}

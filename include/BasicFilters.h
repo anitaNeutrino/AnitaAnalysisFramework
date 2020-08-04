@@ -249,4 +249,35 @@ class DeconvolveFilter : public FilterOperation
 }
 
 
+/**
+ *  Filter corresponding to differintegral operator in Fourier domain.
+ *  Modifying scipy.fftpack.diff from SciPy
+ *  <https://docs.scipy.org/doc/scipy-0.19.1/reference/generated/scipy.fftpack.diff.html>
+ *  for usage with FFTtools. Assumes the waveform is uniformly sampled, zero-meaned when
+ *  order is negative, isn't constant after differentiation, and the result is expected to be
+ *  real over the input domain, so don't use it otherwise.
+ **/ 
+class IFFTDiffFilter : public UniformFilterOperation
+{
+  public:
+
+    IFFTDiffFilter(double opOrder = 1, double brOrder = 0) 
+      : order(opOrder), branchOrder(brOrder) 
+    {
+      desc.Form("IFFTDiffFilter(%g,%g)",opOrder,brOrder); 
+    }
+    /** "order" refers to order of operation, with positive values corresponding to orders of differation, negative to integration. Default is simple differentiation.
+     *  "branchOrder" should only be nonzero when "order" isn't an integer. When "order" is noninteger, "branchOrder" corresponds to a branch cut in complex analysis.
+     **/
+
+    const char * tag() const { return "IFFTDiffFilter"; } 
+    const char * description() const { return desc.Data(); } 
+    virtual void processOne(AnalysisWaveform *, const RawAnitaHeader * = 0, int = 0, int pol = 0);
+
+  private: 
+    TString desc;  
+    double order, branchOrder; 
+}; 
+
+
 #endif 
