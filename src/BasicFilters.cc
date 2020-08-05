@@ -262,7 +262,7 @@ void DeglitchFilter::processOne(AnalysisWaveform * wf, const RawAnitaHeader * he
 
 void IFFTDiffFilter::processOne(AnalysisWaveform* g, const RawAnitaHeader * header, int ant, int pol) {
 
-  int nfreq = g -> Nfreq(); 
+  int nfreq = g -> Nfreq();
 
   double dw = 2 * M_PI * g -> deltaF();
   double cosOrder = cos(order * (0.5 + 2 * branchOrder) * M_PI);  //  i^x = cos(x * (0.5 + 2 * k) * pi) + i * sin(x * (0.5 + 2 * k) * pi), k = ..., -1, 0, 1, ...

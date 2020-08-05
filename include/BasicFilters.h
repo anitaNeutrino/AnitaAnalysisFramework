@@ -264,12 +264,12 @@ class IFFTDiffFilter : public UniformFilterOperation
     IFFTDiffFilter(double order = 1, int branchOrder = 0) 
       : order(order), branchOrder(branchOrder) 
     {
-      desc.Form("IFFTDiffFilter(%g,%g)", order, branchOrder); 
+      desc.Form("IFFTDiffFilter(%g,%d)", order, branchOrder); 
     }
     /** "order" refers to order of operation, with positive values corresponding to orders of differation,
      *  negative to integration. Default is simple differentiation.
-     *  "branchOrder" should only be nonzero when "order" isn't an integer. When "order" is noninteger,
-     *  "branchOrder" corresponds to a branch cut in complex analysis.
+     *  "branchOrder" provides a unique result when "order" is noninteger, then "branchOrder" corresponds to
+     *  a branch cut in complex analysis.
      **/
 
     const char * tag() const { return "IFFTDiffFilter"; } 
