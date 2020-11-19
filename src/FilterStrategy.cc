@@ -15,6 +15,21 @@ FilterStrategy::FilterStrategy(TFile * outfile)
 }
 
 
+FilterStrategy::~FilterStrategy() 
+{
+
+  done(); 
+
+  for (unsigned i = 0; i < operations.size(); i++) 
+  {
+    if (owns[i])
+    {
+      delete operations[i]; 
+    }
+  }
+
+}
+
 void FilterStrategy::attachFile(TFile* outfile){
 
   if(!outfile){
@@ -122,16 +137,18 @@ void FilterStrategy::process(FilteredAnitaEvent * ev)
 }
 
 
-void FilterStrategy::addOperation(FilterOperation* fo, bool enable_output) 
+void FilterStrategy::addOperation(FilterOperation* fo, bool enable_output, bool own) 
 {
   if (started) 
   {
+    //TODO: This really only needs to happen in the less common case that an operation has an output... but whatever. 
     fprintf(stderr,"Sorry, can't add operation to strategy after processing started!\n"); 
     return; 
   }
 
   operations.push_back(fo);
   enable_outputs.push_back(enable_output); 
+  owns.push_back(own);
 
   if (f && fo->nOutputs() && enable_output)     
   {

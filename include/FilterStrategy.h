@@ -31,11 +31,16 @@ class FilterStrategy
     /** Allow attachment of outfile after construct if haven't called this->process() yet */
     void attachFile(TFile* outfile);
 
-    /** Destructor. Will write to output file if necessary */ 
-    virtual ~FilterStrategy() {done(); } 
+    /** Destructor. Will write to output file if necessary (and deleted any owned operations) */ 
+    ~FilterStrategy(); 
 
-    /** Adds an operation to the strategy. This may only be done before any events are processed */ 
-    void addOperation(FilterOperation* f, bool enable_output = false); 
+    /** Adds an operation to the strategy. This may only be done before any events are processed 
+     * @param f  The FilterOperation to add to this strategy
+     * @param enable_output Whether or not to enable the Filter Output tree for this operation
+     * @param take_ownership  whether or not to delete this operation on destruction of the strategy
+     *
+     * */ 
+    void addOperation(FilterOperation* f, bool enable_output = false, bool take_ownership = false); 
 
     /** Process an event using this strategy */
     void process(FilteredAnitaEvent * event); 
@@ -57,6 +62,7 @@ class FilterStrategy
      bool started; 
      std::vector<FilterOperation*> operations;
      std::vector<bool> enable_outputs; 
+     std::vector<bool> owns; 
      TFile * f; 
      std::vector<TTree *> trees; 
      std::vector<std::vector<std::vector<double> > >outputStore; 
