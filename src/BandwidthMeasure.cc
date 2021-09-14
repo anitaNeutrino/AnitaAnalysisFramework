@@ -157,7 +157,7 @@ void bandwidth::checkNotches(int timeCheck, double& notch0, double& notch1, doub
 {
   if(AnitaVersion::get() != 4) return;
   TString dir;
-  dir.Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/index.txt", getenv("ANITA_UTIL_INSTALL_DIR"));
+  dir.Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/index.txt", getenv("PUEO_UTIL_INSTALL_DIR"));
   std::ifstream inf(dir.Data());
   std::string notchConfig;
   std::string tempConfig;
@@ -189,7 +189,7 @@ TGraph* bandwidth::loadImpulsePower(int timeCheck)
   TString dir;
   if(AnitaVersion::get() != 4)
   {
-    dir.Form("%s/share/AnitaAnalysisFramework/responses/SingleBRotter/all.imp", getenv("ANITA_UTIL_INSTALL_DIR"));
+    dir.Form("%s/share/AnitaAnalysisFramework/responses/SingleBRotter/all.imp", getenv("PUEO_UTIL_INSTALL_DIR"));
     TGraph* g = new TGraph(dir.Data());
     TGraph* gpow = FFTtools::makePowerSpectrum(g);
     delete g;
@@ -197,7 +197,7 @@ TGraph* bandwidth::loadImpulsePower(int timeCheck)
   }
   else
   {
-    dir.Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/index.txt", getenv("ANITA_UTIL_INSTALL_DIR"));
+    dir.Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/index.txt", getenv("PUEO_UTIL_INSTALL_DIR"));
     std::ifstream inf(dir.Data());
     std::string notchConfig;
     std::string tempConfig;
@@ -210,7 +210,7 @@ TGraph* bandwidth::loadImpulsePower(int timeCheck)
         break;
       }
     }
-    dir.Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/averages/%s.root", getenv("ANITA_UTIL_INSTALL_DIR"), notchConfig.c_str());
+    dir.Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/averages/%s.root", getenv("PUEO_UTIL_INSTALL_DIR"), notchConfig.c_str());
     TFile f(dir.Data());
     TGraph* gpow =(TGraph*) f.Get("power");
     f.Close();

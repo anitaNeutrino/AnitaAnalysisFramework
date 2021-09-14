@@ -23,7 +23,7 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
 
   //where do we look for the dir? 
   // Then try data/responses/ 
-  // Then try ${ANITA_UTIL_INSTALL_DIR}/share/UCorrelator/responses
+  // Then try ${PUEO_UTIL_INSTALL_DIR}/share/UCorrelator/responses
 
   TString dir ; 
   hasIndex = false;
@@ -80,7 +80,7 @@ int AnitaResponse::ResponseManager::loadResponsesFromDir(const char * raw_dir, i
     }
     if (!dp)
     {
-      dir.Form("%s/share/AnitaAnalysisFramework/responses/%s", getenv("ANITA_UTIL_INSTALL_DIR"), raw_dir); 
+      dir.Form("%s/share/AnitaAnalysisFramework/responses/%s", getenv("PUEO_UTIL_INSTALL_DIR"), raw_dir); 
       dp = opendir(dir.Data()); 
       if(dp)
       {
@@ -386,7 +386,7 @@ void AnitaResponse::ResponseManager::checkTime(unsigned int evTime)
     }
     if (!dp)
     {
-      dir.Form("%s/share/AnitaAnalysisFramework/responses/%s", getenv("ANITA_UTIL_INSTALL_DIR"), whichDir); 
+      dir.Form("%s/share/AnitaAnalysisFramework/responses/%s", getenv("PUEO_UTIL_INSTALL_DIR"), whichDir); 
       dp = opendir(dir.Data()); 
       if(dp)
       {

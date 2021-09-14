@@ -91,7 +91,7 @@ void AnitaTemplateMachine::fillNotchConfigs()
 {
   int tempTime;
   std::string tempStr;
-  char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
+  char* installDir = getenv("PUEO_UTIL_INSTALL_DIR");
   std::ifstream inf(Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/index.txt", installDir));
   while(inf >> tempStr >> tempTime)
   {
@@ -104,7 +104,7 @@ void AnitaTemplateMachine::fillNotchConfigs()
 void AnitaTemplateMachine::getImpulseResponseTemplate(int version) {
   
   //and get the "averaged" impulse response as the template"
-  char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
+  char* installDir = getenv("PUEO_UTIL_INSTALL_DIR");
   TString name;
   if(version == 4)
   {
@@ -147,7 +147,7 @@ void AnitaTemplateMachine::getImpulseResponseTemplate(int version) {
 
 void AnitaTemplateMachine::getCRTemplates(int version) {
 
-  char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
+  char* installDir = getenv("PUEO_UTIL_INSTALL_DIR");
   TString fname;
   if(version == 4 && !fUseAverageCRTemplate)
   {
@@ -226,7 +226,7 @@ void AnitaTemplateMachine::getCRTemplates(int version) {
     
 void AnitaTemplateMachine::getWaisTemplate(int version) {
  
-  char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
+  char* installDir = getenv("PUEO_UTIL_INSTALL_DIR");
   std::stringstream name;
   name.str("");
   if(AnitaVersion::get() == 4) name << installDir << "/share/AnitaAnalysisFramework/templates/waisTemplateA4.root";
@@ -356,7 +356,7 @@ void AnitaTemplateMachine::deconvolveTemplates(AnitaResponse::DeconvolutionMetho
 
   if(fUseAverageCRTemplate)
   {
-    char* installDir = getenv("ANITA_UTIL_INSTALL_DIR");
+    char* installDir = getenv("PUEO_UTIL_INSTALL_DIR");
     TString crfname = Form("%s/share/AnitaAnalysisFramework/templates/deconvolvedCRA3average.txt", installDir);
     
     TGraph* grTemplateCut = new TGraph(crfname.Data());
