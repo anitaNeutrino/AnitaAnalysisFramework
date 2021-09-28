@@ -212,7 +212,13 @@ class AnitaEventSummary : public TObject
     Double_t fracPowerWindowIntercept() const;
     Double_t fracPowerWindowChisquare() const;
 
-    ClassDefNV(WaveformInfo, 18);
+    //BinnedAnalysis changes. - JCF 9/27/2021
+    Double_t snr1;  // 0.5 * peak2peak / (rms of 1/5 of waveform starting 3/4 of the way through)
+    Double_t snr2;  // 0.5 * peak2peak / (rms of 10 secs at beginning of nonzero portion of wf)
+    Double_t snr3;  // average value from hilbert peak-5sec to peak + 10 sec / (average of 10 secs at beginning of nonzero portion of hilbert env)
+    //End BinnedAnalysis changes
+
+    ClassDefNV(WaveformInfo, 19);  //Incremented up to 19 per the advice of Cosmin. - JCF 9/27/2021
 
    private:
     friend class AnitaEventSummary;
