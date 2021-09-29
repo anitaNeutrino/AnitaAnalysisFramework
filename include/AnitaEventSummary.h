@@ -439,6 +439,10 @@ class AnitaEventSummary : public TObject
   WaveformInfo deconvolved[AnitaPol::kNotAPol][maxDirectionsPerPol]; /// Summaries of the (unfiltered) de-dispersed coherently summed waveforms, array index correponds to entry in peak[][]
   WaveformInfo coherent_filtered[AnitaPol::kNotAPol][maxDirectionsPerPol]; /// Summaries of the filtered, coherently summed waveforms, array index correponds to entry in peak[][]
   WaveformInfo deconvolved_filtered[AnitaPol::kNotAPol][maxDirectionsPerPol]; /// Summaries of the filtered, de-dispersed, coherently summed waveforms, array index correponds to entry in peak[][]
+  //BinnedAnalysis additions - JCF 9/29/2021
+  WaveformInfo inputWfRaw[AnitaPol::kNotAPol][NUM_SEAVEYS];
+  WaveformInfo inputWfFiltered[AnitaPol::kNotAPol][NUM_SEAVEYS];
+  //End BinnedAnalysis additions
   ChannelInfo channels[AnitaPol::kNotAPol][NUM_SEAVEYS]; /// Summaries of each channel's waveform.
   EventFlags flags; /// Flags corresponding the event quality, trigger type, calibration pulser timing, etc.
   SourceHypothesis sun; /// Contains location of sun in map coordinates at time of event
