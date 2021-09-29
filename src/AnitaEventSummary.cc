@@ -109,6 +109,14 @@ void AnitaEventSummary::zeroInternals(){
       memset(&deconvolved_filtered[polInd][dir],0,sizeof(WaveformInfo));
 
     }
+
+    //BinnedAnalysis addition - JCF 9/29/2021
+    for (int ant=0; ant<NUM_SEAVEYS; ++ant) {
+      memset(&inputWfRaw[polInd][ant],0,sizeof(WaveformInfo));
+      memset(&inputWfFiltered[polInd][ant],0,sizeof(WaveformInfo));
+    }
+    //End BinnedAnalysis addition.
+
     for(Int_t ant=0; ant < 48; ant++){
       memset(&channels[polInd][ant],0,sizeof(ChannelInfo));
       channels[polInd][ant].pol = pol;
