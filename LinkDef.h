@@ -42,7 +42,8 @@
 #pragma link C++ class GeometricFilter+;
 #pragma link C++ class GaussianTaper; 
 #pragma link C++ class DiodeFilter; 
-#pragma link C++ class DeglitchFilter+; 
+#pragma link C++ class DeglitchFilter+;
+#pragma link C++ class interpolatedNotchFilter; 
 
 #pragma link C++ namespace AnitaResponse+;
 #pragma link C++ namespace impulsivity+;
