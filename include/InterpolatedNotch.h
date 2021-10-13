@@ -1,6 +1,6 @@
 #ifndef ANITA_ANALYSIS_INTERPOLATED_NOTCH_H
 #define ANITA_ANALYSIS_INTERPOLATED_NOTCH_H
-?
+
 #include "FilterOperation.h"
 #include "TString.h"
 #include "AnalysisWaveform.h"
