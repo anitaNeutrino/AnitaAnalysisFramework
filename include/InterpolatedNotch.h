@@ -4,17 +4,17 @@
 #include "FilterOperation.h"
 #include "TString.h"
 #include "AnalysisWaveform.h"
-?
+
 class interpolatedNotchFilter : public UniformFilterOperation
 {
-?
+
  public:
-?
+
   interpolatedNotchFilter();
-?
+
   const char * tag () const { return "interpolatedNotch"; }
   const char * description () const { return "interpolatedNotchFilter"; }
-?
+
   virtual void processOne(AnalysisWaveform *, const RawAnitaHeader *,int unused , int unsused2) ;
   virtual void process(FilteredAnitaEvent* ev);
   virtual void cutParams(bool notchLower,Double_t lowBinCenter,Double_t lowBinSigma,bool notchHigher,
@@ -24,8 +24,8 @@ class interpolatedNotchFilter : public UniformFilterOperation
  private:
   Double_t lowBin,highBin,lowSigma,highSigma;
   bool notchLower,notchHigher;
-?
+
   void init();
 };
-?
+
 #endif 
