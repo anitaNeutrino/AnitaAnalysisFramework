@@ -523,7 +523,7 @@ class AnitaEventSummary : public TObject
   void resetNonPersistent() const;
   const SourceHypothesis* sourceFromTag() const;
 
-  ClassDefNV(AnitaEventSummary, 41);
+  ClassDefNV(AnitaEventSummary, 42);
 };
 
 #endif
