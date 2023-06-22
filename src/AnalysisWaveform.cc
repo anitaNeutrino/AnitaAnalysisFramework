@@ -1458,6 +1458,7 @@ void AnalysisWaveform::basisChange(AnalysisWaveform * __restrict x,
 
 }
 
+
 void AnalysisWaveform::sumDifference( AnalysisWaveform * __restrict x, AnalysisWaveform * __restrict y) 
 {
   int N = TMath::Min(x->Neven(), y->Neven()); 
@@ -1473,6 +1474,32 @@ void AnalysisWaveform::sumDifference( AnalysisWaveform * __restrict x, AnalysisW
   {
     new_x[i] = 0.5 * ( g_x->GetY()[i] + g_y->GetY()[i] ); 
     new_y[i] = 0.5 * ( g_x->GetY()[i] - g_y->GetY()[i] ); 
+  }
+
+
+  memcpy(x->updateEven()->GetY(), new_x, N * sizeof(double)); 
+  memcpy(y->updateEven()->GetY(), new_y, N * sizeof(double)); 
+
+  x->forceEvenSize(N); 
+  y->forceEvenSize(N); 
+}
+
+
+void AnalysisWaveform::flipHV( AnalysisWaveform * __restrict x, AnalysisWaveform * __restrict y) 
+{
+  int N = TMath::Min(x->Neven(), y->Neven()); 
+
+  //is this right? who knows
+  const TGraphAligned * g_x = x->even(); 
+  const TGraphAligned * g_y = y->even();
+
+  double new_x[N] __attribute__((aligned)); 
+  double new_y[N] __attribute__((aligned)); 
+
+  for (int i = 0; i < N; i++) 
+  {
+    new_x[i] = g_y->GetY()[i]; 
+    new_y[i] = g_x->GetY()[i]; 
   }
 
 

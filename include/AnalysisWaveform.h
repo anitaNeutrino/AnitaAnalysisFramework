@@ -301,7 +301,6 @@ class AnalysisWaveform
 
 
     /** change between vpol / hpol and lcp / rcp 
-     *
      * */ 
     static void basisChange(AnalysisWaveform * __restrict hpol_or_lcp, AnalysisWaveform * __restrict vpol_or_rcp); 
 
@@ -309,6 +308,9 @@ class AnalysisWaveform
      * */ 
     static void sumDifference(AnalysisWaveform * __restrict a, AnalysisWaveform * __restrict b); 
 
+    /* Exchange (a, b) -> (b, a)
+     */
+    static void flipHV(AnalysisWaveform * __restrict a, AnalysisWaveform * __restrict b);
 
     /** Zero mean even graph */ 
     void zeroMeanEven(); 
