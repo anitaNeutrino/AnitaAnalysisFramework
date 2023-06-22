@@ -40,34 +40,34 @@ void SimpleNotchFilter::processOne(AnalysisWaveform* g, const RawAnitaHeader * h
 }
 
 
-void HybridFilter::process(FilteredAnitaEvent * event) 
-{
+void HybridFilter::process(FilteredAnitaEvent * event) {
+
 #ifdef USE_OMP
 #pragma omp  parallel for 
 #endif
-  for (int i = 0; i < NUM_SEAVEYS; i++) 
-  {
-    AnalysisWaveform::basisChange(getWf(event,i, AnitaPol::kHorizontal), getWf(event,i,AnitaPol::kVertical)); 
-  }
 
-
+  for (int i = 0; i < NUM_SEAVEYS; i++) AnalysisWaveform::basisChange(getWf(event,i, AnitaPol::kHorizontal), getWf(event,i,AnitaPol::kVertical));
 }
 
-void HybridFilter::processOne(AnalysisWaveform* g, const RawAnitaHeader* header, int ant, int pol) 
-{
-}
+void HybridFilter::processOne(AnalysisWaveform* g, const RawAnitaHeader* header, int ant, int pol) {}
 
-void SumDifferenceFilter::process(FilteredAnitaEvent * event) 
-{
+void SumDifferenceFilter::process(FilteredAnitaEvent * event) {
+
 #ifdef USE_OMP
 #pragma omp  parallel for 
 #endif
-  for (int i = 0; i < NUM_SEAVEYS; i++) 
-  {
-    AnalysisWaveform::sumDifference(getWf(event,i, AnitaPol::kHorizontal), getWf(event,i,AnitaPol::kVertical)); 
-  }
+
+  for (int i = 0; i < NUM_SEAVEYS; i++) AnalysisWaveform::sumDifference(getWf(event,i, AnitaPol::kHorizontal), getWf(event,i,AnitaPol::kVertical));
+}
 
 
+void FlipHVFilter::process(FilteredAnitaEvent * event) {
+
+#ifdef USE_OMP
+#pragma omp  parallel for 
+#endif
+
+  for (int i = 0; i < NUM_SEAVEYS; i++) AnalysisWaveform::flipHV(getWf(event,i, AnitaPol::kHorizontal), getWf(event,i,AnitaPol::kVertical));
 }
 
 
