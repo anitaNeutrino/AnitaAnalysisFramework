@@ -79,18 +79,15 @@ class ALFASincFilter : public FilterOperation
     ALFASincFilter(double cutoff = 0.7)
       : pb(0,cutoff) {descStr.Form("ALFA Filter with cutoff at %f GHz",cutoff); } 
 
-
-    virtual void process(FilteredAnitaEvent * event) 
-    {
+    virtual void process(FilteredAnitaEvent * event) {
+    
       if (AnitaVersion::get()!=3) return; 
 
-      pb.processOne( getWf(event, 4, AnitaPol::kHorizontal)); 
+      pb.processOne(getWf(event, 4, AnitaPol::kHorizontal)); 
       //cross talk is strong in this one 
-      pb.processOne( getWf(event, 12, AnitaPol::kHorizontal)); 
+      pb.processOne(getWf(event, 12, AnitaPol::kHorizontal)); 
     }
-		virtual void processOne(AnalysisWaveform * awf, const RawAnitaHeader * header=0, int ant=0, int pol = 0);
-
-
+    virtual void processOne(AnalysisWaveform * awf, const RawAnitaHeader * header=0, int ant = 0, int pol = 0);
     const char * tag() const { return "ALFAFilter"; } 
     const char * description() const { return descStr.Data(); } 
   private:
@@ -98,22 +95,20 @@ class ALFASincFilter : public FilterOperation
     double power_before; 
     double power_after;  
     TString descStr;
-
-}; 
+};
 
 //backwards compatibility? 
 typedef ALFASincFilter ALFAFilter; 
 
 
-class HybridFilter : public FilterOperation
-{
+class HybridFilter : public FilterOperation {
 
   public:
 
     const char * tag () const { return "HybridFilter"; } 
     const char * description () const { return "Hybrid Filter"; } 
     virtual void process(FilteredAnitaEvent * event); 
-		virtual void processOne(AnalysisWaveform * awf, const RawAnitaHeader * header=0, int ant=0, int pol = 0);
+    virtual void processOne(AnalysisWaveform * awf, const RawAnitaHeader * header = 0, int ant=0, int pol = 0);
 };
 
 
@@ -123,7 +118,8 @@ class SumDifferenceFilter : public FilterOperation {
 
     const char * tag () const { return "SumDifferenceFilter"; } 
     const char * description () const { return "SumDifference Filter"; } 
-    virtual void process(FilteredAnitaEvent * event); 
+    virtual void process(FilteredAnitaEvent * event);
+    virtual void processOne(AnalysisWaveform * awf, const RawAnitaHeader * header = 0, int ant = 0, int pol = 0);
 };
 
 
@@ -133,7 +129,8 @@ class FlipHVFilter : public FilterOperation {
 
     const char * tag () const { return "FlipHVFilter"; } 
     const char * description () const { return "FlipHVFilter"; } 
-    virtual void process(FilteredAnitaEvent * event); 
+    virtual void process(FilteredAnitaEvent * event);
+    virtual void processOne(AnalysisWaveform * awf, const RawAnitaHeader * header = 0, int ant = 0, int pol = 0);
 };
 
 

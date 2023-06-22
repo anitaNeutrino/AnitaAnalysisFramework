@@ -49,7 +49,9 @@ void HybridFilter::process(FilteredAnitaEvent * event) {
   for (int i = 0; i < NUM_SEAVEYS; i++) AnalysisWaveform::basisChange(getWf(event,i, AnitaPol::kHorizontal), getWf(event,i,AnitaPol::kVertical));
 }
 
+
 void HybridFilter::processOne(AnalysisWaveform* g, const RawAnitaHeader* header, int ant, int pol) {}
+
 
 void SumDifferenceFilter::process(FilteredAnitaEvent * event) {
 
@@ -61,6 +63,9 @@ void SumDifferenceFilter::process(FilteredAnitaEvent * event) {
 }
 
 
+void SumDifferenceFilter::processOne(AnalysisWaveform* g, const RawAnitaHeader* header, int ant, int pol) {}
+
+
 void FlipHVFilter::process(FilteredAnitaEvent * event) {
 
 #ifdef USE_OMP
@@ -69,6 +74,9 @@ void FlipHVFilter::process(FilteredAnitaEvent * event) {
 
   for (int i = 0; i < NUM_SEAVEYS; i++) AnalysisWaveform::flipHV(getWf(event,i, AnitaPol::kHorizontal), getWf(event,i,AnitaPol::kVertical));
 }
+
+
+void FlipHVFilter::processOne(AnalysisWaveform* g, const RawAnitaHeader* header, int ant, int pol) {}
 
 
 DigitalFilterOperation::DigitalFilterOperation(const FFTtools::DigitalFilter * digi, bool correct, double fmin, double fmax)
