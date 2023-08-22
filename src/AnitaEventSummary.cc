@@ -577,7 +577,7 @@ double AnitaEventSummary::WaveformInfo::linearPolFrac() const {
 
 double AnitaEventSummary::WaveformInfo::linearPolAngle() const {
   
-  double value = (TMath::ATan(U/Q)/2)*TMath::RadToDeg();
+  double value = TMath::ATan2(U, Q) * TMath::RadToDeg() * / 2;
 
   return value;
 
@@ -643,7 +643,7 @@ double AnitaEventSummary::WaveformInfo::instantaneousLinearPolFrac() const {
 
 double AnitaEventSummary::WaveformInfo::instantaneousLinearPolAngle() const {
   
-  double value = (TMath::ATan(max_dU/max_dQ)/2)*TMath::RadToDeg();
+  double value = TMath::ATan2(max_dU, max_dQ) * TMath::RadToDeg() / 2;
 
   return value;
 
